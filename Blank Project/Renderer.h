@@ -9,7 +9,7 @@ class MeshMaterial;
 class HeightMap;
 class Light;
 class SpotLight;
-class Scene;
+class DefaultScene;
 
 class Renderer : public OGLRenderer	{
 public:
@@ -34,23 +34,13 @@ protected:
 	//Make a new texture
 	void GenerateScreenTexture(GLuint& into, bool depth = false);
 
-	Scene* scene;
+	DefaultScene* scene;
 
 	Mesh* quad;
 	Mesh* cube;
 	Mesh* sphere; //Light volume
-	Shader* shader;
-	GLuint texture;
-
-	Mesh* mesh_roleT;
-	MeshAnimation* anim_roleT;
-	MeshMaterial* mat_roleT;
-	Shader* shader_roleT;
-
-	HeightMap* mesh_heightMap;
-	Shader* heightMapShader;	
-	GLuint heightMapTexture;
-	GLuint heightMapBump;
+	Shader* defaultShader;
+	GLuint  defaultTexture;
 
 	Shader* pointLightShader;
 	Shader* spotLightShader;
@@ -69,7 +59,4 @@ protected:
 
 	vector<SceneNode*> nodeList;
 	vector<SceneNode*> transparentNodeList;
-
-	Light* pointLights;			//Array of point lighting data
-	SpotLight* spotLights;		//Array of spot lighting data
 };

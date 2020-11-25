@@ -1,5 +1,5 @@
 #include "Renderer.h"
-#include "Scene.h"
+#include "DefaultScene.h"
 
 #include "../nclgl/Camera.h"
 #include "../nclgl/SceneNode.h"
@@ -10,111 +10,22 @@
 
 #include <algorithm>
 
-const int POINT_LIGHT_NUM = 24;
-const int SPOT_LIGHT_NUM = 40;
-
 Renderer::Renderer(Window& parent) : OGLRenderer(parent) {
 
-	scene = new Scene();
+	scene = new DefaultScene();
 	quad = Mesh::GenerateQuad();
 	cube = Mesh::LoadFromMeshFile("OffsetCubeY.msh");
 	sphere = Mesh::LoadFromMeshFile("Sphere.msh");
 
+	defaultTexture = SOIL_load_OGL_texture(TEXTUREDIR"stainedglass.tga", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, 0);
+	defaultShader = new Shader("BumpVertex.glsl", "BufferFragment.glsl");
+	BindShader(defaultShader);
 
-	shader = new Shader("BumpVertex.glsl", "BufferFragment.glsl");
-	BindShader(shader);
-	texture = SOIL_load_OGL_texture(TEXTUREDIR"stainedglass.tga", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, 0);
-	heightMapTexture = SOIL_load_OGL_texture(TEXTUREDIR"Barren Reds.JPG", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, 0);
-	heightMapBump = SOIL_load_OGL_texture(TEXTUREDIR"Barren RedsDOT3.JPG", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, 0);
+	SetTextureRepeating(scene->heightMapTexture, true);
+	SetTextureRepeating(scene->heightMapBump, true);
 
-	SetTextureRepeating(heightMapTexture, true);
-	SetTextureRepeating(heightMapBump, true);
-
-	if (!shader->LoadSuccess() || !texture || ! heightMapTexture || !heightMapBump)
+	if (!defaultShader->LoadSuccess() || !defaultTexture)
 		return;
-
-	pointLights = new Light[POINT_LIGHT_NUM];
-	spotLights = new SpotLight[SPOT_LIGHT_NUM];
-
-	mesh_heightMap = new HeightMap(TEXTUREDIR"noise.png");
-
-	Vector3 heightmapSize = mesh_heightMap->GetHeightMapSize();
-	for (int i = 0; i < POINT_LIGHT_NUM; i++)
-	{
-		Light& l = pointLights[i];
-
-		l.SetPosition(Vector3((rand() % (int)heightmapSize.x) - heightmapSize.x / 2,
-			250.0f,
-			(rand() % (int)heightmapSize.z) - heightmapSize.x / 2));
-
-		l.SetRadius(500 + (rand() % 250));
-
-		l.SetDiffuseColour(Vector4(0.5f + (float)(rand() / (float)RAND_MAX),
-			0.5f + (float)(rand() / (float)RAND_MAX),
-			0.5f + (float)(rand() / (float)RAND_MAX),
-			1));
-	}
-
-	for (int i = 0; i < SPOT_LIGHT_NUM; ++i) {
-		SpotLight& l = spotLights[i];
-
-		//l.SetPosition(Vector3(heightmapSize.x * 0.5, 600, heightmapSize.z * 0.5));
-
-		l.SetPosition(Vector3((rand() % (int)heightmapSize.x) - heightmapSize.x / 2,
-			250.0f,
-			(rand() % (int)heightmapSize.z) - heightmapSize.x / 2));
-
-		l.SetDiffuseColour(Vector4(0.5f + (float)(rand() / (float)RAND_MAX),
-			0.5f + (float)(rand() / (float)RAND_MAX),
-			0.5f + (float)(rand() / (float)RAND_MAX),
-			1));
-
-		l.SetRotation(Vector3(rand() % 360, 0, 0));
-
-		l.SetRadius(500 + (rand() % 250));
-		l.SetAngle(20 + rand() % 45);
-		l.SetDirection(Vector3(0, -1, 0));
-	}
-
-
-	for (int i = 0; i < 5; ++i) {
-		SceneNode* s = new SceneNode();
-		s->SetColour(Vector4(1.0f, 1.0f, 1.0f, 0.5f));
-		s->SetTransform(Matrix4::Translation(Vector3(0, 100.0f, -300.0f + 100.0f + 100 * i)));
-		s->SetModelScale(Vector3(100.0f, 100.0f, 100.0f));
-		s->SetBoundingRadius(100.0f);
-		s->SetMesh(quad);
-		s->SetTexture(texture);
-		scene->root->AddChild(s);
-	}
-
-	mesh_roleT = Mesh::LoadFromMeshFile("Role_T.msh");
-	anim_roleT = new MeshAnimation("Role_T.anm");
-	anim_roleT->GenerateRelativeJoints(mesh_roleT->GetInverseBindPose());
-	mat_roleT = new MeshMaterial("Role_T.mat");
-	shader_roleT = new Shader("SkinningBumpVertex.glsl", "BufferFragment.glsl");
-
-	if (!shader_roleT->LoadSuccess())
-		return;
-
-	SceneNode* role_t = new SceneNode(mesh_roleT, anim_roleT, mat_roleT, Vector4(1, 1, 1, 1), shader_roleT);
-	role_t->SetModelScale(Vector3(100.0f, 100.0f, 100.0f));
-	role_t->SetBoundingRadius(200.0f);
-	scene->root->AddChild(role_t);
-
-	
-	SceneNode* heightMapNode = new SceneNode(mesh_heightMap);
-	heightMapNode->SetBoundingRadius((mesh_heightMap->GetHeightMapSize()).Length());
-	heightMapNode->SetTransform(Matrix4::Translation(Vector3(-mesh_heightMap->GetHeightMapSize().x / 2, -mesh_heightMap->GetHeightMapSize().y, -mesh_heightMap->GetHeightMapSize().z / 2)));
-	heightMapNode->SetTexture(heightMapTexture);
-	heightMapNode->SetNormal(heightMapBump);
-	heightMapShader = new Shader("BumpVertex.glsl", "BufferFragment.glsl");
-	heightMapNode->SetShader(heightMapShader);
-
-	if (!heightMapShader->LoadSuccess())
-		return;
-
-	scene->root->AddChild(heightMapNode);
 
 	projMatrix = Matrix4::Perspective(1.0f, 10000.0f, (float)width / (float)height, 45.0f);
 
@@ -171,17 +82,10 @@ Renderer::~Renderer(void) {
 	delete scene;
 	delete quad;
 	delete cube;
-	delete shader;
+	delete defaultShader;
 
-	delete mesh_roleT;
-	delete anim_roleT;
-	delete mat_roleT;
-	delete shader_roleT;
+	glDeleteTextures(1, &defaultTexture);
 
-	delete mesh_heightMap;
-
-	glDeleteTextures(1, &texture);
-	glDeleteTextures(1, &heightMapTexture);
 }
 
 void Renderer::Resize(int x, int y) {
@@ -231,40 +135,8 @@ void Renderer::GenerateScreenTexture(GLuint& into, bool depth) {
 
 void Renderer::UpdateScene(float dt) {
 
-	scene->camera->Rotate(-Window::GetMouse()->GetRelativePosition().y, -Window::GetMouse()->GetRelativePosition().x, 0);
+	scene->Update(dt);
 
-	Matrix4 rotation = Matrix4::Rotation(scene->camera->GetYaw(), Vector3(0, 1, 0)) * Matrix4::Rotation(scene->camera->GetRoll(), Vector3(0, 0, 1));
-
-	Vector3 forward = rotation * Vector3(0, 0, -1) * dt;
-	Vector3 right = rotation * Vector3(1, 0, 0) * dt;
-	Vector3 up = Vector3(0, 1, 0);
-	Vector3 velocity = Vector3(90, 90, 90);
-
-	if (Window::GetKeyboard()->KeyDown(KEYBOARD_W)) {
-		scene->camera->Translate(forward * velocity);
-	}
-	if (Window::GetKeyboard()->KeyDown(KEYBOARD_S)) {
-		scene->camera->Translate(-forward * velocity);
-	}
-	if (Window::GetKeyboard()->KeyDown(KEYBOARD_A)) {
-		scene->camera->Translate(-right * velocity);
-	}
-	if (Window::GetKeyboard()->KeyDown(KEYBOARD_D)) {
-		scene->camera->Translate(right * velocity);
-	}
-	if (Window::GetKeyboard()->KeyDown(KEYBOARD_SPACE)) {
-		scene->camera->Translate(up * velocity * dt);
-	}
-	if (Window::GetKeyboard()->KeyDown(KEYBOARD_SHIFT)) {
-		scene->camera->Translate(-up * velocity.y * dt);
-	}
-
-	for (int i = 0; i < SPOT_LIGHT_NUM; i++)
-	{
-		spotLights[i].SetRotation(spotLights[i].GetRotation() + Vector3(1, 0, 0) * velocity * dt);
-	}
-
-	scene->camera->UpdateCamera(dt);
 	viewMatrix = scene->camera->BuildViewMatrix();
 	projMatrix = Matrix4::Perspective(1.0f, 10000.0f, (float)width / (float)height, 45.0f);
 	frameFrustum.FromMatrix(projMatrix * viewMatrix);
@@ -301,7 +173,7 @@ void Renderer::SortNodeLists() {
 
 void Renderer::DrawNode(SceneNode* n) {
 
-	Shader* activeShader = shader;
+	Shader* activeShader = defaultShader;
 	if (n->GetShader()) {
 		activeShader = n->GetShader();
 	}
@@ -319,9 +191,9 @@ void Renderer::DrawNode(SceneNode* n) {
 		glUniformMatrix4fv(glGetUniformLocation(activeShader->GetProgram(), "modelMatrix"), 1, false, model.values);
 		glUniform4fv(glGetUniformLocation(activeShader->GetProgram(), "nodeColour"), 1, (float*)&n->GetColour());
 
-		texture = n->GetTexture();
+		defaultTexture = n->GetTexture();
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, texture);
+		glBindTexture(GL_TEXTURE_2D, defaultTexture);
 
 		GLuint normal = n->GetNormal();
 
@@ -390,8 +262,8 @@ void Renderer::DrawLights() {
 	glUniformMatrix4fv(glGetUniformLocation(pointLightShader->GetProgram(), "inverseProjView"), 1, false, invViewProj.values);
 
 	UpdateShaderMatrices();
-	for (int i = 0; i < POINT_LIGHT_NUM; ++i) {
-		Light& l = pointLights[i];
+	for (int i = 0; i < scene->pointLights.size(); ++i) {
+		Light& l = scene->pointLights[i];
 		SetShaderLight(l);
 		sphere->Draw();
 	}
@@ -413,8 +285,8 @@ void Renderer::DrawLights() {
 	glUniformMatrix4fv(glGetUniformLocation(spotLightShader->GetProgram(), "inverseProjView"), 1, false, invViewProj.values);
 
 	UpdateShaderMatrices();
-	for (int i = 0; i < SPOT_LIGHT_NUM; ++i) {
-		SpotLight& l = spotLights[i];
+	for (int i = 0; i < scene->spotLights.size(); ++i) {
+		SpotLight& l = scene->spotLights[i];
 		SetShaderLight(l);
 		sphere->Draw();
 	}
