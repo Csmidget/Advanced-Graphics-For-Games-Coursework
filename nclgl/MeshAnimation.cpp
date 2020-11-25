@@ -28,7 +28,6 @@ MeshAnimation::MeshAnimation(const std::string& filename) : MeshAnimation() {
 	file >> frameRate;
 
 	allJoints.reserve(frameCount * jointCount);
-	allRelativeJoints.reserve(frameCount * jointCount);
 
 	for (unsigned int f = 0; f < frameCount; ++f) {
 		for (unsigned int j = 0; j < jointCount; ++j) {
@@ -45,14 +44,19 @@ MeshAnimation::~MeshAnimation() {
 
 }
 
-void MeshAnimation::GenerateRelativeJoints(const Matrix4* invBindPose) {
+std::vector<Matrix4> MeshAnimation::GenerateRelativeJoints(const Matrix4* invBindPose) {
+
+	std::vector<Matrix4> relativeJoints;
+
+	relativeJoints.reserve(frameCount * jointCount);
 	for (int f = 0; f < frameCount; ++f) {
 		for (int i = 0; i < jointCount; ++i)
 		{
-			allRelativeJoints.emplace_back(allJoints[f*jointCount + i] * invBindPose[i]);
+			relativeJoints.emplace_back(allJoints[f*jointCount + i] * invBindPose[i]);
 		}
-		
 	}
+
+	return relativeJoints;
 }
 
 const Matrix4* MeshAnimation::GetJointData(unsigned int frame) const {
@@ -62,17 +66,6 @@ const Matrix4* MeshAnimation::GetJointData(unsigned int frame) const {
 	int matStart = frame * jointCount;
 
 	Matrix4* dataStart = (Matrix4*)allJoints.data();
-
-	return dataStart + matStart;
-}
-
-const Matrix4* MeshAnimation::GetRelativeJointData(unsigned int frame) const {
-	if (frame >= frameCount) {
-		return nullptr;
-	}
-	int matStart = frame * jointCount;
-
-	Matrix4* dataStart = (Matrix4*)allRelativeJoints.data();
 
 	return dataStart + matStart;
 }

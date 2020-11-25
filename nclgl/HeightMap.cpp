@@ -11,8 +11,6 @@ HeightMap::HeightMap(const std::string& name) {
 		return;
 	}
 
-	
-
 	numVertices = iWidth * iHeight;
 	numIndices = (iWidth - 1) * (iHeight - 1) * 6;
 	

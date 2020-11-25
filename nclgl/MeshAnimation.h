@@ -23,9 +23,8 @@ public:
 		return frameRate;
 	}
 
-	const Matrix4* GetRelativeJointData(unsigned int frame) const;
 	const Matrix4* GetJointData(unsigned int frame) const;
-	void GenerateRelativeJoints(const Matrix4* invBindPose);
+	std::vector<Matrix4> GenerateRelativeJoints(const Matrix4* invBindPose);
 
 protected:
 	unsigned int	jointCount;
@@ -33,6 +32,5 @@ protected:
 	float			frameRate;
 
 	std::vector<Matrix4>		allJoints;
-	std::vector<Matrix4>		allRelativeJoints;
 };
 

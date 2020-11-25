@@ -12,7 +12,7 @@ public:
 		roll = 0.0f;
 	};
 
-	Camera(float pitch, float yaw, float roll, Vector3 position, Vector3 velocity) {
+	Camera(float pitch, float yaw, float roll, Vector3 position) {
 		this->pitch = pitch;
 		this->yaw = yaw;
 		this->roll = roll;

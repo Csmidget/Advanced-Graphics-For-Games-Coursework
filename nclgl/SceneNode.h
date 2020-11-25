@@ -1,15 +1,18 @@
 #pragma once
 
+#include "OGLRenderer.h"
 #include "Matrix4.h"
 #include "Vector3.h"
 #include "Vector4.h"
-#include "Mesh.h"
 
 #include <vector>
 
+class MeshAnimation;
+class MeshMaterial;
+
 class SceneNode {
 public:
-	SceneNode(Mesh* m = NULL, Vector4 colour = Vector4(1, 1, 1, 1), Shader * s = NULL);
+	SceneNode(Mesh* m = NULL, MeshAnimation* anm = NULL, MeshMaterial* = NULL, Vector4 colour = Vector4(1, 1, 1, 1), Shader * s = NULL);
 	~SceneNode(void);
 
 	void SetTransform(const Matrix4& matrix) { transform = matrix; }
@@ -23,7 +26,7 @@ public:
 	void SetModelScale(Vector3 s) { modelScale = s; }
 
 	Mesh* GetMesh() const { return mesh; }
-	void SetMesh(Mesh* m) { mesh = m; }
+	void SetMesh(Mesh* m);
 
 	Shader* GetShader() const { return shader; }
 	void SetShader(Shader* s) { shader = s; }
@@ -34,8 +37,17 @@ public:
 	float GetCameraDistance() const { return distanceFromCamera; }
 	void SetCameraDistance(float f) { distanceFromCamera = f; }
 
-	void SetTexture(GLuint tex) { texture = tex; }
 	GLuint GetTexture() const { return texture; }
+	void SetTexture(GLuint tex) { texture = tex; }
+
+	GLuint GetNormal() const { return normal; }
+	void SetNormal(GLuint tex) { normal = tex; }
+
+	MeshMaterial* GetMaterial() const { return material; }
+	void SetMaterial(MeshMaterial* mat) { material = mat; }
+
+	MeshAnimation* GetAnimation() const { return anim; }
+	void SetAnimation(MeshAnimation* anim);
 
 	void AddChild(SceneNode* s);
 	void RemoveChild(SceneNode* s);
@@ -52,11 +64,19 @@ public:
 
 
 protected:
-	bool HasParent(SceneNode* _parent);
+	bool HasParent(SceneNode* _parent) const;
+	const Matrix4* GetRelativeJointData(unsigned int frame) const;
 
 	SceneNode* parent;
+
 	Shader* shader;
 	Mesh* mesh;
+	MeshAnimation* anim;
+	std::vector<Matrix4> animRelativeJoints;
+
+	MeshMaterial* material;
+	vector <GLuint> matTextures;
+
 	Matrix4 worldTransform;
 	Matrix4 transform;
 	Vector3 modelScale;
@@ -65,5 +85,8 @@ protected:
 
 	float distanceFromCamera;
 	float boundingRadius;
+	float frameTime;
+	int currentFrame;
 	GLuint texture;
+	GLuint normal;
 };

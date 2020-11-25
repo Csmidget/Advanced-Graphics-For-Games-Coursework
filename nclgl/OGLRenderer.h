@@ -63,6 +63,7 @@ public:
 protected:
 	virtual void	Resize(int x, int y);	
 	void			UpdateShaderMatrices();
+	Shader*			GetCurrentShader() { return currentShader; }
 	void			BindShader(Shader*s);
 	void SetShaderLight(const Light& l);
 	void SetShaderLight(const DirectionLight& l);

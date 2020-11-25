@@ -1,7 +1,7 @@
 #version 330 core
 
 uniform sampler2D depthTex;
-uniform sampler2D normTex;
+uniform sampler2D normalTex;
 
 uniform vec2 pixelSize;
 uniform vec3 cameraPos;
@@ -33,14 +33,13 @@ void main(void) {
 
     vec3 incident = normalize(lightPos - worldPos);
 
-
     float angle = acos(dot(normalize(lightDir),-incident));
 
     if (angle > lightConeAngle) {
         discard;
     }
     
-    vec3 normal = normalize(texture(normTex, texCoord.xy).xyz * 2.0 - 1.0);
+    vec3 normal = normalize(texture(normalTex, texCoord.xy).xyz * 2.0 - 1.0);
     vec3 viewDir = normalize(cameraPos - worldPos);
     vec3 halfDir = normalize(incident + viewDir);
 
@@ -53,6 +52,6 @@ void main(void) {
 
     vec3 attenuated = diffuseColour.xyz * atten * angleFade;
 
-    diffuseOutput = vec4(attenuated * lambert, 1.0);
+    diffuseOutput = vec4(attenuated * lambert, diffuseColour.a);
     specularOutput = vec4(attenuated * specFactor * 0.33, 1.0);
 }
