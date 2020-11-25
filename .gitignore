@@ -351,3 +351,8 @@ MigrationBackup/
 
 # Ionide (cross platform F# VS Code tools) working folder
 .ionide/
+
+!Third*Party/*
+!Third*Party/SOIL/*
+!Third*Party/SOIL/x64/*
+!Third*Party/SOIL/Win32/*

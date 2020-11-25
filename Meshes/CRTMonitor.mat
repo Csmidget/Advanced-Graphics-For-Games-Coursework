@@ -1,0 +1,12 @@
+MeshMat
+1
+2
+2
+CRTMonitorMaterial
+1
+Diffuse:/Pekdata/PekdataCRTMonitor/Materials/CRTMonitorMaterials/CRTMonitorDiffuse.png
+CRTMonitorScreenOnMaterial
+1
+Diffuse:/Pekdata/PekdataCRTMonitor/Gfx/Images/CRTMonitorScreenOn.png
+0
+1
