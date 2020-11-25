@@ -7,25 +7,24 @@
 #include "../nclgl/MeshMaterial.h"
 #include "../nclgl/HeightMap.h"
 #include "../nclgl/Light.h"
+#include "../nclgl/TextureManager.h"
 
 #include <algorithm>
 
 Renderer::Renderer(Window& parent) : OGLRenderer(parent) {
 
 	scene = new DefaultScene();
+
+	if (!scene->initialized) {
+		return;
+	}
+
+	defaultShader = new Shader("basicVertex.glsl", "colourFragment.glsl");
+	BindShader(defaultShader);
+
 	quad = Mesh::GenerateQuad();
 	cube = Mesh::LoadFromMeshFile("OffsetCubeY.msh");
 	sphere = Mesh::LoadFromMeshFile("Sphere.msh");
-
-	defaultTexture = SOIL_load_OGL_texture(TEXTUREDIR"stainedglass.tga", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, 0);
-	defaultShader = new Shader("BumpVertex.glsl", "BufferFragment.glsl");
-	BindShader(defaultShader);
-
-	SetTextureRepeating(scene->heightMapTexture, true);
-	SetTextureRepeating(scene->heightMapBump, true);
-
-	if (!defaultShader->LoadSuccess() || !defaultTexture)
-		return;
 
 	projMatrix = Matrix4::Perspective(1.0f, 10000.0f, (float)width / (float)height, 45.0f);
 
@@ -82,10 +81,22 @@ Renderer::~Renderer(void) {
 	delete scene;
 	delete quad;
 	delete cube;
+
 	delete defaultShader;
+	delete pointLightShader;
+	delete spotLightShader;
+	delete combineShader;
 
-	glDeleteTextures(1, &defaultTexture);
+	glDeleteTextures(1, &bufferDepthTex);
+	glDeleteTextures(1, &bufferColourTex);
+	glDeleteTextures(1, &bufferNormalTex);
+	glDeleteTextures(1, &lightDiffuseTex);
+	glDeleteTextures(1, &lightSpecularTex);
 
+	glDeleteFramebuffers(1, &bufferFBO);
+	glDeleteFramebuffers(1, &lightingFBO);
+
+	TextureManager::Cleanup();
 }
 
 void Renderer::Resize(int x, int y) {
@@ -138,7 +149,6 @@ void Renderer::UpdateScene(float dt) {
 	scene->Update(dt);
 
 	viewMatrix = scene->camera->BuildViewMatrix();
-	projMatrix = Matrix4::Perspective(1.0f, 10000.0f, (float)width / (float)height, 45.0f);
 	frameFrustum.FromMatrix(projMatrix * viewMatrix);
 	scene->root->Update(dt);
 }
@@ -148,12 +158,12 @@ void Renderer::BuildNodeLists(SceneNode* from) {
 		Vector3 dir = from->GetWorldTransform().GetPositionVector() - scene->camera->GetPosition();
 		from->SetCameraDistance(Vector3::Dot(dir, dir));
 
-		if (from->GetColour().w < 1.0f) {
-			transparentNodeList.push_back(from);
-		}
-		else {
+		//if (from->GetColour().w < 1.0f) {
+		//	transparentNodeList.push_back(from);
+		//}
+		//else {
 			nodeList.push_back(from);
-		}
+		//}
 	}
 
 	for (auto i = from->GetChildIteratorStart(); i != from->GetChildIteratorEnd(); ++i) {
@@ -162,9 +172,9 @@ void Renderer::BuildNodeLists(SceneNode* from) {
 }
 
 void Renderer::SortNodeLists() {
-	std::sort(transparentNodeList.rbegin(),
-		transparentNodeList.rend(),
-		SceneNode::CompareByCameraDistance);
+	//std::sort(transparentNodeList.rbegin(),
+	//	transparentNodeList.rend(),
+	//	SceneNode::CompareByCameraDistance);
 
 	std::sort(nodeList.begin(),
 		nodeList.end(),
@@ -180,20 +190,22 @@ void Renderer::DrawNode(SceneNode* n) {
 
 	if (GetCurrentShader()->GetProgram() != activeShader->GetProgram()) {
 		BindShader(activeShader);
-		UpdateShaderMatrices();
-
+		
 		glUniform1i(glGetUniformLocation(activeShader->GetProgram(), "diffuseTex"), 0);
 		glUniform1i(glGetUniformLocation(activeShader->GetProgram(), "normalTex"), 1);
 	}
 
 	if (n->GetMesh()) {
-		Matrix4 model = n->GetWorldTransform() * Matrix4::Scale(n->GetModelScale());
-		glUniformMatrix4fv(glGetUniformLocation(activeShader->GetProgram(), "modelMatrix"), 1, false, model.values);
+		modelMatrix = n->GetWorldTransform() * Matrix4::Scale(n->GetModelScale());
+		UpdateShaderMatrices();
+
+		//glUniformMatrix4fv(glGetUniformLocation(activeShader->GetProgram(), "modelMatrix"), 1, false, model.values);
 		glUniform4fv(glGetUniformLocation(activeShader->GetProgram(), "nodeColour"), 1, (float*)&n->GetColour());
 
-		defaultTexture = n->GetTexture();
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, defaultTexture);
+		if (n->GetTexture()) {
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_2D, n->GetTexture());
+		}
 
 		GLuint normal = n->GetNormal();
 
@@ -225,7 +237,6 @@ void Renderer::DrawOpaques() {
 
 	modelMatrix.ToIdentity();
 	viewMatrix = scene->camera->BuildViewMatrix();
-
 
 	for (auto i : nodeList)
 	{
@@ -320,9 +331,10 @@ void Renderer::CombineBuffers() {
 	glBindTexture(GL_TEXTURE_2D, lightSpecularTex);
 
 	quad->Draw();
+	projMatrix = Matrix4::Perspective(1.0f, 10000.0f, (float)width / (float)height, 45.0f);
 }
 
 void Renderer::ClearNodeLists() {
-	transparentNodeList.clear();
+	//transparentNodeList.clear();
 	nodeList.clear();
 }

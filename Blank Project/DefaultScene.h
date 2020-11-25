@@ -22,7 +22,7 @@ public:
 	Shader* shader_roleT;
 
 	HeightMap* mesh_heightMap;
-	Shader* heightMapShader;
-	GLuint heightMapTexture;
-	GLuint heightMapBump;
+	Shader* shader_heightMap;
+	GLuint diffuse_heightMap;
+	GLuint normal_heightMap;
 };

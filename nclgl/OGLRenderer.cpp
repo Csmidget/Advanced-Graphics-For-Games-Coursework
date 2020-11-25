@@ -255,14 +255,6 @@ void OGLRenderer::UpdateScene(float msec)	{
 
 }
 
-void OGLRenderer::SetTextureRepeating(GLuint texture, bool repeat)
-{
-	glBindTexture(GL_TEXTURE_2D, texture);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, repeat ? GL_REPEAT : GL_CLAMP);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, repeat ? GL_REPEAT : GL_CLAMP);
-	glBindTexture(GL_TEXTURE_2D, 0);
-}
-
 /*
 Updates the uniform matrices of the current shader. Assumes that
 the shader has uniform matrices called modelMatrix, viewMatrix,

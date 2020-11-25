@@ -9,7 +9,7 @@ class MeshMaterial;
 class HeightMap;
 class Light;
 class SpotLight;
-class DefaultScene;
+class Scene;
 
 class Renderer : public OGLRenderer	{
 public:
@@ -24,7 +24,6 @@ protected:
 	void SortNodeLists();
 	void ClearNodeLists();
 	void DrawOpaques();
-	void DrawTransparents();
 	void DrawLights();
 	void DrawNode(SceneNode* n);
 
@@ -34,13 +33,12 @@ protected:
 	//Make a new texture
 	void GenerateScreenTexture(GLuint& into, bool depth = false);
 
-	DefaultScene* scene;
+	Scene* scene;
 
 	Mesh* quad;
 	Mesh* cube;
 	Mesh* sphere; //Light volume
 	Shader* defaultShader;
-	GLuint  defaultTexture;
 
 	Shader* pointLightShader;
 	Shader* spotLightShader;
@@ -58,5 +56,5 @@ protected:
 	Frustum frameFrustum;
 
 	vector<SceneNode*> nodeList;
-	vector<SceneNode*> transparentNodeList;
+	//vector<SceneNode*> transparentNodeList;
 };

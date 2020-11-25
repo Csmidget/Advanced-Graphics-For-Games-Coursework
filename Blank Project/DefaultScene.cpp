@@ -1,5 +1,7 @@
 #include "DefaultScene.h"
 
+#include "../nclgl/TextureManager.h"
+
 #include "../nclgl/Camera.h"
 #include "../nclgl/Window.h"
 #include "../nclgl/Light.h"
@@ -8,33 +10,37 @@
 #include "../nclgl/MeshMaterial.h"
 #include "../nclgl/SceneNode.h"
 
+
 const int POINT_LIGHT_NUM = 24;
 const int SPOT_LIGHT_NUM = 40;
 
 DefaultScene::DefaultScene() : Scene() {
 
 	//Texture initialization
-	heightMapTexture = SOIL_load_OGL_texture(TEXTUREDIR"Barren Reds.JPG", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, 0);
-	heightMapBump = SOIL_load_OGL_texture(TEXTUREDIR"Barren RedsDOT3.JPG", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, 0);
+	diffuse_heightMap	=	TextureManager::LoadTexture(TEXTUREDIR"Barren Reds.JPG");
+	normal_heightMap	=	TextureManager::LoadTexture(TEXTUREDIR"Barren RedsDOT3.JPG");
+//	diffuse_Glass		=	TextureManager::LoadTexture(TEXTUREDIR"stainedglass.tga");
 
-	if (!heightMapTexture || !heightMapBump) {
+	if (!diffuse_heightMap || !normal_heightMap) {
 		return;
 	}
 
+	TextureManager::SetTextureRepeating(diffuse_heightMap, true);
+	TextureManager::SetTextureRepeating(normal_heightMap, true);
 
 	//Terrain
 	mesh_heightMap = new HeightMap(TEXTUREDIR"noise.png");
 	SceneNode* heightMapNode = new SceneNode(mesh_heightMap);
 	heightMapNode->SetBoundingRadius((mesh_heightMap->GetHeightMapSize()).Length());
 	heightMapNode->SetTransform(Matrix4::Translation(Vector3(-mesh_heightMap->GetHeightMapSize().x / 2, -mesh_heightMap->GetHeightMapSize().y, -mesh_heightMap->GetHeightMapSize().z / 2)));
-	heightMapNode->SetTexture(heightMapTexture);
-	heightMapNode->SetNormal(heightMapBump);
+	heightMapNode->SetTexture(diffuse_heightMap);
+	heightMapNode->SetNormal(normal_heightMap);
 
-	heightMapShader = new Shader("BumpVertex.glsl", "BufferFragment.glsl");
-	if (!heightMapShader->LoadSuccess())
+	shader_heightMap = new Shader("BumpVertex.glsl", "BufferFragment.glsl");
+	if (!shader_heightMap->LoadSuccess())
 		return;
 
-	heightMapNode->SetShader(heightMapShader);
+	heightMapNode->SetShader(shader_heightMap);
 	root->AddChild(heightMapNode);
 
 
@@ -53,6 +59,11 @@ DefaultScene::DefaultScene() : Scene() {
 	role_t->SetBoundingRadius(200.0f);
 	root->AddChild(role_t);
 
+	role_t = new SceneNode(mesh_roleT, anim_roleT, mat_roleT, Vector4(1, 1, 1, 1), shader_roleT);
+	role_t->SetTransform(Matrix4::Translation(Vector3(100, 0, 0)));
+	role_t->SetModelScale(Vector3(100.0f, 100.0f, 100.0f));
+	role_t->SetBoundingRadius(200.0f);
+	root->AddChild(role_t);
 
 	//Light setup
 	pointLights.reserve(POINT_LIGHT_NUM);
@@ -106,10 +117,10 @@ DefaultScene::~DefaultScene() {
 	delete shader_roleT;
 
 	delete mesh_heightMap;
-	delete heightMapShader;
+	delete shader_heightMap;
 
-	glDeleteTextures(1, &heightMapTexture);
-	glDeleteTextures(1, &heightMapBump);
+	glDeleteTextures(1, &diffuse_heightMap);
+	glDeleteTextures(1, &normal_heightMap);
 }
 
 void DefaultScene::Update(float dt) {

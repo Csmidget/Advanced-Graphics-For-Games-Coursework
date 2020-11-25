@@ -1,6 +1,7 @@
 #include "SceneNode.h"
 #include "MeshAnimation.h"
 #include "MeshMaterial.h"
+#include "TextureManager.h"
 
 SceneNode::SceneNode(Mesh* m, MeshAnimation* anm, MeshMaterial* mat, Vector4 colour, Shader* s) {
 	this->mesh = m;
@@ -26,7 +27,7 @@ SceneNode::SceneNode(Mesh* m, MeshAnimation* anm, MeshMaterial* mat, Vector4 col
 			matEntry->GetEntry("Diffuse", &filename);
 			string path = TEXTUREDIR + *filename;
 
-			GLuint texID = SOIL_load_OGL_texture(path.c_str(), SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_MIPMAPS | SOIL_FLAG_INVERT_Y);
+			GLuint texID = TextureManager::LoadTexture(path.c_str(), SOIL_FLAG_MIPMAPS | SOIL_FLAG_INVERT_Y);
 			matTextures.emplace_back(texID);
 		}
 	}
