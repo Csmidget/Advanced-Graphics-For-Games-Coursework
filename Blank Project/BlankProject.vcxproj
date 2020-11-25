@@ -72,7 +72,7 @@
     <LibraryPath>..\..\SOIL\$(Configuration)\;..\$(Platform)\$(Configuration)\;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>..\Third Party\;$(ProjectDir)..\;$(IncludePath)</IncludePath>
+    <IncludePath>..\Third-Party\;$(ProjectDir)..\;$(IncludePath)</IncludePath>
     <LibraryPath>..\..\SOIL\$(Configuration)\;..\$(Platform)\$(Configuration)\;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -80,7 +80,7 @@
     <LibraryPath>..\..\SOIL\$(Configuration)\;..\$(Platform)\$(Configuration)\;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>..\Third Party\;$(ProjectDir)..\;$(IncludePath)</IncludePath>
+    <IncludePath>..\Third-Party\;$(ProjectDir)..\;$(IncludePath)</IncludePath>
     <LibraryPath>..\..\SOIL\$(Configuration)\;..\$(Platform)\$(Configuration)\;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
