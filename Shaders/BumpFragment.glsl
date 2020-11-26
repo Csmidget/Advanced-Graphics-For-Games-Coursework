@@ -1,6 +1,6 @@
 #version 330 core
 uniform sampler2D diffuseTex;
-uniform sampler2D bumpTex;
+uniform sampler2D normalTex;
 
 uniform vec3 cameraPos;
 uniform vec4 diffuseColour;
@@ -26,7 +26,7 @@ void main(void) {
     mat3 TBN = mat3(normalize(IN.tangent), normalize(IN.binormal), normalize(IN.normal));
 
     vec4 diffuse = texture(diffuseTex, IN.texCoord);
-    vec3 bumpNormal = texture(bumpTex, IN.texCoord).rgb;
+    vec3 bumpNormal = texture(normalTex, IN.texCoord).rgb;
 
     bumpNormal = normalize(TBN * normalize(bumpNormal * 2.0 - 1.0));
 

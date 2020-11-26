@@ -16,6 +16,26 @@ GLuint TextureManager::LoadTexture(std::string textureName, unsigned int flags) 
 	return newTexture;
 }
 
+GLuint TextureManager::LoadCubemap(std::string xPos, std::string xNeg, std::string yPos, std::string yNeg, std::string zPos, std::string zNeg, unsigned int flags) {
+
+	std::string combined = xPos + xNeg + yPos + yNeg + zPos + zNeg;
+
+	//If we have loaded this cubemap in the past, just return it again.
+	if (loadedTextures.find(combined) != loadedTextures.end())
+		return loadedTextures[combined];
+
+	GLuint newCubemap = SOIL_load_OGL_cubemap(
+		xPos.c_str(), xNeg.c_str(),
+		yPos.c_str(), yNeg.c_str(),
+		zPos.c_str(), zNeg.c_str(),
+		SOIL_LOAD_RGB, SOIL_CREATE_NEW_ID, flags);
+
+	loadedTextures.emplace(combined, newCubemap);
+
+	return newCubemap;
+
+}
+
 void TextureManager::SetTextureRepeating(GLuint texture, bool repeat)
 {
 	glBindTexture(GL_TEXTURE_2D, texture);

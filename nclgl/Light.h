@@ -18,6 +18,8 @@ public:
 	Vector3 GetPosition() const { return position; }
 	void SetPosition(const Vector3& val) { position = val; }
 
+	void Translate(Vector3 val) { position += val; }
+
 	float GetRadius() const { return radius; }
 	void SetRadius(float val) { radius = val; }
 	

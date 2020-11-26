@@ -16,10 +16,14 @@ const int SPOT_LIGHT_NUM = 40;
 
 DefaultScene::DefaultScene() : Scene() {
 
+	camera->SetPitch(-45.0f);
+
 	//Texture initialization
-	diffuse_heightMap	=	TextureManager::LoadTexture(TEXTUREDIR"Barren Reds.JPG");
-	normal_heightMap	=	TextureManager::LoadTexture(TEXTUREDIR"Barren RedsDOT3.JPG");
-//	diffuse_Glass		=	TextureManager::LoadTexture(TEXTUREDIR"stainedglass.tga");
+	diffuse_heightMap	=	TextureManager::LoadTexture(TEXTUREDIR"Barren Reds.JPG", SOIL_FLAG_MIPMAPS);
+	normal_heightMap	=	TextureManager::LoadTexture(TEXTUREDIR"Barren RedsDOT3.JPG", SOIL_FLAG_MIPMAPS);
+	skybox				=	TextureManager::LoadCubemap(TEXTUREDIR"rusted_west.jpg", TEXTUREDIR"rusted_east.jpg",
+														TEXTUREDIR"rusted_up.jpg", TEXTUREDIR"rusted_down.jpg",
+														TEXTUREDIR"rusted_south.jpg", TEXTUREDIR"rusted_north.jpg");
 
 	if (!diffuse_heightMap || !normal_heightMap) {
 		return;
@@ -27,43 +31,63 @@ DefaultScene::DefaultScene() : Scene() {
 
 	TextureManager::SetTextureRepeating(diffuse_heightMap, true);
 	TextureManager::SetTextureRepeating(normal_heightMap, true);
+	////////////
 
-	//Terrain
-	mesh_heightMap = new HeightMap(TEXTUREDIR"noise.png");
+
+	//Shader setup//
+	defaultShader =  new Shader("BufferVertex.glsl", "BufferFragment.glsl");
+	bumpMapShader =  new Shader("BufferBumpVertex.glsl", "BufferBumpFragment.glsl");
+	animatedShader = new Shader("SkinningVertex.glsl", "BufferFragment.glsl");
+	//bumpAnimated
+
+	if (!defaultShader->LoadSuccess() || !bumpMapShader->LoadSuccess() || !animatedShader->LoadSuccess())
+		return;
+	////////////////
+	
+	//Terrain//
+	mesh_heightMap = new HeightMap(TEXTUREDIR"terraintest.png");
 	SceneNode* heightMapNode = new SceneNode(mesh_heightMap);
 	heightMapNode->SetBoundingRadius((mesh_heightMap->GetHeightMapSize()).Length());
 	heightMapNode->SetTransform(Matrix4::Translation(Vector3(-mesh_heightMap->GetHeightMapSize().x / 2, -mesh_heightMap->GetHeightMapSize().y, -mesh_heightMap->GetHeightMapSize().z / 2)));
 	heightMapNode->SetTexture(diffuse_heightMap);
 	heightMapNode->SetNormal(normal_heightMap);
 
-	shader_heightMap = new Shader("BumpVertex.glsl", "BufferFragment.glsl");
-	if (!shader_heightMap->LoadSuccess())
-		return;
 
-	heightMapNode->SetShader(shader_heightMap);
+	heightMapNode->SetShader(bumpMapShader);
 	root->AddChild(heightMapNode);
+	///////////////
 
+	//Walking man//
 
-	//Walking man
-	mesh_roleT =	Mesh::LoadFromMeshFile("Role_T.msh");
-	anim_roleT =	new MeshAnimation("Role_T.anm");
-	anim_roleT->GenerateRelativeJoints(mesh_roleT->GetInverseBindPose());
-	mat_roleT =		new MeshMaterial("Role_T.mat");
-	shader_roleT =	new Shader("SkinningBumpVertex.glsl", "BufferFragment.glsl");
-
-	if (!shader_roleT->LoadSuccess())
-		return;
-
-	SceneNode* role_t = new SceneNode(mesh_roleT, anim_roleT, mat_roleT, Vector4(1, 1, 1, 1), shader_roleT);
+	mesh_roleT = Mesh::LoadFromMeshFile("Role_T.msh");
+	anim_roleT = new MeshAnimation("Role_T.anm");
+	mat_roleT  = new MeshMaterial("Role_T.mat");
+	
+	SceneNode* role_t = new SceneNode(mesh_roleT,  mat_roleT, anim_roleT, Vector4(1, 1, 1, 1), animatedShader);
 	role_t->SetModelScale(Vector3(100.0f, 100.0f, 100.0f));
 	role_t->SetBoundingRadius(200.0f);
 	root->AddChild(role_t);
 
-	role_t = new SceneNode(mesh_roleT, anim_roleT, mat_roleT, Vector4(1, 1, 1, 1), shader_roleT);
+	role_t = new SceneNode(mesh_roleT, mat_roleT, anim_roleT, Vector4(1, 1, 1, 1), animatedShader);
 	role_t->SetTransform(Matrix4::Translation(Vector3(100, 0, 0)));
 	role_t->SetModelScale(Vector3(100.0f, 100.0f, 100.0f));
 	role_t->SetBoundingRadius(200.0f);
 	root->AddChild(role_t);
+
+	//////////////
+	
+	//Barrel//
+
+	mesh_Barrel = Mesh::LoadFromMeshFile("Barrel_1.msh");
+	mat_Barrel = new MeshMaterial("Barrel_1.mat");
+	
+	SceneNode* barrel = new SceneNode(mesh_Barrel, mat_Barrel);
+	barrel->SetModelScale(Vector3(100.0f, 100.0f, 100.0f));
+	barrel->SetBoundingRadius(200.0f);
+	barrel->SetShader(bumpMapShader);
+	root->AddChild(barrel);
+
+	//////////
 
 	//Light setup
 	pointLights.reserve(POINT_LIGHT_NUM);
@@ -75,7 +99,7 @@ DefaultScene::DefaultScene() : Scene() {
 		Light l;
 
 		l.SetPosition(Vector3((rand() % (int)heightmapSize.x) - heightmapSize.x / 2,
-			250.0f,
+			250.0f - heightmapSize.y,
 			(rand() % (int)heightmapSize.z) - heightmapSize.x / 2));
 
 		l.SetRadius(500 + (rand() % 250));
@@ -91,7 +115,7 @@ DefaultScene::DefaultScene() : Scene() {
 		SpotLight l;
 
 		l.SetPosition(Vector3((rand() % (int)heightmapSize.x) - heightmapSize.x / 2,
-			250.0f,
+			250.0f - heightmapSize.y,
 			(rand() % (int)heightmapSize.z) - heightmapSize.x / 2));
 
 		l.SetDiffuseColour(Vector4(0.5f + (float)(rand() / (float)RAND_MAX),
@@ -106,18 +130,30 @@ DefaultScene::DefaultScene() : Scene() {
 		l.SetDirection(Vector3(0, -1, 0));
 		spotLights.emplace_back(l);
 	}
+	////////////
 
 	initialized = true;
 }
 
 DefaultScene::~DefaultScene() {
+
+	delete defaultShader;
+	delete bumpMapShader;
+	delete animatedShader;
+	delete bumpAnimatedShader;
+
 	delete mesh_roleT;
 	delete anim_roleT;
 	delete mat_roleT;
-	delete shader_roleT;
+
+	delete mesh_cyberSoldier;
+	delete anim_cyberSoldier;
+	delete mat_cyberSoldier;
 
 	delete mesh_heightMap;
-	delete shader_heightMap;
+
+	delete mesh_Barrel;
+	delete mat_Barrel;
 
 	glDeleteTextures(1, &diffuse_heightMap);
 	glDeleteTextures(1, &normal_heightMap);
@@ -150,6 +186,27 @@ void DefaultScene::Update(float dt) {
 	}
 	if (Window::GetKeyboard()->KeyDown(KEYBOARD_SHIFT)) {
 		camera->Translate(-up * velocity.y * dt);
+	}
+
+	if (Window::GetKeyboard()->KeyDown(KEYBOARD_UP)) {
+		for (int i = 0; i < pointLights.size(); ++i) {
+			pointLights[i].Translate(Vector3(0, 0, -1) * dt * velocity);
+		}
+	}
+	if (Window::GetKeyboard()->KeyDown(KEYBOARD_DOWN)) {
+		for (int i = 0; i < pointLights.size(); ++i) {
+			pointLights[i].Translate(-Vector3(0, 0, -1) * dt * velocity);
+		}
+	}
+	if (Window::GetKeyboard()->KeyDown(KEYBOARD_LEFT)) {
+		for (int i = 0; i < pointLights.size(); ++i) {
+			pointLights[i].Translate(-Vector3(1, 0, 0) * dt * velocity);
+		}
+	}
+	if (Window::GetKeyboard()->KeyDown(KEYBOARD_RIGHT)) {
+		for (int i = 0; i < pointLights.size(); ++i) {
+			pointLights[i].Translate(Vector3(1, 0, 0) * dt * velocity);
+		}
 	}
 
 	for (int i = 0; i < spotLights.size(); i++) {

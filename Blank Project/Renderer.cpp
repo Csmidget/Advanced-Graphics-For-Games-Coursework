@@ -31,8 +31,9 @@ Renderer::Renderer(Window& parent) : OGLRenderer(parent) {
 	pointLightShader = new Shader("PointLightVertex.glsl", "PointLightFragment.glsl");
 	spotLightShader = new Shader("PointLightVertex.glsl", "SpotLightFragment.glsl");
 	combineShader = new Shader("CombineVertex.glsl", "CombineFragment.glsl");
+	skyboxShader = new Shader("SkyboxVertex.glsl", "SkyboxFragment.glsl");
 
-	if (!pointLightShader->LoadSuccess() || !spotLightShader->LoadSuccess() || !combineShader->LoadSuccess())
+	if (!defaultShader->LoadSuccess() ||!pointLightShader->LoadSuccess() || !spotLightShader->LoadSuccess() || !combineShader->LoadSuccess() || !skyboxShader->LoadSuccess())
 		return;
 
 	glGenFramebuffers(1, &bufferFBO);
@@ -86,6 +87,7 @@ Renderer::~Renderer(void) {
 	delete pointLightShader;
 	delete spotLightShader;
 	delete combineShader;
+	delete skyboxShader;
 
 	glDeleteTextures(1, &bufferDepthTex);
 	glDeleteTextures(1, &bufferColourTex);
@@ -197,6 +199,7 @@ void Renderer::DrawNode(SceneNode* n) {
 
 	if (n->GetMesh()) {
 		modelMatrix = n->GetWorldTransform() * Matrix4::Scale(n->GetModelScale());
+
 		UpdateShaderMatrices();
 
 		//glUniformMatrix4fv(glGetUniformLocation(activeShader->GetProgram(), "modelMatrix"), 1, false, model.values);

@@ -12,7 +12,7 @@ class MeshMaterial;
 
 class SceneNode {
 public:
-	SceneNode(Mesh* m = NULL, MeshAnimation* anm = NULL, MeshMaterial* = NULL, Vector4 colour = Vector4(1, 1, 1, 1), Shader * s = NULL);
+	SceneNode(Mesh* m = NULL, MeshMaterial* = NULL, MeshAnimation* anm = NULL, Vector4 colour = Vector4(1, 1, 1, 1), Shader * s = NULL);
 	~SceneNode(void);
 
 	void SetTransform(const Matrix4& matrix) { transform = matrix; }
@@ -76,6 +76,7 @@ protected:
 
 	MeshMaterial* material;
 	vector <GLuint> matTextures;
+	vector<GLuint> matNormals;
 
 	Matrix4 worldTransform;
 	Matrix4 transform;

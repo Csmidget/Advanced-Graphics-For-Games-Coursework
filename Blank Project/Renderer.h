@@ -39,6 +39,7 @@ protected:
 	Mesh* cube;
 	Mesh* sphere; //Light volume
 	Shader* defaultShader;
+	Shader* skyboxShader;
 
 	Shader* pointLightShader;
 	Shader* spotLightShader;

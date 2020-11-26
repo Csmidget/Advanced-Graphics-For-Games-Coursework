@@ -33,6 +33,7 @@ void main(void) {
 
     vec3 incident = normalize(lightPos - worldPos);
 
+
     float angle = acos(dot(normalize(lightDir),-incident));
 
     if (angle > lightConeAngle) {
@@ -52,6 +53,6 @@ void main(void) {
 
     vec3 attenuated = diffuseColour.xyz * atten * angleFade;
 
-    diffuseOutput = vec4(attenuated * lambert, diffuseColour.a);
+    diffuseOutput = vec4(attenuated * lambert, 1.0);
     specularOutput = vec4(attenuated * specFactor * 0.33, 1.0);
 }

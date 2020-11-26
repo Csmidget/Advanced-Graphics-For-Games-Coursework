@@ -1,5 +1,6 @@
 #pragma once
 
+#include <glad/glad.h>
 #include <vector>
 
 class SceneNode;
@@ -22,6 +23,7 @@ protected:
 	bool initialized;
 	SceneNode* root;
 	Camera* camera;
+	GLuint skybox;
 
 	std::vector<Light> pointLights;
 	std::vector<SpotLight> spotLights;

@@ -3,7 +3,7 @@
 #include "MeshMaterial.h"
 #include "TextureManager.h"
 
-SceneNode::SceneNode(Mesh* m, MeshAnimation* anm, MeshMaterial* mat, Vector4 colour, Shader* s) {
+SceneNode::SceneNode(Mesh* m,  MeshMaterial* mat, MeshAnimation* anm, Vector4 colour, Shader* s) {
 	this->mesh = m;
 	this->anim = anm;
 	this->material = mat;
@@ -13,6 +13,7 @@ SceneNode::SceneNode(Mesh* m, MeshAnimation* anm, MeshMaterial* mat, Vector4 col
 	boundingRadius = 1.0f;
 	distanceFromCamera = 0.0f;
 	texture = 0;
+	normal = 0;
 	parent = NULL;
 	modelScale = Vector3(1, 1, 1);
 	frameTime = 0.0f;
@@ -23,12 +24,22 @@ SceneNode::SceneNode(Mesh* m, MeshAnimation* anm, MeshMaterial* mat, Vector4 col
 			const MeshMaterialEntry* matEntry = material->GetMaterialForLayer(i);
 
 			const string* filename = nullptr;
+			GLuint texID = 0;
+			GLuint normID = 0;
+			if (matEntry->GetEntry("Diffuse", &filename)) {
+				string path = TEXTUREDIR + *filename;
 
-			matEntry->GetEntry("Diffuse", &filename);
-			string path = TEXTUREDIR + *filename;
+				texID = TextureManager::LoadTexture(path.c_str(), SOIL_FLAG_MIPMAPS | SOIL_FLAG_INVERT_Y);
+			}
 
-			GLuint texID = TextureManager::LoadTexture(path.c_str(), SOIL_FLAG_MIPMAPS | SOIL_FLAG_INVERT_Y);
+			if (matEntry->GetEntry("Bump", &filename)) {
+				string path = TEXTUREDIR + *filename;
+
+				normID = TextureManager::LoadTexture(path.c_str(), SOIL_FLAG_MIPMAPS | SOIL_FLAG_INVERT_Y);
+			}
+
 			matTextures.emplace_back(texID);
+			matNormals.emplace_back(normID);
 		}
 	}
 
@@ -99,6 +110,8 @@ void SceneNode::Draw(const OGLRenderer& r) {
 			for (int i = 0; i < mesh->GetSubMeshCount(); ++i) {
 				glActiveTexture(GL_TEXTURE0);
 				glBindTexture(GL_TEXTURE_2D, matTextures[i]);
+				glActiveTexture(GL_TEXTURE1);
+				glBindTexture(GL_TEXTURE_2D, matNormals[i]);
 				mesh->DrawSubMesh(i);
 			}
 		}
