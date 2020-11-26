@@ -25,6 +25,7 @@ protected:
 	void ClearNodeLists();
 	void DrawOpaques();
 	void DrawLights();
+	void DrawSkybox();
 	void DrawNode(SceneNode* n);
 
 	void CombineBuffers();
@@ -48,7 +49,10 @@ protected:
 	GLuint bufferFBO;			//FBO for our G-Buffer pass
 	GLuint bufferColourTex;		//Albedo goes here
 	GLuint bufferNormalTex;		//Normals go here
-	GLuint bufferDepthTex;		//Depth goes here
+	GLuint bufferDepthStencilTex;		//Depth goes here
+
+	GLuint skyboxFBO;
+	GLuint skyboxColourTex;
 
 	GLuint lightingFBO;		//FBO for our lighting pass
 	GLuint lightDiffuseTex;		//Store Diffuse Lighting

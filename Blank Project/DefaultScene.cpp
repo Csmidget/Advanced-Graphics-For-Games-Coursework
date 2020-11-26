@@ -21,11 +21,11 @@ DefaultScene::DefaultScene() : Scene() {
 	//Texture initialization
 	diffuse_heightMap	=	TextureManager::LoadTexture(TEXTUREDIR"Barren Reds.JPG", SOIL_FLAG_MIPMAPS);
 	normal_heightMap	=	TextureManager::LoadTexture(TEXTUREDIR"Barren RedsDOT3.JPG", SOIL_FLAG_MIPMAPS);
-	skybox				=	TextureManager::LoadCubemap(TEXTUREDIR"rusted_west.jpg", TEXTUREDIR"rusted_east.jpg",
-														TEXTUREDIR"rusted_up.jpg", TEXTUREDIR"rusted_down.jpg",
-														TEXTUREDIR"rusted_south.jpg", TEXTUREDIR"rusted_north.jpg");
+	skybox				=	TextureManager::LoadCubemap(TEXTUREDIR"CosmicCoolCloudLeft.jpg", TEXTUREDIR"CosmicCoolCloudRight.jpg",
+														TEXTUREDIR"CosmicCoolCloudTop.jpg",  TEXTUREDIR"CosmicCoolCloudBottom.jpg",
+														TEXTUREDIR"CosmicCoolCloudFront.jpg", TEXTUREDIR"CosmicCoolCloudBack.jpg");
 
-	if (!diffuse_heightMap || !normal_heightMap) {
+	if (!diffuse_heightMap || !normal_heightMap || !skybox) {
 		return;
 	}
 
