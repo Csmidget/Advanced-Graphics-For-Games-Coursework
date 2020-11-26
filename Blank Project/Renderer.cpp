@@ -11,6 +11,8 @@
 
 #include <algorithm>
 
+const int BLUR_PASSES = 10;
+
 Renderer::Renderer(Window& parent) : OGLRenderer(parent) {
 
 	scene = new DefaultScene();
@@ -32,6 +34,9 @@ Renderer::Renderer(Window& parent) : OGLRenderer(parent) {
 	lightDiffuseTex = 0;
 	lightSpecularTex = 0;
 	skyboxColourTex = 0;
+	outputPostProcessTex = 0;
+	postProcessColourTex[0] = 0;
+	postProcessColourTex[1] = 0;
 
 	projMatrix = Matrix4::Perspective(1.0f, 10000.0f, (float)width / (float)height, 45.0f);
 
@@ -39,13 +44,16 @@ Renderer::Renderer(Window& parent) : OGLRenderer(parent) {
 	spotLightShader = new Shader("PointLightVertex.glsl", "SpotLightFragment.glsl");
 	combineShader = new Shader("CombineVertex.glsl", "CombineFragment.glsl");
 	skyboxShader = new Shader("SkyboxVertex.glsl", "SkyboxFragment.glsl");
+	blurShader = new Shader("TexturedVertex.glsl", "ProcessFragment.glsl");
+	sceneShader = new Shader("TexturedVertex.glsl", "TexturedFragment.glsl");
 
-	if (!defaultShader->LoadSuccess() ||!pointLightShader->LoadSuccess() || !spotLightShader->LoadSuccess() || !combineShader->LoadSuccess() || !skyboxShader->LoadSuccess())
+	if (!defaultShader->LoadSuccess() ||!pointLightShader->LoadSuccess() || !spotLightShader->LoadSuccess() || !combineShader->LoadSuccess() || !skyboxShader->LoadSuccess() || !blurShader->LoadSuccess() || !sceneShader->LoadSuccess())
 		return;
 
 	glGenFramebuffers(1, &bufferFBO);
 	glGenFramebuffers(1, &lightingFBO);
 	glGenFramebuffers(1, &skyboxFBO);
+	glGenFramebuffers(1, &postProcessFBO);
 
 	GLenum buffers[2] = {
 		GL_COLOR_ATTACHMENT0,
@@ -59,6 +67,8 @@ Renderer::Renderer(Window& parent) : OGLRenderer(parent) {
 	GenerateScreenTexture(lightDiffuseTex);
 	GenerateScreenTexture(lightSpecularTex);
 	GenerateScreenTexture(skyboxColourTex);
+	GenerateScreenTexture(postProcessColourTex[0]);
+	GenerateScreenTexture(postProcessColourTex[1]);
 
 	glBindFramebuffer(GL_FRAMEBUFFER, bufferFBO);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, bufferColourTex, 0);
@@ -89,7 +99,16 @@ Renderer::Renderer(Window& parent) : OGLRenderer(parent) {
 		return;
 	}
 
+	glBindFramebuffer(GL_FRAMEBUFFER, postProcessFBO);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, postProcessColourTex[0], 0);
+
+
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+		return;
+	}
+
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
 	glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
@@ -111,6 +130,8 @@ Renderer::~Renderer(void) {
 	delete spotLightShader;
 	delete combineShader;
 	delete skyboxShader;
+	delete blurShader;
+	delete sceneShader;
 
 	glDeleteTextures(1, &bufferDepthStencilTex);
 	glDeleteTextures(1, &bufferColourTex);
@@ -118,10 +139,12 @@ Renderer::~Renderer(void) {
 	glDeleteTextures(1, &lightDiffuseTex);
 	glDeleteTextures(1, &lightSpecularTex);
 	glDeleteTextures(1, &skyboxColourTex);
+	glDeleteTextures(2, postProcessColourTex);
 
 	glDeleteFramebuffers(1, &bufferFBO);
 	glDeleteFramebuffers(1, &lightingFBO);
 	glDeleteFramebuffers(1, &skyboxFBO);
+	glDeleteFramebuffers(1, &postProcessFBO);
 
 	TextureManager::Cleanup();
 }
@@ -159,6 +182,8 @@ void Renderer::Resize(int x, int y) {
 	GenerateScreenTexture(lightDiffuseTex);
 	GenerateScreenTexture(lightSpecularTex);
 	GenerateScreenTexture(skyboxColourTex);
+	GenerateScreenTexture(postProcessColourTex[0]);
+	GenerateScreenTexture(postProcessColourTex[1]);
 
 	glBindFramebuffer(GL_FRAMEBUFFER, bufferFBO);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, bufferColourTex, 0);
@@ -263,7 +288,7 @@ void Renderer::RenderScene() {
  	DrawOpaques();
 	DrawSkybox();
 	DrawLights();
-	CombineBuffers();
+	PostProcessing();
 
 	ClearNodeLists();
 }
@@ -284,7 +309,6 @@ void Renderer::DrawOpaques() {
 	{
 		DrawNode(i);
 	}
-
 
 	glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -380,11 +404,30 @@ void Renderer::DrawSkybox() {
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-void Renderer::CombineBuffers() {
-	BindShader(combineShader);
+void Renderer::PostProcessing() {
+	outputPostProcessTex = 0;
+	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+
 	modelMatrix.ToIdentity();
 	viewMatrix.ToIdentity();
 	projMatrix.ToIdentity();
+
+	//Combine the buffers and put the output into the postprocessing shader
+	CombineBuffers();
+	Blur();
+	PresentScene();
+	projMatrix = Matrix4::Perspective(1.0f, 10000.0f, (float)width / (float)height, 45.0f);
+}
+
+void Renderer::CombineBuffers() {
+	
+	glBindFramebuffer(GL_FRAMEBUFFER, postProcessFBO);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, postProcessColourTex[outputPostProcessTex], 0);
+
+	glClear(GL_COLOR_BUFFER_BIT);
+	
+	BindShader(combineShader);
+
 	UpdateShaderMatrices();
 
 	glUniform1i(glGetUniformLocation(combineShader->GetProgram(), "diffuseTex"), 0);
@@ -404,7 +447,50 @@ void Renderer::CombineBuffers() {
 	glBindTexture(GL_TEXTURE_2D, skyboxColourTex);
 
 	quad->Draw();
-	projMatrix = Matrix4::Perspective(1.0f, 10000.0f, (float)width / (float)height, 45.0f);
+
+	outputPostProcessTex = !outputPostProcessTex;
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+void Renderer::Blur() {
+	glBindFramebuffer(GL_FRAMEBUFFER, postProcessFBO);
+		
+	BindShader(blurShader);
+	UpdateShaderMatrices();
+
+	glDisable(GL_DEPTH_TEST);
+
+	bool isVertical = 0;
+	glActiveTexture(GL_TEXTURE0);
+	glUniform1i(glGetUniformLocation(blurShader->GetProgram(), "sceneTex"), 0);
+	for (int i = 0; i < BLUR_PASSES * 2; ++i) {
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, postProcessColourTex[outputPostProcessTex], 0);
+		glUniform1i(glGetUniformLocation(blurShader->GetProgram(), "isVertical"), isVertical);
+		glBindTexture(GL_TEXTURE_2D, postProcessColourTex[!outputPostProcessTex]);
+		quad->Draw();
+
+		isVertical = !isVertical;
+		outputPostProcessTex = !outputPostProcessTex;
+	}
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glEnable(GL_DEPTH_TEST);
+}
+
+void Renderer::PresentScene() {
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	BindShader(sceneShader);
+
+	UpdateShaderMatrices();
+
+	glUniform1i(glGetUniformLocation(sceneShader->GetProgram(), "diffuseTex"), 0);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, postProcessColourTex[!outputPostProcessTex]);
+
+
+	quad->Draw();
 }
 
 void Renderer::ClearNodeLists() {

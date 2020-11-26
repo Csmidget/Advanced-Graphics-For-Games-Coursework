@@ -27,8 +27,11 @@ protected:
 	void DrawLights();
 	void DrawSkybox();
 	void DrawNode(SceneNode* n);
-
+	void PostProcessing();
 	void CombineBuffers();
+	void Blur();
+	void PresentScene();
+
 	void Resize(int x, int y) override;
 
 	//Make a new texture
@@ -44,7 +47,7 @@ protected:
 
 	Shader* pointLightShader;
 	Shader* spotLightShader;
-	Shader* combineShader;
+
 
 	GLuint bufferFBO;			//FBO for our G-Buffer pass
 	GLuint bufferColourTex;		//Albedo goes here
@@ -57,6 +60,13 @@ protected:
 	GLuint lightingFBO;		//FBO for our lighting pass
 	GLuint lightDiffuseTex;		//Store Diffuse Lighting
 	GLuint lightSpecularTex;	//Store Specular Lighting
+
+	GLuint postProcessFBO;
+	GLuint postProcessColourTex[2];
+	Shader* combineShader;
+	Shader* blurShader;
+	Shader* sceneShader;
+	int outputPostProcessTex;
 
 	Frustum frameFrustum;
 
