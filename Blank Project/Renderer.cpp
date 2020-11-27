@@ -385,6 +385,9 @@ void Renderer::DrawSkybox() {
 	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 	glClear(GL_COLOR_BUFFER_BIT);
 
+	BindShader(skyboxShader);
+	UpdateShaderMatrices();
+
 	glUniform1i(glGetUniformLocation(skyboxShader->GetProgram(), "cubeTex"), 0);
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_CUBE_MAP, scene->skybox);
@@ -395,8 +398,7 @@ void Renderer::DrawSkybox() {
 
 	glDepthMask(GL_FALSE);
 
-	BindShader(skyboxShader);
-	UpdateShaderMatrices();
+
 
 	quad->Draw();
 	glDepthMask(GL_TRUE);
