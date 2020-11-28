@@ -20,7 +20,7 @@ SceneNode::SceneNode(Mesh* m,  MeshMaterial* mat, MeshAnimation* anm, Vector4 co
 	currentFrame = 0;
 	isStatic = false;
 
-	if (mesh) {
+	if (this->mesh) {
 		for (int i = 0; i < mesh->GetSubMeshCount(); ++i) {
 			const MeshMaterialEntry* matEntry = material->GetMaterialForLayer(i);
 
@@ -45,7 +45,7 @@ SceneNode::SceneNode(Mesh* m,  MeshMaterial* mat, MeshAnimation* anm, Vector4 co
 	}
 
 	if (anim) {
-		animRelativeJoints = anim->GenerateRelativeJoints(mesh->GetInverseBindPose());
+		animRelativeJoints = anim->GenerateRelativeJoints(this->mesh->GetInverseBindPose());
 	}
 }
 
@@ -89,7 +89,8 @@ bool SceneNode::HasParent(SceneNode* _parent) const {
 	return parent == nullptr ? false : parent == _parent || parent->HasParent(_parent);
 }
 
-void SceneNode::Draw() {
+void SceneNode::Draw(const Shader* externalShader) {
+	const Shader* activeShader = (externalShader ? externalShader : shader);
 	if (mesh) { 
 		if (anim) {
 			vector<Matrix4> frameMatrices;
@@ -103,8 +104,8 @@ void SceneNode::Draw() {
 				frameMatrices.push_back(Matrix4::Lerp(progress, currFrameData[j], prevFrameData[j]));
 			}
 
-			int j = glGetUniformLocation(shader->GetProgram(), "joints");
-			glUniformMatrix4fv(j, anim->GetJointCount(), false, (float*)frameMatrices.data());
+			glUniformMatrix4fv(glGetUniformLocation(activeShader->GetProgram(), "joints"), anim->GetJointCount(), false, (float*)frameMatrices.data());
+			glUniform1i(glGetUniformLocation(activeShader->GetProgram(), "hasJoints"), true);
 		}
 
 		if (material) {
@@ -117,6 +118,7 @@ void SceneNode::Draw() {
 			}
 		}
 		else {
+			glUniform1i(glGetUniformLocation(activeShader->GetProgram(), "hasJoints"), false);
 			mesh->Draw();
 		}
 	}

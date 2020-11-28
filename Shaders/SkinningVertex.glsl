@@ -12,6 +12,7 @@ in vec4 jointWeights;
 in ivec4 jointIndices;
 
 uniform mat4 joints[128];
+uniform int jointCount;
 
 out Vertex {
     vec4 colour;

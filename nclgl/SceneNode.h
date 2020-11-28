@@ -53,7 +53,7 @@ public:
 	void RemoveChild(SceneNode* s);
 
 	virtual void Update(float dt);
-	virtual void Draw();
+	virtual void Draw(const Shader* externalShader = nullptr);
 
 	std::vector<SceneNode*>::const_iterator GetChildIteratorStart() { return children.begin(); }
 	std::vector<SceneNode*>::const_iterator GetChildIteratorEnd() { return children.end(); }

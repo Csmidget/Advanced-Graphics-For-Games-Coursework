@@ -11,8 +11,8 @@
 #include "../nclgl/SceneNode.h"
 
 
-const int POINT_LIGHT_NUM = 1;
-const int SPOT_LIGHT_NUM = 40;
+const int POINT_LIGHT_NUM = 36;
+const int SPOT_LIGHT_NUM = 16;
 
 DefaultScene::DefaultScene() : Scene() {
 
@@ -108,11 +108,11 @@ DefaultScene::DefaultScene() : Scene() {
 	{
 		PointLight l;
 
-		l.SetPosition(Vector3(0, 0, 0));
+	//	l.SetPosition(Vector3(0, 0, 0));
 
-	//	l.SetPosition(Vector3((rand() % (int)heightmapSize.x) - heightmapSize.x / 2,
-	//		250.0f - heightmapSize.y,
-	//		(rand() % (int)heightmapSize.z) - heightmapSize.x / 2));
+		l.SetPosition(Vector3((rand() % (int)heightmapSize.x) - heightmapSize.x / 2,
+			25.0f ,
+			(rand() % (int)heightmapSize.z) - heightmapSize.x / 2));
 
 		l.SetRadius(75.0);
 
@@ -203,23 +203,23 @@ void DefaultScene::Update(float dt) {
 	}
 
 	if (Window::GetKeyboard()->KeyDown(KEYBOARD_UP)) {
-		for (int i = 0; i < pointLights.size(); ++i) {
-			pointLights[i].Translate(Vector3(0, 0, -1) * dt * velocity);
+		for (int i = 0; i < spotLights.size(); ++i) {
+			spotLights[i].Translate(Vector3(0, 0, -1) * dt * velocity);
 		}
 	}
 	if (Window::GetKeyboard()->KeyDown(KEYBOARD_DOWN)) {
-		for (int i = 0; i < pointLights.size(); ++i) {
-			pointLights[i].Translate(-Vector3(0, 0, -1) * dt * velocity);
+		for (int i = 0; i < spotLights.size(); ++i) {
+			spotLights[i].Translate(-Vector3(0, 0, -1) * dt * velocity);
 		}
 	}
 	if (Window::GetKeyboard()->KeyDown(KEYBOARD_LEFT)) {
-		for (int i = 0; i < pointLights.size(); ++i) {
-			pointLights[i].Translate(-Vector3(1, 0, 0) * dt * velocity);
+		for (int i = 0; i < spotLights.size(); ++i) {
+			spotLights[i].Translate(-Vector3(1, 0, 0) * dt * velocity);
 		}
 	}
 	if (Window::GetKeyboard()->KeyDown(KEYBOARD_RIGHT)) {
-		for (int i = 0; i < pointLights.size(); ++i) {
-			pointLights[i].Translate(Vector3(1, 0, 0) * dt * velocity);
+		for (int i = 0; i < spotLights.size(); ++i) {
+			spotLights[i].Translate(Vector3(1, 0, 0) * dt * velocity);
 		}
 	}
 

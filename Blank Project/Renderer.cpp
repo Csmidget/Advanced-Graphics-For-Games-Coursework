@@ -294,14 +294,14 @@ void Renderer::DrawDynamicShadowMaps() {
 		if (l.IsStatic())
 			continue;
 
-		DrawShadowMap(DYNAMIC_SHADOW_RESOLUTION, l, l.GetRadius(),true);
+		DrawShadowMap(DYNAMIC_SHADOW_RESOLUTION, l, l.GetRadius(),false);
 	}
 
 	for (auto& l : scene->spotLights) {
 		if (l.IsStatic())
 			continue;
 
-		DrawShadowMap(DYNAMIC_SHADOW_RESOLUTION, l, l.GetRadius(),true);
+		DrawShadowMap(DYNAMIC_SHADOW_RESOLUTION, l, l.GetRadius(),false);
 	}
 
 	glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
@@ -335,11 +335,11 @@ void Renderer::DrawShadowMap(int resolution,Light& light,float farPlaneDist, boo
 
 	for (auto& n : nodeList) {
 		if (staticObjectsOnly && !n->IsStatic())
-			continue;
+			continue; 
 
 		modelMatrix = n->GetWorldTransform() * Matrix4::Scale(n->GetModelScale());
 		glUniformMatrix4fv(glGetUniformLocation(shadowShader->GetProgram(), "modelMatrix"), 1, false, modelMatrix.values);
-		n->Draw();
+		n->Draw(shadowShader);
 	}
 }
 
