@@ -51,6 +51,7 @@ DefaultScene::DefaultScene() : Scene() {
 	heightMapNode->SetTransform(Matrix4::Translation(Vector3(-mesh_heightMap->GetHeightMapSize().x / 2, -mesh_heightMap->GetHeightMapSize().y, -mesh_heightMap->GetHeightMapSize().z / 2)));
 	heightMapNode->SetTexture(diffuse_heightMap);
 	heightMapNode->SetNormal(normal_heightMap);
+	heightMapNode->MakeStatic();
 
 
 	heightMapNode->SetShader(bumpMapShader);
@@ -92,6 +93,7 @@ DefaultScene::DefaultScene() : Scene() {
 		barrel->SetModelScale(Vector3(10.0f, 10.0f, 10.0f));
 		barrel->SetBoundingRadius(200.0f);
 		barrel->SetShader(bumpMapShader);
+		barrel->MakeStatic();
 		root->AddChild(barrel);
 	}
 
@@ -104,7 +106,7 @@ DefaultScene::DefaultScene() : Scene() {
 
 	for (int i = 0; i < POINT_LIGHT_NUM; i++)
 	{
-		Light l;
+		PointLight l;
 
 		l.SetPosition(Vector3(0, 0, 0));
 
@@ -118,6 +120,7 @@ DefaultScene::DefaultScene() : Scene() {
 			0.5f + (float)(rand() / (float)RAND_MAX),
 			0.5f + (float)(rand() / (float)RAND_MAX),
 			1));
+		l.MakeStatic();
 		pointLights.emplace_back(l);
 	}
 

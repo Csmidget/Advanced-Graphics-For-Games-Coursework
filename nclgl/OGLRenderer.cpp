@@ -42,6 +42,8 @@ OGLRenderer::OGLRenderer(Window &window)	{
 		std::cout << "OGLRenderer::OGLRenderer(): Failed to create window!\n";
 		return;
 	}
+
+	DirectionLight test2;
 	
 	//A pixel format descriptor is a struct that tells the Windows OS what type of front / back buffers we want to create etc
 	PIXELFORMATDESCRIPTOR pfd;
@@ -150,66 +152,6 @@ Destructor. Deletes the default shader, and the OpenGL rendering context.
 */
 OGLRenderer::~OGLRenderer(void)	{
 	wglDeleteContext(renderContext);
-}
-
-void OGLRenderer::SetShaderLight(const Light& l) {
-	glUniform3fv(glGetUniformLocation(currentShader->GetProgram(), "lightPos"), 1, (float*)&l.GetPosition());
-
-	glUniform4fv(glGetUniformLocation(currentShader->GetProgram(), "diffuseColour"), 1, (float*)&l.GetDiffuseColour());
-	glUniform4fv(glGetUniformLocation(currentShader->GetProgram(), "specularColour"), 1, (float*)&l.GetSpecularColour());
-
-	glUniform1f(glGetUniformLocation(currentShader->GetProgram(), "lightRadius"), l.GetRadius());
-}
-
-void OGLRenderer::SetShaderLight(const DirectionLight& l) {
-	glUniform3fv(glGetUniformLocation(currentShader->GetProgram(), "lightDir"), 1, (float*)&l.GetDirection());
-
-	glUniform4fv(glGetUniformLocation(currentShader->GetProgram(), "diffuseColour"), 1, (float*)&l.GetDiffuseColour());
-	glUniform4fv(glGetUniformLocation(currentShader->GetProgram(), "specularColour"), 1, (float*)&l.GetSpecularColour());
-}
-
-void OGLRenderer::SetShaderLight(const SpotLight& l) {
-	Matrix4 rotMat = Matrix4::Rotation(l.GetRotation().x, Vector3(1, 0, 0)) *
-					 Matrix4::Rotation(l.GetRotation().y, Vector3(0, 1, 0)) *
-					 Matrix4::Rotation(l.GetRotation().z, Vector3(0, 0, 1));
-
-	Vector3 dir = rotMat * l.GetDirection();
-	glUniform3fv(glGetUniformLocation(currentShader->GetProgram(), "lightDir"), 1, (float*)&dir);
-	glUniform3fv(glGetUniformLocation(currentShader->GetProgram(), "lightPos"), 1, (float*)&l.GetPosition());
-
-	glUniform4fv(glGetUniformLocation(currentShader->GetProgram(), "diffuseColour"), 1, (float*)&l.GetDiffuseColour());
-	glUniform4fv(glGetUniformLocation(currentShader->GetProgram(), "specularColour"), 1, (float*)&l.GetSpecularColour());
-	glUniform1f(glGetUniformLocation(currentShader->GetProgram(), "lightConeAngle"), DegToRad(l.GetAngle()));
-	glUniform1f(glGetUniformLocation(currentShader->GetProgram(), "lightRadius"), l.GetRadius());
-
-}
-
-void OGLRenderer::SetShaderLights(const Light* lights, int count) {
-
-	Vector3* positions = new Vector3[count];
-	Vector4* diffuses = new Vector4[count];
-	Vector4* speculars = new Vector4[count];
-	float* radiuses = new float[count];
-
-	for (int i = 0; i < count; i++)
-	{
-		positions[i] = lights[i].GetPosition();
-		diffuses[i] = lights[i].GetDiffuseColour();
-		speculars[i] = lights[i].GetSpecularColour();
-		radiuses[i] = lights[i].GetRadius();
-	}
-
-	glUniform3fv(glGetUniformLocation(currentShader->GetProgram(), "lightPositions"), count, (float*)positions);
-
-	glUniform4fv(glGetUniformLocation(currentShader->GetProgram(), "lightDiffuseColours"), count, (float*)diffuses);
-	glUniform4fv(glGetUniformLocation(currentShader->GetProgram(), "lightSpecularColours"), count, (float*)speculars);
-
-	glUniform1fv(glGetUniformLocation(currentShader->GetProgram(), "lightRadiuses"), count, radiuses);
-
-	delete[] positions;
-	delete[] diffuses;
-	delete[] speculars;
-	delete[] radiuses;
 }
 
 /*

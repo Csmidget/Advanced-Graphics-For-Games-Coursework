@@ -18,6 +18,7 @@ SceneNode::SceneNode(Mesh* m,  MeshMaterial* mat, MeshAnimation* anm, Vector4 co
 	modelScale = Vector3(1, 1, 1);
 	frameTime = 0.0f;
 	currentFrame = 0;
+	isStatic = false;
 
 	if (mesh) {
 		for (int i = 0; i < mesh->GetSubMeshCount(); ++i) {

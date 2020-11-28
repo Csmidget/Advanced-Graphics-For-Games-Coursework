@@ -31,7 +31,7 @@ public:
 	Shader(const std::string& vertex, const std::string& fragment, const std::string& geometry = "", const std::string& domain = "", const std::string& hull = "");
 	~Shader(void);
 
-	GLuint  GetProgram() { return programID;}
+	GLuint  GetProgram() const { return programID;}
 	
 	void	Reload(bool deleteOld = true);
 

@@ -43,7 +43,7 @@ using std::vector;
 extern const Matrix4 biasMatrix;
 
 class Shader;
-class Light;
+class PointLight;
 class DirectionLight;
 class SpotLight;
 
@@ -64,10 +64,6 @@ protected:
 	void			UpdateShaderMatrices();
 	Shader*			GetCurrentShader() { return currentShader; }
 	void			BindShader(Shader*s);
-	void SetShaderLight(const Light& l);
-	void SetShaderLight(const DirectionLight& l);
-	void SetShaderLight(const SpotLight& l);
-	void SetShaderLights(const Light* lights, int count);
 
 	void StartDebugGroup(const std::string& s) {
 		glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, (GLsizei)s.length(), s.c_str());

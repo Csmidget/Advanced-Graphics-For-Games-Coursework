@@ -5,7 +5,7 @@
 
 class SceneNode;
 class Camera;
-class Light;
+class PointLight;
 class SpotLight;
 
 class Scene {
@@ -25,6 +25,6 @@ protected:
 	Camera* camera;
 	GLuint skybox;
 
-	std::vector<Light> pointLights;
+	std::vector<PointLight> pointLights;
 	std::vector<SpotLight> spotLights;
 };

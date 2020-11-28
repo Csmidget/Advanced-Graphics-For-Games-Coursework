@@ -62,6 +62,10 @@ public:
 		return (a->distanceFromCamera < b->distanceFromCamera) ? true : false;
 	}
 
+	bool IsStatic() const { return isStatic; }
+	void MakeStatic() { isStatic = true; }
+	void MakeDynamic() { isStatic = false; }
+
 
 protected:
 	bool HasParent(SceneNode* _parent) const;
@@ -88,6 +92,7 @@ protected:
 	float boundingRadius;
 	float frameTime;
 	int currentFrame;
+	bool isStatic;
 	GLuint texture;
 	GLuint normal;
 };

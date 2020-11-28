@@ -7,7 +7,7 @@ class SceneNode;
 class MeshAnimation;
 class MeshMaterial;
 class HeightMap;
-class Light;
+class PointLight;
 class SpotLight;
 class Scene;
 
@@ -31,6 +31,7 @@ protected:
 	void CombineBuffers();
 	void Blur();
 	void PresentScene();
+	void BakeStaticShadowMaps();
 
 	void Resize(int x, int y) override;
 

@@ -237,6 +237,10 @@ void Renderer::BuildNodeLists(SceneNode* from) {
 	}
 }
 
+void Renderer::BakeStaticShadowMaps() {
+
+}
+
 void Renderer::SortNodeLists() {
 	//std::sort(transparentNodeList.rbegin(),
 	//	transparentNodeList.rend(),
@@ -348,8 +352,8 @@ void Renderer::DrawLights() {
 
 	UpdateShaderMatrices();
 	for (int i = 0; i < scene->pointLights.size(); ++i) {
-		Light& l = scene->pointLights[i];
-		SetShaderLight(l);
+		PointLight& l = scene->pointLights[i];
+		l.SetShaderLightData(pointLightShader);
 		sphere->Draw();
 	}
 
@@ -372,7 +376,7 @@ void Renderer::DrawLights() {
 	UpdateShaderMatrices();
 	for (int i = 0; i < scene->spotLights.size(); ++i) {
 		SpotLight& l = scene->spotLights[i];
-		SetShaderLight(l);
+		l.SetShaderLightData(spotLightShader);
 		sphere->Draw();
 	}
 
