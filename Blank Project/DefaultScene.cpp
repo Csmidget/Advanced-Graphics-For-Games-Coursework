@@ -16,7 +16,7 @@ const int SPOT_LIGHT_NUM = 40;
 
 DefaultScene::DefaultScene() : Scene() {
 
-	camera->SetPosition(Vector3(0, -150, 100));
+	camera->SetPosition(Vector3(0, -15.0, 10.0));
 	rotateLights = true;
 	//Texture initialization
 	diffuse_heightMap	=	TextureManager::LoadTexture(TEXTUREDIR"Barren Reds.JPG", SOIL_FLAG_MIPMAPS);
@@ -47,11 +47,13 @@ DefaultScene::DefaultScene() : Scene() {
 	//Terrain//
 	mesh_heightMap = new HeightMap(TEXTUREDIR"terraintest.png");
 	SceneNode* heightMapNode = new SceneNode(mesh_heightMap);
+	Vector3 heightmapSize = mesh_heightMap->GetHeightMapSize() * 0.1f;
 	heightMapNode->SetBoundingRadius((mesh_heightMap->GetHeightMapSize()).Length());
-	heightMapNode->SetTransform(Matrix4::Translation(Vector3(-mesh_heightMap->GetHeightMapSize().x / 2, -mesh_heightMap->GetHeightMapSize().y, -mesh_heightMap->GetHeightMapSize().z / 2)));
+	heightMapNode->SetTransform(Matrix4::Translation(Vector3(-heightmapSize.x / 2, -heightmapSize.y, -heightmapSize.z / 2)));
 	heightMapNode->SetTexture(diffuse_heightMap);
 	heightMapNode->SetNormal(normal_heightMap);
 	heightMapNode->MakeStatic();
+	heightMapNode->SetModelScale(Vector3(0.1f, 0.1f, 0.1f));
 
 
 	heightMapNode->SetShader(bumpMapShader);
@@ -65,14 +67,14 @@ DefaultScene::DefaultScene() : Scene() {
 	mat_roleT  = new MeshMaterial("Role_T.mat");
 	
 	SceneNode* role_t = new SceneNode(mesh_roleT,  mat_roleT, anim_roleT, Vector4(1, 1, 1, 1), animatedShader);
-	role_t->SetTransform(Matrix4::Translation(Vector3(0, -154, 0)));
-	role_t->SetModelScale(Vector3(20.0f, 20.0f, 20.0f));
+	role_t->SetTransform(Matrix4::Translation(Vector3(0, -15.4, 0)));
+	role_t->SetModelScale(Vector3(2.0f, 2.0f, 2.0f));
 	role_t->SetBoundingRadius(200.0f);
 	root->AddChild(role_t);
 
 	role_t = new SceneNode(mesh_roleT, mat_roleT, anim_roleT, Vector4(1, 1, 1, 1), animatedShader);
-	role_t->SetTransform(Matrix4::Translation(Vector3(10, -154, 0)));
-	role_t->SetModelScale(Vector3(20.0f, 20.0f, 20.0f));
+	role_t->SetTransform(Matrix4::Translation(Vector3(1, -15.4, 0)));
+	role_t->SetModelScale(Vector3(2.0f, 2.0f, 2.0f));
 	role_t->SetBoundingRadius(200.0f);
 	root->AddChild(role_t);
 
@@ -84,13 +86,12 @@ DefaultScene::DefaultScene() : Scene() {
 	mat_Barrel = new MeshMaterial("Barrel_1.mat");
 	
 	const int barrelCount = 4;
-	const Vector3 barrelPositions[barrelCount]{ {150,-154,150} ,{130,-154,125}, {167,-154,126}, {150,-114,135} };
-	const Vector3 barrelRotations[barrelCount]{ {}			   ,{0  ,225 ,0  }, {0  ,180 ,0  }, {0  ,165  ,0 } };
+	const Vector3 barrelPositions[barrelCount]{ {15.0,-15.4,15.0} ,{13.0,-15.4,12.5}, {16.7,-15.4,12.6}, {15.0,-11.4,13.5} };
+	const Vector3 barrelRotations[barrelCount]{ {}			   ,{0  ,22.5 ,0  }, {0  ,18.0 ,0  }, {0  ,16.5  ,0 } };
 
 	for (int i = 0; i < barrelCount; ++i) {
 		SceneNode* barrel = new SceneNode(mesh_Barrel, mat_Barrel);
 		barrel->SetTransform(Matrix4::Translation(barrelPositions[i]) * Matrix4::Rotation(barrelRotations[i].x, { 1,0,0 })* Matrix4::Rotation(barrelRotations[i].y, { 0,1,0 }) * Matrix4::Rotation(barrelRotations[i].z, { 0,1,0 }));
-		barrel->SetModelScale(Vector3(10.0f, 10.0f, 10.0f));
 		barrel->SetBoundingRadius(200.0f);
 		barrel->SetShader(bumpMapShader);
 		barrel->MakeStatic();
@@ -102,7 +103,6 @@ DefaultScene::DefaultScene() : Scene() {
 	//Light setup
 	pointLights.reserve(POINT_LIGHT_NUM);
 	spotLights.reserve(SPOT_LIGHT_NUM);
-	Vector3 heightmapSize = mesh_heightMap->GetHeightMapSize();
 
 	for (int i = 0; i < POINT_LIGHT_NUM; i++)
 	{
@@ -114,7 +114,7 @@ DefaultScene::DefaultScene() : Scene() {
 	//		250.0f - heightmapSize.y,
 	//		(rand() % (int)heightmapSize.z) - heightmapSize.x / 2));
 
-		l.SetRadius(750);
+		l.SetRadius(75.0);
 
 		l.SetDiffuseColour(Vector4(0.5f + (float)(rand() / (float)RAND_MAX),
 			0.5f + (float)(rand() / (float)RAND_MAX),
@@ -129,7 +129,7 @@ DefaultScene::DefaultScene() : Scene() {
 		SpotLight l;
 
 		l.SetPosition(Vector3((rand() % (int)heightmapSize.x) - heightmapSize.x / 2,
-			250.0f - heightmapSize.y,
+			25.0f - heightmapSize.y,
 			(rand() % (int)heightmapSize.z) - heightmapSize.x / 2));
 
 		l.SetDiffuseColour(Vector4(0.5f + (float)(rand() / (float)RAND_MAX),
@@ -139,7 +139,7 @@ DefaultScene::DefaultScene() : Scene() {
 
 		l.SetRotation(Vector3(rand() % 360, 0, 0));
 
-		l.SetRadius(500 + (rand() % 250));
+		l.SetRadius(75);
 		l.SetAngle(20 + rand() % 45);
 		l.SetDirection(Vector3(0, -1, 0));
 		spotLights.emplace_back(l);

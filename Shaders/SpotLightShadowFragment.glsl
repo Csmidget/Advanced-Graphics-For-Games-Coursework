@@ -53,7 +53,7 @@ void main(void) {
     float shadowMapDepth = texture(shadowMap, worldPosToLightPos).r;
     shadowMapDepth *= lightRadius;
 
-    float bias = 3;
+    float bias = 0.3;
     float shadow = dist - bias > shadowMapDepth ? 0.0 : 1.0;
 
     float angleFade =  1 - clamp(angle / lightConeAngle,0.0f,1.0f);

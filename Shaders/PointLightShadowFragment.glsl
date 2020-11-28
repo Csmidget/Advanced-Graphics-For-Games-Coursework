@@ -44,7 +44,7 @@ void main(void) {
     float shadowMapDepth = texture(shadowMap, worldPosToLightPos).r;
     shadowMapDepth *= lightRadius;
 
-    float bias = 3;
+    float bias = 0.3;
     float shadow = dist - bias > shadowMapDepth ? 0.0 : 1.0;
 
     vec3 attenuated = diffuseColour.xyz * atten;
