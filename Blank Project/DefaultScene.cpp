@@ -11,12 +11,12 @@
 #include "../nclgl/SceneNode.h"
 
 
-const int POINT_LIGHT_NUM = 24;
+const int POINT_LIGHT_NUM = 1;
 const int SPOT_LIGHT_NUM = 40;
 
 DefaultScene::DefaultScene() : Scene() {
 
-	camera->SetPitch(-45.0f);
+	camera->SetPosition(Vector3(0, -150, 100));
 
 	//Texture initialization
 	diffuse_heightMap	=	TextureManager::LoadTexture(TEXTUREDIR"Barren Reds.JPG", SOIL_FLAG_MIPMAPS);
@@ -64,13 +64,14 @@ DefaultScene::DefaultScene() : Scene() {
 	mat_roleT  = new MeshMaterial("Role_T.mat");
 	
 	SceneNode* role_t = new SceneNode(mesh_roleT,  mat_roleT, anim_roleT, Vector4(1, 1, 1, 1), animatedShader);
-	role_t->SetModelScale(Vector3(100.0f, 100.0f, 100.0f));
+	role_t->SetTransform(Matrix4::Translation(Vector3(0, -154, 0)));
+	role_t->SetModelScale(Vector3(20.0f, 20.0f, 20.0f));
 	role_t->SetBoundingRadius(200.0f);
 	root->AddChild(role_t);
 
 	role_t = new SceneNode(mesh_roleT, mat_roleT, anim_roleT, Vector4(1, 1, 1, 1), animatedShader);
-	role_t->SetTransform(Matrix4::Translation(Vector3(100, 0, 0)));
-	role_t->SetModelScale(Vector3(100.0f, 100.0f, 100.0f));
+	role_t->SetTransform(Matrix4::Translation(Vector3(10, -154, 0)));
+	role_t->SetModelScale(Vector3(20.0f, 20.0f, 20.0f));
 	role_t->SetBoundingRadius(200.0f);
 	root->AddChild(role_t);
 
@@ -81,11 +82,18 @@ DefaultScene::DefaultScene() : Scene() {
 	mesh_Barrel = Mesh::LoadFromMeshFile("Barrel_1.msh");
 	mat_Barrel = new MeshMaterial("Barrel_1.mat");
 	
-	SceneNode* barrel = new SceneNode(mesh_Barrel, mat_Barrel);
-	barrel->SetModelScale(Vector3(100.0f, 100.0f, 100.0f));
-	barrel->SetBoundingRadius(200.0f);
-	barrel->SetShader(bumpMapShader);
-	root->AddChild(barrel);
+	const int barrelCount = 4;
+	const Vector3 barrelPositions[barrelCount]{ {150,-154,150} ,{130,-154,125}, {167,-154,126}, {150,-114,135} };
+	const Vector3 barrelRotations[barrelCount]{ {}			   ,{0  ,225 ,0  }, {0  ,180 ,0  }, {0  ,165  ,0 } };
+
+	for (int i = 0; i < barrelCount; ++i) {
+		SceneNode* barrel = new SceneNode(mesh_Barrel, mat_Barrel);
+		barrel->SetTransform(Matrix4::Translation(barrelPositions[i]) * Matrix4::Rotation(barrelRotations[i].x, { 1,0,0 })* Matrix4::Rotation(barrelRotations[i].y, { 0,1,0 }) * Matrix4::Rotation(barrelRotations[i].z, { 0,1,0 }));
+		barrel->SetModelScale(Vector3(10.0f, 10.0f, 10.0f));
+		barrel->SetBoundingRadius(200.0f);
+		barrel->SetShader(bumpMapShader);
+		root->AddChild(barrel);
+	}
 
 	//////////
 
@@ -98,11 +106,13 @@ DefaultScene::DefaultScene() : Scene() {
 	{
 		Light l;
 
-		l.SetPosition(Vector3((rand() % (int)heightmapSize.x) - heightmapSize.x / 2,
-			250.0f - heightmapSize.y,
-			(rand() % (int)heightmapSize.z) - heightmapSize.x / 2));
+		l.SetPosition(Vector3(0, 0, 0));
 
-		l.SetRadius(500 + (rand() % 250));
+	//	l.SetPosition(Vector3((rand() % (int)heightmapSize.x) - heightmapSize.x / 2,
+	//		250.0f - heightmapSize.y,
+	//		(rand() % (int)heightmapSize.z) - heightmapSize.x / 2));
+
+		l.SetRadius(750);
 
 		l.SetDiffuseColour(Vector4(0.5f + (float)(rand() / (float)RAND_MAX),
 			0.5f + (float)(rand() / (float)RAND_MAX),

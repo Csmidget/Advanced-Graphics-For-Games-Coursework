@@ -68,6 +68,8 @@ protected:
 	Shader* sceneShader;
 	int outputPostProcessTex;
 
+	bool doBlur;
+
 	Frustum frameFrustum;
 
 	vector<SceneNode*> nodeList;

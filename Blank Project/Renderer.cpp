@@ -28,6 +28,8 @@ Renderer::Renderer(Window& parent) : OGLRenderer(parent) {
 	cube = Mesh::LoadFromMeshFile("OffsetCubeY.msh");
 	sphere = Mesh::LoadFromMeshFile("Sphere.msh");
 
+	doBlur = false;
+
 	bufferDepthStencilTex = 0;
 	bufferColourTex = 0;
 	bufferNormalTex = 0;
@@ -205,6 +207,10 @@ void Renderer::Resize(int x, int y) {
 }
 
 void Renderer::UpdateScene(float dt) {
+
+	if (Window::GetKeyboard()->KeyTriggered(KEYBOARD_1)) {
+		doBlur = !doBlur;
+	}
 
 	scene->Update(dt);
 
@@ -416,7 +422,7 @@ void Renderer::PostProcessing() {
 
 	//Combine the buffers and put the output into the postprocessing shader
 	CombineBuffers();
-	Blur();
+	if (doBlur) Blur();
 	PresentScene();
 	projMatrix = Matrix4::Perspective(1.0f, 10000.0f, (float)width / (float)height, 45.0f);
 }
