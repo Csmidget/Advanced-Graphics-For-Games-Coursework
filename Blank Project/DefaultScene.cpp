@@ -121,6 +121,7 @@ DefaultScene::DefaultScene() : Scene() {
 			0.5f + (float)(rand() / (float)RAND_MAX),
 			1));
 		l.MakeStatic();
+		l.GenerateShadowMapTexture();
 		pointLights.emplace_back(l);
 	}
 
@@ -227,4 +228,6 @@ void DefaultScene::Update(float dt) {
 	}
 
 	camera->UpdateCamera(dt);
+
+	Scene::Update(dt);
 }

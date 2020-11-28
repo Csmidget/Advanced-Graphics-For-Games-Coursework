@@ -14,3 +14,7 @@ Scene::~Scene() {
 	delete camera;
 	delete root;
 }
+
+void Scene::Update(float dt) {
+	root->Update(dt);
+}

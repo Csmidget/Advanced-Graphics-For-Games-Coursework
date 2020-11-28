@@ -20,7 +20,7 @@ public:
 
 protected:
 
-	void BuildNodeLists(SceneNode* from);
+	void BuildNodeLists(SceneNode* from, bool frustumCheck);
 	void SortNodeLists();
 	void ClearNodeLists();
 	void DrawOpaques();
@@ -48,6 +48,7 @@ protected:
 
 	Shader* pointLightShader;
 	Shader* spotLightShader;
+	Shader* shadowShader;
 
 
 	GLuint bufferFBO;			//FBO for our G-Buffer pass
@@ -61,6 +62,10 @@ protected:
 	GLuint lightingFBO;		//FBO for our lighting pass
 	GLuint lightDiffuseTex;		//Store Diffuse Lighting
 	GLuint lightSpecularTex;	//Store Specular Lighting
+
+	GLuint testShadowMap;
+
+	GLuint shadowFBO;
 
 	GLuint postProcessFBO;
 	GLuint postProcessColourTex[2];

@@ -9,6 +9,7 @@ class Shader;
 class Light {
 
 public:
+
 	Light(const Vector4& diffuseColour = {}, const Vector4& specularColour = {}, const Vector3& position = {}) {
 		this->position = position;
 		this->diffuseColour = diffuseColour;
@@ -16,6 +17,12 @@ public:
 		this->isStatic = false;
 		this->shadowMap = 0;
 	}
+
+	~Light() {
+		glDeleteTextures(1, &shadowMap);
+	}
+
+	GLuint GenerateShadowMapTexture();
 
 	virtual void SetShaderLightData(const Shader* shader) = 0;
 
@@ -33,6 +40,8 @@ public:
 	bool IsStatic() const { return isStatic; }
 	void MakeStatic() { isStatic = true; }
 	void MakeDynamic() { isStatic = false; }
+
+	GLuint GetShadowMap() const { return shadowMap; }
 
 private:
 	Vector3 position;

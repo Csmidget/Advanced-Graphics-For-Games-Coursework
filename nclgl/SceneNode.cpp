@@ -89,7 +89,7 @@ bool SceneNode::HasParent(SceneNode* _parent) const {
 	return parent == nullptr ? false : parent == _parent || parent->HasParent(_parent);
 }
 
-void SceneNode::Draw(const OGLRenderer& r) {
+void SceneNode::Draw() {
 	if (mesh) { 
 		if (anim) {
 			vector<Matrix4> frameMatrices;

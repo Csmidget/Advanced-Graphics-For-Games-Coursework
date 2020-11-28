@@ -136,8 +136,10 @@ OGLRenderer::OGLRenderer(Window &window)	{
 	//If we get this far, everything's going well!
 
 #ifdef OPENGL_DEBUGGING
+#ifdef _DEBUG
 	glDebugMessageCallbackARB(&OGLRenderer::DebugCallback, NULL);
 	glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS_ARB);
+#endif
 #endif
 
 	glClearColor(0.2f,0.2f,0.2f,1.0f);			//When we clear the screen, we want it to be dark grey
@@ -220,6 +222,7 @@ void OGLRenderer::BindShader(Shader*s) {
 }
 
 #ifdef OPENGL_DEBUGGING
+#ifdef _DEBUG
 void OGLRenderer::DebugCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* userParam)	{
 		string sourceName;
 		string typeName;
@@ -258,6 +261,7 @@ void OGLRenderer::DebugCallback(GLenum source, GLenum type, GLuint id, GLenum se
 
 		std::cout << "OpenGL Debug Output: " + sourceName + ", " + typeName + ", " + severityName + ", " + string(message) << "\n";
 }
+#endif
 #endif
 
 

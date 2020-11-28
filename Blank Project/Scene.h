@@ -17,7 +17,7 @@ public:
 	Scene();
 	~Scene();
 
-	virtual void Update(float dt) = 0;
+	virtual void Update(float dt);
 
 protected:
 	bool initialized;
