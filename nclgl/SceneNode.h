@@ -77,6 +77,7 @@ protected:
 	Mesh* mesh;
 	MeshAnimation* anim;
 	std::vector<Matrix4> animRelativeJoints;
+	std::vector<Matrix4> frameMatrices;
 
 	MeshMaterial* material;
 	vector <GLuint> matTextures;
@@ -87,6 +88,7 @@ protected:
 	Vector3 modelScale;
 	Vector4 colour;
 	std::vector<SceneNode*> children;
+	
 
 	float distanceFromCamera;
 	float boundingRadius;

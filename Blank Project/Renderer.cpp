@@ -48,9 +48,9 @@ Renderer::Renderer(Window& parent) : OGLRenderer(parent) {
 	skyboxShader = new Shader("SkyboxVertex.glsl", "SkyboxFragment.glsl");
 	blurShader = new Shader("TexturedVertex.glsl", "ProcessFragment.glsl");
 	sceneShader = new Shader("TexturedVertex.glsl", "TexturedFragment.glsl");
-	shadowShader = new Shader("ShadowVert.glsl", "ShadowFrag.glsl", "ShadowGeom.glsl");
 	pointLightShader = new Shader("PointLightVertex.glsl", "PointLightShadowFragment.glsl");
 	spotLightShader = new Shader("PointLightVertex.glsl", "SpotLightShadowFragment.glsl");
+	shadowShader = new Shader("ShadowVert.glsl", "ShadowFrag.glsl", "ShadowGeom.glsl");
 
 	if (!defaultShader->LoadSuccess()	|| !pointLightShader->LoadSuccess()	|| !spotLightShader->LoadSuccess()	||
 		!combineShader->LoadSuccess()	|| !skyboxShader->LoadSuccess()		|| !blurShader->LoadSuccess()		||

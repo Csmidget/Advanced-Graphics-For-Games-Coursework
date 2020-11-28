@@ -50,11 +50,28 @@ void main(void) {
     float specFactor = rFactor;
     specFactor = pow(specFactor, 60.0);
 
-    float shadowMapDepth = texture(shadowMap, worldPosToLightPos).r;
-    shadowMapDepth *= lightRadius;
+    vec3 sampleOffsetDirections[20] = vec3[] (       
+        vec3( 1,  1,  1), vec3( 1, -1,  1), vec3(-1, -1,  1), vec3(-1,  1,  1), 
+        vec3( 1,  1, -1), vec3( 1, -1, -1), vec3(-1, -1, -1), vec3(-1,  1, -1),
+        vec3( 1,  1,  0), vec3( 1, -1,  0), vec3(-1, -1,  0), vec3(-1,  1,  0),
+        vec3( 1,  0,  1), vec3(-1,  0,  1), vec3( 1,  0, -1), vec3(-1,  0, -1),
+        vec3( 0,  1,  1), vec3( 0, -1,  1), vec3( 0, -1, -1), vec3( 0,  1, -1));  
 
-    float bias = 0.3;
-    float shadow = dist - bias > shadowMapDepth ? 0.0 : 1.0;
+    float shadow = 0.0;
+    float bias   = 0.2;
+    int samples  = 20; 
+    float viewDistance = length(cameraPos - worldPos);
+    float diskRadius = 0.05;
+
+    for(int i = 0; i < samples; ++i)
+    {
+        float shadowMapDepth = texture(shadowMap, worldPosToLightPos + sampleOffsetDirections[i] * diskRadius).r;
+        shadowMapDepth *= lightRadius;   // undo mapping [0;1]
+        if(dist - bias > shadowMapDepth)
+            shadow += 1.0;
+    }   
+
+    shadow = 1 - shadow / float(samples);
 
     float angleFade =  1 - clamp(angle / lightConeAngle,0.0f,1.0f);
 

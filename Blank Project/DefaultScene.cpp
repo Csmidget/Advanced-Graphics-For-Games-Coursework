@@ -11,8 +11,8 @@
 #include "../nclgl/SceneNode.h"
 
 
-const int POINT_LIGHT_NUM = 36;
-const int SPOT_LIGHT_NUM = 16;
+const int POINT_LIGHT_NUM = 20;
+const int SPOT_LIGHT_NUM = 20;
 
 DefaultScene::DefaultScene() : Scene() {
 

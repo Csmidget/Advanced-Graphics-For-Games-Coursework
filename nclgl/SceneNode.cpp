@@ -93,19 +93,11 @@ void SceneNode::Draw(const Shader* externalShader) {
 	const Shader* activeShader = (externalShader ? externalShader : shader);
 	if (mesh) { 
 		if (anim) {
-			vector<Matrix4> frameMatrices;
-			const Matrix4* invBindPose = mesh->GetInverseBindPose();
-			const Matrix4* prevFrameData = GetRelativeJointData(currentFrame == 0 ? anim->GetFrameCount() - 1 : currentFrame - 1);
-			const Matrix4* currFrameData = GetRelativeJointData(currentFrame);
-
-			float progress = frameTime / (1.0f / anim->GetFrameRate());
-			for (int j = 0; j < mesh->GetJointCount(); j++)
-			{
-				frameMatrices.push_back(Matrix4::Lerp(progress, currFrameData[j], prevFrameData[j]));
-			}
-
 			glUniformMatrix4fv(glGetUniformLocation(activeShader->GetProgram(), "joints"), anim->GetJointCount(), false, (float*)frameMatrices.data());
 			glUniform1i(glGetUniformLocation(activeShader->GetProgram(), "hasJoints"), true);
+		}
+		else {
+			glUniform1i(glGetUniformLocation(activeShader->GetProgram(), "hasJoints"), false);
 		}
 
 		if (material) {
@@ -118,7 +110,6 @@ void SceneNode::Draw(const Shader* externalShader) {
 			}
 		}
 		else {
-			glUniform1i(glGetUniformLocation(activeShader->GetProgram(), "hasJoints"), false);
 			mesh->Draw();
 		}
 	}
@@ -142,6 +133,19 @@ void SceneNode::Update(float dt) {
 
 	for (vector<SceneNode*>::iterator i = children.begin(); i != children.end(); ++i) {
 		(*i)->Update(dt);
+	}
+
+	if (anim) {
+		frameMatrices.clear();
+		const Matrix4* invBindPose = mesh->GetInverseBindPose();
+		const Matrix4* prevFrameData = GetRelativeJointData(currentFrame == 0 ? anim->GetFrameCount() - 1 : currentFrame - 1);
+		const Matrix4* currFrameData = GetRelativeJointData(currentFrame);
+
+		float progress = frameTime / (1.0f / anim->GetFrameRate());
+		for (int j = 0; j < mesh->GetJointCount(); j++)
+		{
+			frameMatrices.push_back(Matrix4::Lerp(progress, currFrameData[j], prevFrameData[j]));
+		}
 	}
 }
 
