@@ -17,7 +17,7 @@ const int SPOT_LIGHT_NUM = 40;
 DefaultScene::DefaultScene() : Scene() {
 
 	camera->SetPosition(Vector3(0, -150, 100));
-
+	rotateLights = true;
 	//Texture initialization
 	diffuse_heightMap	=	TextureManager::LoadTexture(TEXTUREDIR"Barren Reds.JPG", SOIL_FLAG_MIPMAPS);
 	normal_heightMap	=	TextureManager::LoadTexture(TEXTUREDIR"Barren RedsDOT3.JPG", SOIL_FLAG_MIPMAPS);
@@ -121,7 +121,7 @@ DefaultScene::DefaultScene() : Scene() {
 			0.5f + (float)(rand() / (float)RAND_MAX),
 			1));
 		l.MakeStatic();
-		l.GenerateShadowMapTexture();
+	//	l.GenerateShadowMapTexture();
 		pointLights.emplace_back(l);
 	}
 
@@ -223,10 +223,15 @@ void DefaultScene::Update(float dt) {
 		}
 	}
 
-	for (int i = 0; i < spotLights.size(); i++) {
-		spotLights[i].SetRotation(spotLights[i].GetRotation() + Vector3(1, 0, 0) * velocity * dt);
+	if (Window::GetKeyboard()->KeyTriggered(KEYBOARD_2)) {
+		rotateLights = !rotateLights;
 	}
 
+	if (rotateLights) {
+		for (int i = 0; i < spotLights.size(); i++) {
+			spotLights[i].SetRotation(spotLights[i].GetRotation() + Vector3(1, 0, 0) * velocity * dt);
+		}
+	}
 	camera->UpdateCamera(dt);
 
 	Scene::Update(dt);

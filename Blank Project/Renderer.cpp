@@ -11,12 +11,10 @@
 
 #include <algorithm>
 
-#define SHADOW_RESOLUTION 4096
-
 const int BLUR_PASSES = 10;
 
 Renderer::Renderer(Window& parent) : OGLRenderer(parent) {
-
+	
 	scene = new DefaultScene();
 
 	if (!scene->initialized) {
@@ -46,13 +44,13 @@ Renderer::Renderer(Window& parent) : OGLRenderer(parent) {
 
 	projMatrix = Matrix4::Perspective(1.0f, 10000.0f, (float)width / (float)height, 45.0f);
 
-	spotLightShader = new Shader("PointLightVertex.glsl", "SpotLightFragment.glsl");
 	combineShader = new Shader("CombineVertex.glsl", "CombineFragment.glsl");
 	skyboxShader = new Shader("SkyboxVertex.glsl", "SkyboxFragment.glsl");
 	blurShader = new Shader("TexturedVertex.glsl", "ProcessFragment.glsl");
 	sceneShader = new Shader("TexturedVertex.glsl", "TexturedFragment.glsl");
 	shadowShader = new Shader("ShadowVert.glsl", "ShadowFrag.glsl", "ShadowGeom.glsl");
 	pointLightShader = new Shader("PointLightVertex.glsl", "PointLightShadowFragment.glsl");
+	spotLightShader = new Shader("PointLightVertex.glsl", "SpotLightShadowFragment.glsl");
 
 	if (!defaultShader->LoadSuccess()	|| !pointLightShader->LoadSuccess()	|| !spotLightShader->LoadSuccess()	||
 		!combineShader->LoadSuccess()	|| !skyboxShader->LoadSuccess()		|| !blurShader->LoadSuccess()		||
@@ -130,22 +128,6 @@ Renderer::Renderer(Window& parent) : OGLRenderer(parent) {
 	glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-	glGenTextures(1, &testShadowMap);
-
-	glBindTexture(GL_TEXTURE_CUBE_MAP, testShadowMap);
-
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-
-	for (unsigned int i = 0; i < 6; ++i)
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_DEPTH_COMPONENT,
-			SHADOW_RESOLUTION, SHADOW_RESOLUTION, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
-
-	glBindTexture(GL_TEXTURE_2D, 0);
 
 	BakeStaticShadowMaps();
 
@@ -271,54 +253,94 @@ void Renderer::BakeStaticShadowMaps() {
 	BuildNodeLists(scene->root, false);
 
 	glBindFramebuffer(GL_FRAMEBUFFER, shadowFBO);
-	glViewport(0, 0, SHADOW_RESOLUTION, SHADOW_RESOLUTION);
+	glViewport(0, 0, STATIC_SHADOW_RESOLUTION, STATIC_SHADOW_RESOLUTION);
 	glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
 	glClearColor(0, 0, 0, 0);
 
 	BindShader(shadowShader);
 
-	for (auto& l : scene->pointLights)
-	{
+	for (auto& l : scene->pointLights) {
 		if (!l.IsStatic())
 			continue;
 
-		if (l.GetShadowMap() == 0)
-			l.GenerateShadowMapTexture();
-	
-		glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, testShadowMap, 0);
-
-		glClear(GL_DEPTH_BUFFER_BIT);
-
-		Matrix4 lightProjMatrix = Matrix4::Perspective(1, l.GetRadius(), 1, 90);
-
-		std::vector<Matrix4> shadowTransforms;
-		Vector3 lightPos = l.GetPosition();
-		shadowTransforms.emplace_back(lightProjMatrix * Matrix4::BuildViewMatrix(lightPos, lightPos + Vector3(1, 0, 0), Vector3(0.0, -1.0, 0.0)));
-		shadowTransforms.emplace_back(lightProjMatrix * Matrix4::BuildViewMatrix(lightPos, lightPos + Vector3(-1, 0, 0), Vector3(0.0, -1.0, 0.0)));
-		shadowTransforms.emplace_back(lightProjMatrix * Matrix4::BuildViewMatrix(lightPos, lightPos + Vector3(0, 1, 0), Vector3(0.0, 0.0, 1.0)));
-		shadowTransforms.emplace_back(lightProjMatrix * Matrix4::BuildViewMatrix(lightPos, lightPos + Vector3(0, -1, 0), Vector3(0.0, 0.0, -1.0)));
-		shadowTransforms.emplace_back(lightProjMatrix * Matrix4::BuildViewMatrix(lightPos, lightPos + Vector3(0, 0, 1), Vector3(0.0, -1.0, 0.0)));
-		shadowTransforms.emplace_back(lightProjMatrix * Matrix4::BuildViewMatrix(lightPos, lightPos + Vector3(0, 0, -1), Vector3(0.0, -1.0, 0.0)));
-		glUniformMatrix4fv(glGetUniformLocation(shadowShader->GetProgram(), "shadowMatrices"), 6, 0, (float*)shadowTransforms.data());
-		glUniform3fv(glGetUniformLocation(shadowShader->GetProgram(), "lightPos"), 1, (float*)&lightPos);
-		glUniform1f(glGetUniformLocation(shadowShader->GetProgram(), "lightFarPlane"), l.GetRadius());
-
-		for(auto& n : nodeList){
-			if (!n->IsStatic())
-				continue;
-	
-			modelMatrix = n->GetWorldTransform() * Matrix4::Scale(n->GetModelScale());
-			glUniformMatrix4fv(glGetUniformLocation(shadowShader->GetProgram(), "modelMatrix"), 1, false,modelMatrix.values);
-			n->Draw();
-		}
-
+		DrawShadowMap(STATIC_SHADOW_RESOLUTION, l, l.GetRadius(),true);
 	}
+
+	for (auto& l : scene->spotLights) {
+		if (!l.IsStatic())
+			continue;
+
+		DrawShadowMap(STATIC_SHADOW_RESOLUTION, l, l.GetRadius(),true);
+	}
+
+
 	glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 	glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, 0, 0);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glViewport(0, 0, width, height);
 
 	ClearNodeLists();
+}
+
+void Renderer::DrawDynamicShadowMaps() {
+	glBindFramebuffer(GL_FRAMEBUFFER, shadowFBO);
+	glViewport(0, 0, DYNAMIC_SHADOW_RESOLUTION, DYNAMIC_SHADOW_RESOLUTION);
+	glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+	glClearColor(0, 0, 0, 0);
+
+	BindShader(shadowShader);
+
+	for (auto& l : scene->pointLights) {
+		if (l.IsStatic())
+			continue;
+
+		DrawShadowMap(DYNAMIC_SHADOW_RESOLUTION, l, l.GetRadius(),true);
+	}
+
+	for (auto& l : scene->spotLights) {
+		if (l.IsStatic())
+			continue;
+
+		DrawShadowMap(DYNAMIC_SHADOW_RESOLUTION, l, l.GetRadius(),true);
+	}
+
+	glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+	glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, 0, 0);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glViewport(0, 0, width, height);
+}
+
+void Renderer::DrawShadowMap(int resolution,Light& light,float farPlaneDist, bool staticObjectsOnly) {
+
+	if (light.GetShadowMap() == 0)
+		light.GenerateShadowMapTexture();
+
+	glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, light.GetShadowMap(), 0);
+
+	glClear(GL_DEPTH_BUFFER_BIT);
+
+	Matrix4 lightProjMatrix = Matrix4::Perspective(1, farPlaneDist, 1, 90);
+
+	std::vector<Matrix4> shadowTransforms;
+	Vector3 lightPos = light.GetPosition();
+	shadowTransforms.emplace_back(lightProjMatrix * Matrix4::BuildViewMatrix(lightPos, lightPos + Vector3(1, 0, 0), Vector3(0.0, -1.0, 0.0)));
+	shadowTransforms.emplace_back(lightProjMatrix * Matrix4::BuildViewMatrix(lightPos, lightPos + Vector3(-1, 0, 0), Vector3(0.0, -1.0, 0.0)));
+	shadowTransforms.emplace_back(lightProjMatrix * Matrix4::BuildViewMatrix(lightPos, lightPos + Vector3(0, 1, 0), Vector3(0.0, 0.0, 1.0)));
+	shadowTransforms.emplace_back(lightProjMatrix * Matrix4::BuildViewMatrix(lightPos, lightPos + Vector3(0, -1, 0), Vector3(0.0, 0.0, -1.0)));
+	shadowTransforms.emplace_back(lightProjMatrix * Matrix4::BuildViewMatrix(lightPos, lightPos + Vector3(0, 0, 1), Vector3(0.0, -1.0, 0.0)));
+	shadowTransforms.emplace_back(lightProjMatrix * Matrix4::BuildViewMatrix(lightPos, lightPos + Vector3(0, 0, -1), Vector3(0.0, -1.0, 0.0)));
+	glUniformMatrix4fv(glGetUniformLocation(shadowShader->GetProgram(), "shadowMatrices"), 6, 0, (float*)shadowTransforms.data());
+	glUniform3fv(glGetUniformLocation(shadowShader->GetProgram(), "lightPos"), 1, (float*)&lightPos);
+	glUniform1f(glGetUniformLocation(shadowShader->GetProgram(), "lightFarPlane"), farPlaneDist);
+
+	for (auto& n : nodeList) {
+		if (staticObjectsOnly && !n->IsStatic())
+			continue;
+
+		modelMatrix = n->GetWorldTransform() * Matrix4::Scale(n->GetModelScale());
+		glUniformMatrix4fv(glGetUniformLocation(shadowShader->GetProgram(), "modelMatrix"), 1, false, modelMatrix.values);
+		n->Draw();
+	}
 }
 
 void Renderer::SortNodeLists() {
@@ -370,11 +392,13 @@ void Renderer::DrawNode(SceneNode* n) {
 }
 
 void Renderer::RenderScene() {
+
 	BuildNodeLists(scene->root, true);
 	SortNodeLists();
 
 	glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 
+	DrawDynamicShadowMaps();
  	DrawOpaques();
 	DrawSkybox();
 	DrawLights();
@@ -435,9 +459,8 @@ void Renderer::DrawLights() {
 	UpdateShaderMatrices();
 	for (int i = 0; i < scene->pointLights.size(); ++i) {
 		PointLight& l = scene->pointLights[i];
-		GLuint tex = l.GetShadowMap();
 		glActiveTexture(GL_TEXTURE2);
-		glBindTexture(GL_TEXTURE_CUBE_MAP, testShadowMap);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, l.GetShadowMap());
 
  		l.SetShaderLightData(pointLightShader);
 		sphere->Draw();
@@ -463,6 +486,8 @@ void Renderer::DrawLights() {
 	UpdateShaderMatrices();
 	for (int i = 0; i < scene->spotLights.size(); ++i) {
 		SpotLight& l = scene->spotLights[i];
+		glActiveTexture(GL_TEXTURE2);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, l.GetShadowMap());
 
 		l.SetShaderLightData(spotLightShader);
 		sphere->Draw();

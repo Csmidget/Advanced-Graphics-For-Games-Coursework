@@ -2,7 +2,6 @@
 #include "Shader.h"
 #include "OGLRenderer.h"
 
-#define SHADOW_RESOLUTION 4096
 
 GLuint Light::GenerateShadowMapTexture() {
 	
@@ -20,9 +19,11 @@ GLuint Light::GenerateShadowMapTexture() {
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 
+	int shadowRes = isStatic ? STATIC_SHADOW_RESOLUTION : DYNAMIC_SHADOW_RESOLUTION;
+
 	for (unsigned int i = 0; i < 6; ++i)
 		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_DEPTH_COMPONENT,
-			SHADOW_RESOLUTION, SHADOW_RESOLUTION, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+			shadowRes, shadowRes, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
 
 	glBindTexture(GL_TEXTURE_2D, 0);
 	

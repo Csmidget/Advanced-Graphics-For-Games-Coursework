@@ -10,6 +10,7 @@ class HeightMap;
 class PointLight;
 class SpotLight;
 class Scene;
+class Light;
 
 class Renderer : public OGLRenderer	{
 public:
@@ -32,6 +33,8 @@ protected:
 	void Blur();
 	void PresentScene();
 	void BakeStaticShadowMaps();
+	void DrawDynamicShadowMaps();
+	void DrawShadowMap(int resolution, Light& light, float farPlaneDist, bool staticObjectsOnly);
 
 	void Resize(int x, int y) override;
 
@@ -62,8 +65,6 @@ protected:
 	GLuint lightingFBO;		//FBO for our lighting pass
 	GLuint lightDiffuseTex;		//Store Diffuse Lighting
 	GLuint lightSpecularTex;	//Store Specular Lighting
-
-	GLuint testShadowMap;
 
 	GLuint shadowFBO;
 

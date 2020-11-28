@@ -16,6 +16,8 @@ public:
 
 	void Update(float dt) override;
 
+	bool rotateLights;
+
 	Shader* defaultShader;
 	Shader* bumpMapShader;
 	Shader* animatedShader;
