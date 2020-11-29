@@ -25,27 +25,11 @@ public:
 	Shader* bumpMapShader;
 	Shader* animatedShader;
 	Shader* reflectShader;
-	
-	Mesh* roleTMesh;
-	MeshAnimation* roleTAnim;
-	MeshMaterial* roleTMat;
-
-	Mesh* cubeMesh;
-	Mesh* wallMesh;
-	GLuint wallDiffuse;
-	GLuint wallNormal;
 
 	SceneNode* water;
 	Mesh* waterMesh;
-	GLuint waterDiffuse;
-	GLuint waterNormal;
 
 	HeightMap* heightMapMesh;
-	GLuint heighMapDiffuse;
-	GLuint heightMapNormal;
-
-	Mesh* barrelMesh;
-	MeshMaterial* barrelMat;	
 
 	float waterRotate;
 	float waterCycle = 0.0f;

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../nclgl/Matrix4.h"
 #include <glad/glad.h>
 #include <vector>
 
@@ -18,6 +19,8 @@ public:
 	~Scene();
 
 	virtual void Update(float dt);
+
+	Matrix4 GetCameraPerspective(int width, int height);
 
 protected:
 	bool initialized;

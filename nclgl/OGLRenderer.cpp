@@ -15,6 +15,8 @@ _-_-_-_-_-_-_-""  ""
 #include "OGLRenderer.h"
 #include "Shader.h"
 #include "Light.h"
+#include "MeshManager.h"
+#include "TextureManager.h"
 
 using std::string;
 
@@ -153,6 +155,8 @@ OGLRenderer::OGLRenderer(Window &window)	{
 Destructor. Deletes the default shader, and the OpenGL rendering context.
 */
 OGLRenderer::~OGLRenderer(void)	{
+	TextureManager::Cleanup();
+	MeshManager::Cleanup();
 	wglDeleteContext(renderContext);
 }
 

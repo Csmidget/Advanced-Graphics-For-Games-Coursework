@@ -32,6 +32,7 @@
     <ClCompile Include="Matrix4.cpp" />
     <ClCompile Include="Mesh.cpp" />
     <ClCompile Include="MeshAnimation.cpp" />
+    <ClCompile Include="MeshManager.cpp" />
     <ClCompile Include="MeshMaterial.cpp" />
     <ClCompile Include="Mouse.cpp" />
     <ClCompile Include="OGLRenderer.cpp" />
@@ -57,6 +58,7 @@
     <ClInclude Include="Matrix4.h" />
     <ClInclude Include="Mesh.h" />
     <ClInclude Include="MeshAnimation.h" />
+    <ClInclude Include="MeshManager.h" />
     <ClInclude Include="MeshMaterial.h" />
     <ClInclude Include="Mouse.h" />
     <ClInclude Include="OGLRenderer.h" />

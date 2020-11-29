@@ -8,6 +8,7 @@
 #include "../nclgl/HeightMap.h"
 #include "../nclgl/Light.h"
 #include "../nclgl/TextureManager.h"
+#include "../nclgl/MeshManager.h"
 
 #include <algorithm>
 
@@ -27,11 +28,15 @@ Renderer::Renderer(Window& parent) : OGLRenderer(parent) {
 	BindShader(defaultShader);
 
 	quad = Mesh::GenerateQuad();
-	cube = Mesh::LoadFromMeshFile("OffsetCubeY.msh");
-	sphere = Mesh::LoadFromMeshFile("Sphere.msh");
+
+	//The mesh manager will handle the lifecycle of these, so we won't need to delete them in the renderer.
+	cube = MeshManager::LoadMesh("OffsetCubeY.msh");
+	sphere = MeshManager::LoadMesh("Sphere.msh");
 
 	doBlur = false;
 
+	//Default all of our textures to 0. This is so that GenerateSceenTexture() recognises
+	//they are empty and generates a new texture for them.
 	bufferDepthStencilTex = 0;
 	bufferColourTex = 0;
 	bufferNormalTex = 0;
@@ -44,7 +49,7 @@ Renderer::Renderer(Window& parent) : OGLRenderer(parent) {
 	postProcessColourTex[0] = 0;
 	postProcessColourTex[1] = 0;
 
-	projMatrix = Matrix4::Perspective(1.0f, 10000.0f, (float)width / (float)height, 45.0f);
+	projMatrix = scene->GetCameraPerspective(width, height);
 
 	skyboxShader = new Shader("SkyboxVertex.glsl", "SkyboxFragment.glsl");
 	blurShader = new Shader("TexturedVertex.glsl", "ProcessFragment.glsl");
@@ -143,7 +148,6 @@ Renderer::~Renderer(void) {
 
 	delete scene;
 	delete quad;
-	delete cube;
 
 	delete defaultShader;
 	delete pointLightShader;
@@ -165,8 +169,6 @@ Renderer::~Renderer(void) {
 	glDeleteFramebuffers(1, &lightingFBO);
 	glDeleteFramebuffers(1, &skyboxFBO);
 	glDeleteFramebuffers(1, &postProcessFBO);
-
-	TextureManager::Cleanup();
 }
 
 void Renderer::GenerateScreenTexture(GLuint& into, bool depth) {
@@ -585,7 +587,7 @@ void Renderer::PostProcessing() {
 	CombineBuffers();
 	if (doBlur) Blur();
 	PresentScene();
-	projMatrix = Matrix4::Perspective(1.0f, 10000.0f, (float)width / (float)height, 45.0f);
+	projMatrix = scene->GetCameraPerspective(width, height);
 }
 
 void Renderer::CombineBuffers() {

@@ -39,6 +39,7 @@
     <ClCompile Include="HeightMap.cpp" />
     <ClCompile Include="TextureManager.cpp" />
     <ClCompile Include="Light.cpp" />
+    <ClCompile Include="MeshManager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="common.h" />
@@ -89,6 +90,7 @@
     <ClInclude Include="HeightMap.h" />
     <ClInclude Include="Light.h" />
     <ClInclude Include="TextureManager.h" />
+    <ClInclude Include="MeshManager.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="GLAD">

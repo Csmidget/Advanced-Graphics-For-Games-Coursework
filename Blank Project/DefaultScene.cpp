@@ -1,6 +1,7 @@
 #include "DefaultScene.h"
 
 #include "../nclgl/TextureManager.h"
+#include "../nclgl/MeshManager.h"
 
 #include "../nclgl/Camera.h"
 #include "../nclgl/Window.h"
@@ -32,22 +33,22 @@ DefaultScene::DefaultScene() : Scene() {
 	camera->SetPitch(-45);
 	rotateLights = true;
 	//Texture initialization
-	heighMapDiffuse	=	TextureManager::LoadTexture(TEXTUREDIR"Barren Reds.JPG", SOIL_FLAG_MIPMAPS);
-	heightMapNormal	=	TextureManager::LoadTexture(TEXTUREDIR"Barren RedsDOT3.JPG", SOIL_FLAG_MIPMAPS);
+	GLuint heightMapDiffuse	=	TextureManager::LoadTexture(TEXTUREDIR"Barren Reds.JPG", SOIL_FLAG_MIPMAPS);
+	GLuint heightMapNormal	=	TextureManager::LoadTexture(TEXTUREDIR"Barren RedsDOT3.JPG", SOIL_FLAG_MIPMAPS);
 	skybox				=	TextureManager::LoadCubemap(TEXTUREDIR"CosmicCoolCloudLeft.jpg", TEXTUREDIR"CosmicCoolCloudRight.jpg",
 														TEXTUREDIR"CosmicCoolCloudTop.jpg",  TEXTUREDIR"CosmicCoolCloudBottom.jpg",
 														TEXTUREDIR"CosmicCoolCloudFront.jpg", TEXTUREDIR"CosmicCoolCloudBack.jpg");
-	waterDiffuse = TextureManager::LoadTexture(TEXTUREDIR"water.tga", SOIL_FLAG_MIPMAPS);
-	waterNormal = TextureManager::LoadTexture(TEXTUREDIR"waterbump.png", SOIL_FLAG_MIPMAPS);
-	wallDiffuse = TextureManager::LoadTexture(TEXTUREDIR"brick.tga", SOIL_FLAG_MIPMAPS);
-	wallNormal = TextureManager::LoadTexture(TEXTUREDIR"brickDOT3.tga", SOIL_FLAG_MIPMAPS);
+	GLuint waterDiffuse = TextureManager::LoadTexture(TEXTUREDIR"water.tga", SOIL_FLAG_MIPMAPS);
+	GLuint waterNormal = TextureManager::LoadTexture(TEXTUREDIR"waterbump.png", SOIL_FLAG_MIPMAPS);
+	GLuint wallDiffuse = TextureManager::LoadTexture(TEXTUREDIR"brick.tga", SOIL_FLAG_MIPMAPS);
+	GLuint wallNormal = TextureManager::LoadTexture(TEXTUREDIR"brickDOT3.tga", SOIL_FLAG_MIPMAPS);
 
 
-	if (!heighMapDiffuse || !heightMapNormal || !skybox) {
+	if (!heightMapDiffuse || !heightMapNormal || !skybox) {
 		return;
 	}
 
-	TextureManager::SetTextureRepeating(heighMapDiffuse, true);
+	TextureManager::SetTextureRepeating(heightMapDiffuse, true);
 	TextureManager::SetTextureRepeating(heightMapNormal, true);
 	TextureManager::SetTextureRepeating(heightMapNormal, true);
 	TextureManager::SetTextureRepeating(waterDiffuse, true);
@@ -67,12 +68,14 @@ DefaultScene::DefaultScene() : Scene() {
 	////////////////
 	
 	//Terrain//
+
+	//As it is custom, we cannot use the MeshManager to load the heightmap.
 	heightMapMesh = new HeightMap(TEXTUREDIR"terraintest.png");
 	SceneNode* heightMapNode = new SceneNode(heightMapMesh);
 	Vector3 heightmapSize = heightMapMesh->GetHeightMapSize() * 0.1f;
 	heightMapNode->SetBoundingRadius((heightMapMesh->GetHeightMapSize()).Length());
 	heightMapNode->SetTransform(Matrix4::Translation(Vector3(-heightmapSize.x / 2, -heightmapSize.y, -heightmapSize.z / 2)));
-	heightMapNode->SetTexture(heighMapDiffuse);
+	heightMapNode->SetTexture(heightMapDiffuse);
 	heightMapNode->SetNormal(heightMapNormal);
 	heightMapNode->MakeStatic();
 	heightMapNode->SetModelScale(Vector3(0.1f, 0.1f, 0.1f));
@@ -81,6 +84,7 @@ DefaultScene::DefaultScene() : Scene() {
 	///////////////
 
 	//Water//
+	//As with the terrain, this quad is generated in program, so we have to manage it's lifecycle here.
 	waterMesh = Mesh::GenerateQuad();
 	water = new SceneNode(waterMesh);
 	water->SetTransform(Matrix4::Translation(Vector3(0,-16,0)) * Matrix4::Scale(heightmapSize * 0.5f) * Matrix4::Rotation(-90, Vector3(1, 0, 0)));
@@ -95,9 +99,9 @@ DefaultScene::DefaultScene() : Scene() {
 	/////////
 
 	//Walking man//
-	roleTMesh = Mesh::LoadFromMeshFile("Role_T.msh");
-	roleTAnim = new MeshAnimation("Role_T.anm");
-	roleTMat  = new MeshMaterial("Role_T.mat");
+	Mesh* roleTMesh = MeshManager::LoadMesh("Role_T.msh");
+	MeshAnimation* roleTAnim = MeshManager::LoadMeshAnimation("Role_T.anm");
+	MeshMaterial* roleTMat  = MeshManager::LoadMeshMaterial("Role_T.mat");
 	
 	SceneNode* role_t = new SceneNode(roleTMesh,  roleTMat, roleTAnim, Vector4(1, 1, 1, 1), animatedShader);
 	role_t->SetTransform(Matrix4::Translation(Vector3(0, -15.4, 0)));
@@ -112,7 +116,7 @@ DefaultScene::DefaultScene() : Scene() {
 	root->AddChild(role_t);
 	//////////////
 
-	cubeMesh = Mesh::LoadFromMeshFile("Cube.msh");
+	Mesh* cubeMesh = MeshManager::LoadMesh("Cube.msh");
 	SceneNode* cube = new SceneNode(cubeMesh);
 	cube->SetShader(defaultShader);
 	cube->SetTexture(wallDiffuse);
@@ -124,8 +128,8 @@ DefaultScene::DefaultScene() : Scene() {
 	const int wallCount = 5;
 	const Vector3 wallPositions[wallCount]{ {0.0,1,-2}	,{2.0,1,0.0},{-2.0,1,0.0}	,{0.0,2,-1}	,{0.0,2,1}	};
 	const Vector3 wallRotations[wallCount]{ {0,90,0}	,{0,0,0}	,{0,0,0}		,{90,90,0}	,{90,90,0}	};
+	Mesh* wallMesh = MeshManager::LoadMesh("Wall.msh");
 	for (int i = 0; i < wallCount; i++) {
-		wallMesh = Mesh::LoadFromMeshFile("Wall.msh");
 		SceneNode* wall = new SceneNode(wallMesh);
 		wall->SetTexture(wallDiffuse);
 		wall->SetNormal(wallNormal);
@@ -150,8 +154,8 @@ DefaultScene::DefaultScene() : Scene() {
 	/////////
 	
 	//Barrel//
-	barrelMesh = Mesh::LoadFromMeshFile("Barrel_1.msh");
-	barrelMat = new MeshMaterial("Barrel_1.mat");
+	Mesh* barrelMesh = MeshManager::LoadMesh("Barrel_1.msh");
+	MeshMaterial* barrelMat = MeshManager::LoadMeshMaterial("Barrel_1.mat");
 	
 	const int barrelCount = 4;
 	const Vector3 barrelPositions[barrelCount]{ {15.0,-15.4,15.0} ,{13.0,-15.4,12.5}, {16.7,-15.4,12.6}, {15.0,-11.4,13.5} };
@@ -224,27 +228,14 @@ DefaultScene::~DefaultScene() {
 
 	delete track;
 
-	delete wallMesh;
-
 	delete defaultShader;
 	delete bumpMapShader;
 	delete animatedShader;
 	delete reflectShader;
 
-	delete roleTMesh;
-	delete roleTAnim;
-	delete roleTMat;
-
 	delete waterMesh;
-
 	delete heightMapMesh;
 
-	delete barrelMesh;
-	delete barrelMat;
-	
-	//We only need to delete manually generated textures. The texturemanager handles external textures.
-	glDeleteTextures(1, &heighMapDiffuse);
-	glDeleteTextures(1, &heightMapNormal);
 }
 
 void DefaultScene::Update(float dt) {
