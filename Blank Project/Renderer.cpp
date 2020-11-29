@@ -199,6 +199,8 @@ void Renderer::Resize(int x, int y) {
 	GenerateScreenTexture(bufferDepthStencilTex, true);
 	GenerateScreenTexture(bufferColourTex);
 	GenerateScreenTexture(bufferNormalTex);
+	GenerateScreenTexture(bufferTransparentColourTex);
+	GenerateScreenTexture(bufferTransparentNormalTex);
 	GenerateScreenTexture(lightDiffuseTex);
 	GenerateScreenTexture(lightSpecularTex);
 	GenerateScreenTexture(skyboxColourTex);
