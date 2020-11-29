@@ -94,6 +94,7 @@ Renderer::Renderer(Window& parent) : OGLRenderer(parent) {
 	glBindFramebuffer(GL_FRAMEBUFFER, lightingFBO);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, lightDiffuseTex, 0);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, lightSpecularTex, 0);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_TEXTURE_2D, bufferDepthStencilTex, 0);
 	glDrawBuffers(2, buffers);
 
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
@@ -236,12 +237,12 @@ void Renderer::BuildNodeLists(SceneNode* from, bool frustumCheck) {
 		Vector3 dir = from->GetWorldTransform().GetPositionVector() - scene->camera->GetPosition();
 		from->SetCameraDistance(Vector3::Dot(dir, dir));
 
-		//if (from->GetColour().w < 1.0f) {
-		//	transparentNodeList.push_back(from);
-		//}
-		//else {
+		if (from->GetColour().w < 1.0f) {
+			transparentNodeList.push_back(from);
+		}
+		else {
 			nodeList.push_back(from);
-		//}
+		}
 	}
 
 	for (auto i = from->GetChildIteratorStart(); i != from->GetChildIteratorEnd(); ++i) {
@@ -344,9 +345,9 @@ void Renderer::DrawShadowMap(int resolution,Light& light,float farPlaneDist, boo
 }
 
 void Renderer::SortNodeLists() {
-	//std::sort(transparentNodeList.rbegin(),
-	//	transparentNodeList.rend(),
-	//	SceneNode::CompareByCameraDistance);
+	std::sort(transparentNodeList.rbegin(),
+		transparentNodeList.rend(),
+		SceneNode::CompareByCameraDistance);
 
 	std::sort(nodeList.begin(),
 		nodeList.end(),
@@ -369,7 +370,7 @@ void Renderer::DrawNode(SceneNode* n) {
 
 	if (n->GetMesh()) {
 		modelMatrix = n->GetWorldTransform() * Matrix4::Scale(n->GetModelScale());
-
+		textureMatrix = n->GetTextureMatrix();
 		UpdateShaderMatrices();
 
 		//glUniformMatrix4fv(glGetUniformLocation(activeShader->GetProgram(), "modelMatrix"), 1, false, model.values);
@@ -399,7 +400,8 @@ void Renderer::RenderScene() {
 	glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 
 	DrawDynamicShadowMaps();
- 	DrawOpaques();
+	DrawOpaques();
+//	DrawTransparents();
 	DrawSkybox();
 	DrawLights();
 	PostProcessing();
@@ -438,6 +440,10 @@ void Renderer::DrawLights() {
 	glCullFace(GL_FRONT);
 	glDepthFunc(GL_ALWAYS);
 	glDepthMask(GL_FALSE);
+
+	//ONLY light where something is already drawn.
+	glStencilFunc(GL_EQUAL, 2, ~0);
+	glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
 
 	glUniform1i(glGetUniformLocation(pointLightShader->GetProgram(), "depthTex"), 0);
 	glActiveTexture(GL_TEXTURE0);
@@ -493,6 +499,7 @@ void Renderer::DrawLights() {
 		sphere->Draw();
 	}
 
+	glDisable(GL_STENCIL_TEST);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glCullFace(GL_BACK);
 	glDepthFunc(GL_LEQUAL);
@@ -617,6 +624,6 @@ void Renderer::PresentScene() {
 }
 
 void Renderer::ClearNodeLists() {
-	//transparentNodeList.clear();
+	transparentNodeList.clear();
 	nodeList.clear();
 }

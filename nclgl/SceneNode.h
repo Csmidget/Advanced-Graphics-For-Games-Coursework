@@ -19,6 +19,8 @@ public:
 	const Matrix4& GetTransform() const { return transform; }
 	Matrix4 GetWorldTransform() const { return worldTransform; }
 
+	const Matrix4& GetTextureMatrix() const { return texMatrix; }
+
 	Vector4 GetColour() const { return colour; }
 	void SetColour(Vector4 c) { colour = c; }
 
@@ -85,6 +87,7 @@ protected:
 
 	Matrix4 worldTransform;
 	Matrix4 transform;
+	Matrix4 texMatrix;
 	Vector3 modelScale;
 	Vector4 colour;
 	std::vector<SceneNode*> children;

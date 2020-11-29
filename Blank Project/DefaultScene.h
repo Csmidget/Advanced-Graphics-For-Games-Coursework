@@ -22,20 +22,17 @@ public:
 	Shader* bumpMapShader;
 	Shader* animatedShader;
 	Shader* bumpAnimatedShader;
+	
+	Mesh* roleTMesh;
+	MeshAnimation* roleTAnim;
+	MeshMaterial* roleTMat;
 
+	Mesh* waterMesh;
 
-	Mesh* mesh_roleT;
-	MeshAnimation* anim_roleT;
-	MeshMaterial* mat_roleT;
+	HeightMap* heightMapMesh;
+	GLuint heighMapDiffuse;
+	GLuint heightMapNormal;
 
-	Mesh* mesh_cyberSoldier;
-	MeshAnimation* anim_cyberSoldier;
-	MeshMaterial* mat_cyberSoldier;
-
-	HeightMap* mesh_heightMap;
-	GLuint diffuse_heightMap;
-	GLuint normal_heightMap;
-
-	Mesh* mesh_Barrel;
-	MeshMaterial* mat_Barrel;	
+	Mesh* barrelMesh;
+	MeshMaterial* barrelMat;	
 };

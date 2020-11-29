@@ -59,6 +59,8 @@ protected:
 	GLuint bufferNormalTex;		//Normals go here
 	GLuint bufferDepthStencilTex;		//Depth goes here
 
+	GLuint bufferTransparentColourTex; //Transparent Albedo goes here.
+
 	GLuint skyboxFBO;
 	GLuint skyboxColourTex;
 
@@ -80,5 +82,5 @@ protected:
 	Frustum frameFrustum;
 
 	vector<SceneNode*> nodeList;
-	//vector<SceneNode*> transparentNodeList;
+	vector<SceneNode*> transparentNodeList;
 };

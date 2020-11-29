@@ -19,18 +19,18 @@ DefaultScene::DefaultScene() : Scene() {
 	camera->SetPosition(Vector3(0, -15.0, 10.0));
 	rotateLights = true;
 	//Texture initialization
-	diffuse_heightMap	=	TextureManager::LoadTexture(TEXTUREDIR"Barren Reds.JPG", SOIL_FLAG_MIPMAPS);
-	normal_heightMap	=	TextureManager::LoadTexture(TEXTUREDIR"Barren RedsDOT3.JPG", SOIL_FLAG_MIPMAPS);
+	heighMapDiffuse	=	TextureManager::LoadTexture(TEXTUREDIR"Barren Reds.JPG", SOIL_FLAG_MIPMAPS);
+	heightMapNormal	=	TextureManager::LoadTexture(TEXTUREDIR"Barren RedsDOT3.JPG", SOIL_FLAG_MIPMAPS);
 	skybox				=	TextureManager::LoadCubemap(TEXTUREDIR"CosmicCoolCloudLeft.jpg", TEXTUREDIR"CosmicCoolCloudRight.jpg",
 														TEXTUREDIR"CosmicCoolCloudTop.jpg",  TEXTUREDIR"CosmicCoolCloudBottom.jpg",
 														TEXTUREDIR"CosmicCoolCloudFront.jpg", TEXTUREDIR"CosmicCoolCloudBack.jpg");
 
-	if (!diffuse_heightMap || !normal_heightMap || !skybox) {
+	if (!heighMapDiffuse || !heightMapNormal || !skybox) {
 		return;
 	}
 
-	TextureManager::SetTextureRepeating(diffuse_heightMap, true);
-	TextureManager::SetTextureRepeating(normal_heightMap, true);
+	TextureManager::SetTextureRepeating(heighMapDiffuse, true);
+	TextureManager::SetTextureRepeating(heightMapNormal, true);
 	////////////
 
 
@@ -45,13 +45,13 @@ DefaultScene::DefaultScene() : Scene() {
 	////////////////
 	
 	//Terrain//
-	mesh_heightMap = new HeightMap(TEXTUREDIR"terraintest.png");
-	SceneNode* heightMapNode = new SceneNode(mesh_heightMap);
-	Vector3 heightmapSize = mesh_heightMap->GetHeightMapSize() * 0.1f;
-	heightMapNode->SetBoundingRadius((mesh_heightMap->GetHeightMapSize()).Length());
+	heightMapMesh = new HeightMap(TEXTUREDIR"terraintest.png");
+	SceneNode* heightMapNode = new SceneNode(heightMapMesh);
+	Vector3 heightmapSize = heightMapMesh->GetHeightMapSize() * 0.1f;
+	heightMapNode->SetBoundingRadius((heightMapMesh->GetHeightMapSize()).Length());
 	heightMapNode->SetTransform(Matrix4::Translation(Vector3(-heightmapSize.x / 2, -heightmapSize.y, -heightmapSize.z / 2)));
-	heightMapNode->SetTexture(diffuse_heightMap);
-	heightMapNode->SetNormal(normal_heightMap);
+	heightMapNode->SetTexture(heighMapDiffuse);
+	heightMapNode->SetNormal(heightMapNormal);
 	heightMapNode->MakeStatic();
 	heightMapNode->SetModelScale(Vector3(0.1f, 0.1f, 0.1f));
 
@@ -60,19 +60,34 @@ DefaultScene::DefaultScene() : Scene() {
 	root->AddChild(heightMapNode);
 	///////////////
 
+
+	//Water//
+
+	waterMesh = Mesh::GenerateQuad();
+	SceneNode* water = new SceneNode(waterMesh);
+	water->SetTransform(Matrix4::Translation(Vector3(0,-16,0)) * Matrix4::Scale(heightmapSize * 0.5f) * Matrix4::Rotation(-90, Vector3(1, 0, 0)));
+	water->SetShader(bumpMapShader);
+	water->SetTexture(TextureManager::LoadTexture(TEXTUREDIR"water.tga", SOIL_FLAG_MIPMAPS));
+	water->SetNormal(TextureManager::LoadTexture(TEXTUREDIR"waterbump.png", SOIL_FLAG_MIPMAPS));
+	water->SetBoundingRadius((heightMapMesh->GetHeightMapSize()).Length());
+	water->SetColour(Vector4(1, 1, 1, 0.5f));
+	water->MakeStatic();
+	root->AddChild(water);
+	/////////
+
 	//Walking man//
 
-	mesh_roleT = Mesh::LoadFromMeshFile("Role_T.msh");
-	anim_roleT = new MeshAnimation("Role_T.anm");
-	mat_roleT  = new MeshMaterial("Role_T.mat");
+	roleTMesh = Mesh::LoadFromMeshFile("Role_T.msh");
+	roleTAnim = new MeshAnimation("Role_T.anm");
+	roleTMat  = new MeshMaterial("Role_T.mat");
 	
-	SceneNode* role_t = new SceneNode(mesh_roleT,  mat_roleT, anim_roleT, Vector4(1, 1, 1, 1), animatedShader);
+	SceneNode* role_t = new SceneNode(roleTMesh,  roleTMat, roleTAnim, Vector4(1, 1, 1, 1), animatedShader);
 	role_t->SetTransform(Matrix4::Translation(Vector3(0, -15.4, 0)));
 	role_t->SetModelScale(Vector3(2.0f, 2.0f, 2.0f));
 	role_t->SetBoundingRadius(200.0f);
 	root->AddChild(role_t);
 
-	role_t = new SceneNode(mesh_roleT, mat_roleT, anim_roleT, Vector4(1, 1, 1, 1), animatedShader);
+	role_t = new SceneNode(roleTMesh, roleTMat, roleTAnim, Vector4(1, 1, 1, 1), animatedShader);
 	role_t->SetTransform(Matrix4::Translation(Vector3(1, -15.4, 0)));
 	role_t->SetModelScale(Vector3(2.0f, 2.0f, 2.0f));
 	role_t->SetBoundingRadius(200.0f);
@@ -82,15 +97,15 @@ DefaultScene::DefaultScene() : Scene() {
 	
 	//Barrel//
 
-	mesh_Barrel = Mesh::LoadFromMeshFile("Barrel_1.msh");
-	mat_Barrel = new MeshMaterial("Barrel_1.mat");
+	barrelMesh = Mesh::LoadFromMeshFile("Barrel_1.msh");
+	barrelMat = new MeshMaterial("Barrel_1.mat");
 	
 	const int barrelCount = 4;
 	const Vector3 barrelPositions[barrelCount]{ {15.0,-15.4,15.0} ,{13.0,-15.4,12.5}, {16.7,-15.4,12.6}, {15.0,-11.4,13.5} };
 	const Vector3 barrelRotations[barrelCount]{ {}			   ,{0  ,22.5 ,0  }, {0  ,18.0 ,0  }, {0  ,16.5  ,0 } };
 
 	for (int i = 0; i < barrelCount; ++i) {
-		SceneNode* barrel = new SceneNode(mesh_Barrel, mat_Barrel);
+		SceneNode* barrel = new SceneNode(barrelMesh, barrelMat);
 		barrel->SetTransform(Matrix4::Translation(barrelPositions[i]) * Matrix4::Rotation(barrelRotations[i].x, { 1,0,0 })* Matrix4::Rotation(barrelRotations[i].y, { 0,1,0 }) * Matrix4::Rotation(barrelRotations[i].z, { 0,1,0 }));
 		barrel->SetBoundingRadius(200.0f);
 		barrel->SetShader(bumpMapShader);
@@ -108,8 +123,6 @@ DefaultScene::DefaultScene() : Scene() {
 	{
 		PointLight l;
 
-	//	l.SetPosition(Vector3(0, 0, 0));
-
 		l.SetPosition(Vector3((rand() % (int)heightmapSize.x) - heightmapSize.x / 2,
 			25.0f ,
 			(rand() % (int)heightmapSize.z) - heightmapSize.x / 2));
@@ -121,7 +134,7 @@ DefaultScene::DefaultScene() : Scene() {
 			0.5f + (float)(rand() / (float)RAND_MAX),
 			1));
 		l.MakeStatic();
-	//	l.GenerateShadowMapTexture();
+
 		pointLights.emplace_back(l);
 	}
 
@@ -129,7 +142,7 @@ DefaultScene::DefaultScene() : Scene() {
 		SpotLight l;
 
 		l.SetPosition(Vector3((rand() % (int)heightmapSize.x) - heightmapSize.x / 2,
-			25.0f - heightmapSize.y,
+			25.0f,
 			(rand() % (int)heightmapSize.z) - heightmapSize.x / 2));
 
 		l.SetDiffuseColour(Vector4(0.5f + (float)(rand() / (float)RAND_MAX),
@@ -156,21 +169,19 @@ DefaultScene::~DefaultScene() {
 	delete animatedShader;
 	delete bumpAnimatedShader;
 
-	delete mesh_roleT;
-	delete anim_roleT;
-	delete mat_roleT;
+	delete roleTMesh;
+	delete roleTAnim;
+	delete roleTMat;
 
-	delete mesh_cyberSoldier;
-	delete anim_cyberSoldier;
-	delete mat_cyberSoldier;
+	delete waterMesh;
 
-	delete mesh_heightMap;
+	delete heightMapMesh;
 
-	delete mesh_Barrel;
-	delete mat_Barrel;
+	delete barrelMesh;
+	delete barrelMat;
 
-	glDeleteTextures(1, &diffuse_heightMap);
-	glDeleteTextures(1, &normal_heightMap);
+	glDeleteTextures(1, &heighMapDiffuse);
+	glDeleteTextures(1, &heightMapNormal);
 }
 
 void DefaultScene::Update(float dt) {

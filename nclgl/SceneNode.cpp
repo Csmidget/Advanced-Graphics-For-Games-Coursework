@@ -19,6 +19,7 @@ SceneNode::SceneNode(Mesh* m,  MeshMaterial* mat, MeshAnimation* anm, Vector4 co
 	frameTime = 0.0f;
 	currentFrame = 0;
 	isStatic = false;
+	texMatrix = {};
 
 	if (this->mesh) {
 		for (int i = 0; i < mesh->GetSubMeshCount(); ++i) {
@@ -91,6 +92,7 @@ bool SceneNode::HasParent(SceneNode* _parent) const {
 
 void SceneNode::Draw(const Shader* externalShader) {
 	const Shader* activeShader = (externalShader ? externalShader : shader);
+
 	if (mesh) { 
 		if (anim) {
 			glUniformMatrix4fv(glGetUniformLocation(activeShader->GetProgram(), "joints"), anim->GetJointCount(), false, (float*)frameMatrices.data());
