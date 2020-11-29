@@ -60,9 +60,10 @@ public:
 	bool			HasInitialised() const;	
 	
 protected:
+	Shader* currentShader;
+
 	virtual void	Resize(int x, int y);	
 	void			UpdateShaderMatrices();
-	Shader*			GetCurrentShader() { return currentShader; }
 	void			BindShader(Shader*s);
 
 	void StartDebugGroup(const std::string& s) {
@@ -84,7 +85,6 @@ protected:
 	bool	init;			//Did the renderer initialise properly?
 
 private:
-	Shader* currentShader;	
 	HDC		deviceContext;	//...Device context?
 	HGLRC	renderContext;	//Permanent Rendering Context
 #ifdef _DEBUG

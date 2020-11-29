@@ -101,9 +101,7 @@ bool SceneNode::HasParent(SceneNode* _parent) const {
 	return parent == nullptr ? false : parent == _parent || parent->HasParent(_parent);
 }
 
-void SceneNode::Draw(const Shader* externalShader) {
-	const Shader* activeShader = (externalShader ? externalShader : shader);
-
+void SceneNode::Draw(const Shader* activeShader) {
 	if (mesh) { 
 		if (anim) {
 			glUniformMatrix4fv(glGetUniformLocation(activeShader->GetProgram(), "joints"), anim->GetJointCount(), false, (float*)frameMatrices.data());

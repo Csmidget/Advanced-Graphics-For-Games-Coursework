@@ -24,13 +24,8 @@ Renderer::Renderer(Window& parent) : OGLRenderer(parent) {
 	//Run a single update on scene to initialize world transforms etc.
 	scene->Update(0);
 
-	defaultShader = new Shader("basicVertex.glsl", "colourFragment.glsl");
-	BindShader(defaultShader);
-
 	quad = Mesh::GenerateQuad();
-
-	//The mesh manager will handle the lifecycle of these, so we won't need to delete them in the renderer.
-	cube = MeshManager::LoadMesh("OffsetCubeY.msh");
+	//The mesh manager will handle the lifecycle of this, so we won't need to delete them in the renderer.
 	sphere = MeshManager::LoadMesh("Sphere.msh");
 
 	doBlur = false;
@@ -59,9 +54,9 @@ Renderer::Renderer(Window& parent) : OGLRenderer(parent) {
 	shadowShader = new Shader("ShadowVert.glsl", "ShadowFrag.glsl", "ShadowGeom.glsl");
 	combineShader = new Shader("CombineVertex.glsl", "CombineFragment.glsl");
 
-	if (!defaultShader->LoadSuccess()	|| !pointLightShader->LoadSuccess()	|| !spotLightShader->LoadSuccess()	||
-		!combineShader->LoadSuccess()	|| !skyboxShader->LoadSuccess()		|| !blurShader->LoadSuccess()		||
-		!sceneShader->LoadSuccess()		|| !shadowShader->LoadSuccess())
+	if (!pointLightShader->LoadSuccess()|| !spotLightShader->LoadSuccess()	||	!combineShader->LoadSuccess()	||
+		!skyboxShader->LoadSuccess()	|| !blurShader->LoadSuccess()		||	!sceneShader->LoadSuccess()		||
+		!shadowShader->LoadSuccess())
 		return;
 
 	glGenFramebuffers(1, &bufferFBO);
@@ -139,7 +134,9 @@ Renderer::Renderer(Window& parent) : OGLRenderer(parent) {
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-	BakeStaticShadowMaps();
+	BuildNodeLists(scene->root, false);
+	DrawShadowMaps(true);
+	ClearNodeLists();
 
 	init = true;
 }
@@ -149,7 +146,6 @@ Renderer::~Renderer(void) {
 	delete scene;
 	delete quad;
 
-	delete defaultShader;
 	delete pointLightShader;
 	delete spotLightShader;
 	delete combineShader;
@@ -258,9 +254,9 @@ void Renderer::BuildNodeLists(SceneNode* from, bool frustumCheck) {
 	}
 }
 
-void Renderer::BakeStaticShadowMaps() {
-	BuildNodeLists(scene->root, false);
+void Renderer::DrawShadowMaps(bool staticLights) {
 
+	int resolution = staticLights ? STATIC_SHADOW_RESOLUTION : DYNAMIC_SHADOW_RESOLUTION;
 	glBindFramebuffer(GL_FRAMEBUFFER, shadowFBO);
 	glViewport(0, 0, STATIC_SHADOW_RESOLUTION, STATIC_SHADOW_RESOLUTION);
 	glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
@@ -269,57 +265,23 @@ void Renderer::BakeStaticShadowMaps() {
 	BindShader(shadowShader);
 
 	for (auto& l : scene->pointLights) {
-		if (!l.IsStatic())
-			continue;
-
-		DrawShadowMap(STATIC_SHADOW_RESOLUTION, l, l.GetRadius(),true);
+		if (!staticLights || l.IsStatic())
+			DrawShadowMap(STATIC_SHADOW_RESOLUTION, l, l.GetRadius());
 	}
 
 	for (auto& l : scene->spotLights) {
-		if (!l.IsStatic())
-			continue;
-
-		DrawShadowMap(STATIC_SHADOW_RESOLUTION, l, l.GetRadius(),true);
+		if (!staticLights || l.IsStatic())
+			DrawShadowMap(STATIC_SHADOW_RESOLUTION, l, l.GetRadius());
 	}
-
 
 	glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 	glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, 0, 0);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glViewport(0, 0, width, height);
 
-	ClearNodeLists();
 }
 
-void Renderer::DrawDynamicShadowMaps() {
-	glBindFramebuffer(GL_FRAMEBUFFER, shadowFBO);
-	glViewport(0, 0, DYNAMIC_SHADOW_RESOLUTION, DYNAMIC_SHADOW_RESOLUTION);
-	glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
-	glClearColor(0, 0, 0, 0);
-
-	BindShader(shadowShader);
-
-	for (auto& l : scene->pointLights) {
-		if (l.IsStatic())
-			continue;
-
-		DrawShadowMap(DYNAMIC_SHADOW_RESOLUTION, l, l.GetRadius(),false);
-	}
-
-	for (auto& l : scene->spotLights) {
-		if (l.IsStatic())
-			continue;
-
-		DrawShadowMap(DYNAMIC_SHADOW_RESOLUTION, l, l.GetRadius(),false);
-	}
-
-	glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-	glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, 0, 0);
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	glViewport(0, 0, width, height);
-}
-
-void Renderer::DrawShadowMap(int resolution,Light& light,float farPlaneDist, bool staticObjectsOnly) {
+void Renderer::DrawShadowMap(int resolution,Light& light,float farPlaneDist) {
 
 	if (light.GetShadowMap() == 0)
 		light.GenerateShadowMapTexture();
@@ -342,8 +304,9 @@ void Renderer::DrawShadowMap(int resolution,Light& light,float farPlaneDist, boo
 	glUniform3fv(glGetUniformLocation(shadowShader->GetProgram(), "lightPos"), 1, (float*)&lightPos);
 	glUniform1f(glGetUniformLocation(shadowShader->GetProgram(), "lightFarPlane"), farPlaneDist);
 
+	bool staticLight = light.IsStatic();
 	for (auto& n : nodeList) {
-		if (staticObjectsOnly && !n->IsStatic())
+		if (staticLight && !n->IsStatic())
 			continue; 
 
 		modelMatrix = n->GetWorldTransform() * Matrix4::Scale(n->GetModelScale());
@@ -364,12 +327,14 @@ void Renderer::SortNodeLists() {
 
 void Renderer::DrawNode(SceneNode* n) {
 
-	Shader* activeShader = defaultShader;
-	if (n->GetShader()) {
-		activeShader = n->GetShader();
+	Shader* activeShader = n->GetShader();
+
+	//If the object has no shader assigned then don't draw it.
+	if (!activeShader) {
+		return;
 	}
 
-	if (GetCurrentShader() != activeShader) {
+	if (currentShader != activeShader) {
 		BindShader(activeShader);
 		
 		glUniform1i(glGetUniformLocation(activeShader->GetProgram(), "diffuseTex"), 0);
@@ -381,9 +346,6 @@ void Renderer::DrawNode(SceneNode* n) {
 		modelMatrix = n->GetWorldTransform() * Matrix4::Scale(n->GetModelScale());
 		textureMatrix = n->GetTextureMatrix();
 		UpdateShaderMatrices();
-
-		//glUniformMatrix4fv(glGetUniformLocation(activeShader->GetProgram(), "modelMatrix"), 1, false, model.values);
-		glUniform4fv(glGetUniformLocation(activeShader->GetProgram(), "nodeColour"), 1, (float*)&n->GetColour());
 
 		if (n->GetTexture()) {
 			glActiveTexture(GL_TEXTURE0);
@@ -403,7 +365,7 @@ void Renderer::DrawNode(SceneNode* n) {
 			glBindTexture(GL_TEXTURE_CUBE_MAP, scene->skybox);
 		}
 
-		n->Draw();
+		n->Draw(activeShader);
 	}
 }
 
@@ -414,7 +376,7 @@ void Renderer::RenderScene() {
 
 	glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 
-	DrawDynamicShadowMaps();
+	DrawShadowMaps(false);
 	DrawOpaques();
 	DrawTransparents();
 	DrawSkybox();
@@ -432,10 +394,9 @@ void Renderer::DrawOpaques() {
 
 	glEnable(GL_STENCIL_TEST);
 
-	glStencilFunc(GL_ALWAYS, 2, ~0);
+	glStencilFunc(GL_ALWAYS, 1, ~0);
 	glStencilOp(GL_REPLACE, GL_REPLACE, GL_REPLACE);
 
-	modelMatrix.ToIdentity();
 	viewMatrix = scene->camera->BuildViewMatrix();
 
 	for (auto i : nodeList)
@@ -457,9 +418,6 @@ void Renderer::DrawTransparents() {
 	glDisable(GL_STENCIL_TEST);
 	glDepthMask(GL_FALSE);
 
-	modelMatrix.ToIdentity();
-	viewMatrix = scene->camera->BuildViewMatrix();
-
 	for (auto i : transparentNodeList)
 	{
 		DrawNode(i);
@@ -471,42 +429,44 @@ void Renderer::DrawTransparents() {
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
+void Renderer::SetupLightShader(Shader* shader) {
+	BindShader(shader);
+	glUniform1i(glGetUniformLocation(shader->GetProgram(), "depthTex"), 0);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, bufferDepthStencilTex);
+
+	glUniform1i(glGetUniformLocation(shader->GetProgram(), "normalTex"), 1);
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, bufferNormalTex);
+
+	glUniform1i(glGetUniformLocation(shader->GetProgram(), "shadowMap"), 2);
+
+	glUniform3fv(glGetUniformLocation(shader->GetProgram(), "cameraPos"), 1, (float*)&scene->camera->GetPosition());
+
+	glUniform2f(glGetUniformLocation(shader->GetProgram(), "pixelSize"), 1.0f / width, 1.0f / height);
+
+	Matrix4 invViewProj = (projMatrix * viewMatrix).Inverse();
+	glUniformMatrix4fv(glGetUniformLocation(shader->GetProgram(), "inverseProjView"), 1, false, invViewProj.values);
+	UpdateShaderMatrices();
+}
+
 void Renderer::DrawLights() {
 	glBindFramebuffer(GL_FRAMEBUFFER, lightingFBO);
-	BindShader(pointLightShader);
 
-	glClearColor(0, 0, 0, 1);
 	glClear(GL_COLOR_BUFFER_BIT);
 	glBlendFunc(GL_ONE, GL_ONE);
 	glCullFace(GL_FRONT);
 	glDepthFunc(GL_ALWAYS);
 	glDepthMask(GL_FALSE);
 
-	//ONLY light where something is already drawn.
+	//Only draw lights where something is already drawn.
 	glEnable(GL_STENCIL_TEST);
-	glStencilFunc(GL_EQUAL, 2, ~0);
+	glStencilFunc(GL_EQUAL, 1, ~0);
 	glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
 
-	glUniform1i(glGetUniformLocation(pointLightShader->GetProgram(), "depthTex"), 0);
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, bufferDepthStencilTex);
-
-	glUniform1i(glGetUniformLocation(pointLightShader->GetProgram(), "normalTex"), 1);
-	glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_2D, bufferNormalTex);
-
-	glUniform1i(glGetUniformLocation(pointLightShader->GetProgram(), "shadowMap"), 2);
-
-	glUniform3fv(glGetUniformLocation(pointLightShader->GetProgram(), "cameraPos"), 1, (float*)&scene->camera->GetPosition());
-
-	glUniform2f(glGetUniformLocation(pointLightShader->GetProgram(), "pixelSize"), 1.0f / width, 1.0f / height);
-
-	Matrix4 invViewProj = (projMatrix * viewMatrix).Inverse();
-	glUniformMatrix4fv(glGetUniformLocation(pointLightShader->GetProgram(), "inverseProjView"), 1, false, invViewProj.values);
-
-	UpdateShaderMatrices();
+	SetupLightShader(pointLightShader);
 	for (int i = 0; i < scene->pointLights.size(); ++i) {
-		PointLight& l = scene->pointLights[i];
+		Light& l = scene->pointLights[i];
 		glActiveTexture(GL_TEXTURE2);
 		glBindTexture(GL_TEXTURE_CUBE_MAP, l.GetShadowMap());
 
@@ -514,26 +474,9 @@ void Renderer::DrawLights() {
 		sphere->Draw();
 	}
 
-	BindShader(spotLightShader);
-
-	glUniform1i(glGetUniformLocation(spotLightShader->GetProgram(), "depthTex"), 0);
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, bufferDepthStencilTex);
-
-	glUniform1i(glGetUniformLocation(spotLightShader->GetProgram(), "normalTex"), 1);
-	glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_2D, bufferNormalTex);
-
-	glUniform1i(glGetUniformLocation(spotLightShader->GetProgram(), "shadowMap"), 2);
-
-	glUniform3fv(glGetUniformLocation(spotLightShader->GetProgram(), "cameraPos"), 1, (float*)&scene->camera->GetPosition());
-
-	glUniform2f(glGetUniformLocation(spotLightShader->GetProgram(), "pixelSize"), 1.0f / width, 1.0f / height);
-	glUniformMatrix4fv(glGetUniformLocation(spotLightShader->GetProgram(), "inverseProjView"), 1, false, invViewProj.values);
-
-	UpdateShaderMatrices();
+	SetupLightShader(spotLightShader);
 	for (int i = 0; i < scene->spotLights.size(); ++i) {
-		SpotLight& l = scene->spotLights[i];
+		Light& l = scene->spotLights[i];
 		glActiveTexture(GL_TEXTURE2);
 		glBindTexture(GL_TEXTURE_CUBE_MAP, l.GetShadowMap());
 
@@ -547,14 +490,12 @@ void Renderer::DrawLights() {
 	glDepthFunc(GL_LEQUAL);
 
 	glDepthMask(GL_TRUE);
-	glClearColor(0.2f, 0.2f, 0.2f, 1);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 void Renderer::DrawSkybox() {
 
 	glBindFramebuffer(GL_FRAMEBUFFER, skyboxFBO);
-	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 	glClear(GL_COLOR_BUFFER_BIT);
 
 	BindShader(skyboxShader);
@@ -565,7 +506,7 @@ void Renderer::DrawSkybox() {
 	glBindTexture(GL_TEXTURE_CUBE_MAP, scene->skybox);
 
 	//DO NOT draw skybox where something is already drawn.
-	glStencilFunc(GL_NOTEQUAL, 2, ~0);
+	glStencilFunc(GL_NOTEQUAL, 1, ~0);
 	glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
 
 	glDepthMask(GL_FALSE);
@@ -583,9 +524,12 @@ void Renderer::PostProcessing() {
 	modelMatrix.ToIdentity();
 	viewMatrix.ToIdentity();
 	projMatrix.ToIdentity();
+
 	//Combine the buffers and put the output into the postprocessing shader
 	CombineBuffers();
+
 	if (doBlur) Blur();
+
 	PresentScene();
 	projMatrix = scene->GetCameraPerspective(width, height);
 }
@@ -616,10 +560,6 @@ void Renderer::CombineBuffers() {
 	glUniform1i(glGetUniformLocation(combineShader->GetProgram(), "transparentDiffuseTex"), 3);
 	glActiveTexture(GL_TEXTURE3);
 	glBindTexture(GL_TEXTURE_2D, bufferTransparentColourTex);
-
-	//glUniform1i(glGetUniformLocation(combineShader->GetProgram(), "transparentDiffuseLight"), 4);
-//	glActiveTexture(GL_TEXTURE4);
-//	glBindTexture(GL_TEXTURE_2D, lightDiffuseTex);
 
 	glUniform1i(glGetUniformLocation(combineShader->GetProgram(), "skyboxTex"), 5);
 	glActiveTexture(GL_TEXTURE5);

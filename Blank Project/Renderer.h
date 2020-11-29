@@ -24,18 +24,21 @@ protected:
 	void BuildNodeLists(SceneNode* from, bool frustumCheck);
 	void SortNodeLists();
 	void ClearNodeLists();
+
+	void DrawShadowMaps(bool staticLights);
+	void DrawShadowMap(int resolution, Light& light, float farPlaneDist);
 	void DrawOpaques();
 	void DrawTransparents();
+	void DrawNode(SceneNode* n);
+
+	void SetupLightShader(Shader* shader);
 	void DrawLights();
 	void DrawSkybox();
-	void DrawNode(SceneNode* n);
+
 	void PostProcessing();
 	void CombineBuffers();
 	void Blur();
 	void PresentScene();
-	void BakeStaticShadowMaps();
-	void DrawDynamicShadowMaps();
-	void DrawShadowMap(int resolution, Light& light, float farPlaneDist, bool staticObjectsOnly);
 
 	void Resize(int x, int y) override;
 
@@ -44,28 +47,25 @@ protected:
 
 	Scene* scene;
 
-	Mesh* quad;
-	Mesh* cube;
-	Mesh* sphere; //Light volume
-	Shader* defaultShader;
+	Mesh* quad;				//Screen textures
+	Mesh* sphere;			//Light volume
 	Shader* skyboxShader;
 
 	Shader* pointLightShader;
 	Shader* spotLightShader;
 	Shader* shadowShader;
 
-	GLuint bufferFBO;			//FBO for our G-Buffer pass
-	GLuint bufferColourTex;		//Albedo goes here
-	GLuint bufferNormalTex;		//Normals go here
+	GLuint bufferFBO;					//FBO for our G-Buffer pass
+	GLuint bufferColourTex;				//Albedo goes here
+	GLuint bufferNormalTex;				//Normals go here
 	GLuint bufferDepthStencilTex;		//Depth goes here
-
-	GLuint bufferTransparentColourTex; //Transparent Albedo goes here.
+	GLuint bufferTransparentColourTex;	//Transparent Albedo goes here.
 	GLuint bufferTransparentNormalTex;	//Transparent Normals go here
 
 	GLuint skyboxFBO;
 	GLuint skyboxColourTex;
 
-	GLuint lightingFBO;		//FBO for our lighting pass
+	GLuint lightingFBO;			//FBO for our lighting pass
 	GLuint lightDiffuseTex;		//Store Diffuse Lighting
 	GLuint lightSpecularTex;	//Store Specular Lighting
 

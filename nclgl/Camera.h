@@ -12,7 +12,7 @@ public:
 		roll = 0.0f;
 		nearPlane = 1.0f;
 		farPlane = 10000.0f;
-		fov - 45.0f;
+		fov = 45.0f;
 	};
 
 	Camera(float pitch, float yaw, float roll, Vector3 position, float nearPlane, float farPlane, float fov) {
