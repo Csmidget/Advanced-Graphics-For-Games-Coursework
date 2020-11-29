@@ -16,6 +16,7 @@ public:
 	~SceneNode(void);
 
 	void SetTransform(const Matrix4& matrix) { transform = matrix; }
+	void SetTransform(const Vector3& translate, const Vector3& rotate = {1,1,1}, const Vector3& scale = {1,1,1});
 	const Matrix4& GetTransform() const { return transform; }
 	Matrix4 GetWorldTransform() const { return worldTransform; }
 
@@ -34,7 +35,7 @@ public:
 	Shader* GetShader() const { return shader; }
 	void SetShader(Shader* s) { shader = s; }
 
-	bool GetReflective() const { return reflective; }
+	bool IsReflective() const { return reflective; }
 	void SetReflective(bool r) { reflective = r; }
 
 	float GetBoundingRadius() const { return boundingRadius; }

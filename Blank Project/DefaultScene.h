@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Scene.h"
+#include "CameraTrack.h"
 #include <glad/glad.h>
 
 class Mesh;
@@ -18,6 +19,8 @@ public:
 
 	bool rotateLights;
 
+	CameraTrack* track;
+
 	Shader* defaultShader;
 	Shader* bumpMapShader;
 	Shader* animatedShader;
@@ -26,6 +29,11 @@ public:
 	Mesh* roleTMesh;
 	MeshAnimation* roleTAnim;
 	MeshMaterial* roleTMat;
+
+	Mesh* cubeMesh;
+	Mesh* wallMesh;
+	GLuint wallDiffuse;
+	GLuint wallNormal;
 
 	SceneNode* water;
 	Mesh* waterMesh;

@@ -20,9 +20,9 @@ SceneNode::SceneNode(Mesh* m,  MeshMaterial* mat, MeshAnimation* anm, Vector4 co
 	currentFrame = 0;
 	reflective = false;
 	isStatic = false;
-	texMatrix = {};
+	texMatrix.ToIdentity();
 
-	if (this->mesh) {
+	if (this->mesh && this->material) {
 		for (int i = 0; i < mesh->GetSubMeshCount(); ++i) {
 			const MeshMaterialEntry* matEntry = material->GetMaterialForLayer(i);
 
@@ -56,6 +56,16 @@ SceneNode::~SceneNode(void) {
 		delete children[i];
 	}
 }
+
+void SceneNode::SetTransform(const Vector3& translate, const Vector3& rotate, const Vector3& scale) {
+	transform = Matrix4::Translation(translate) *
+				Matrix4::Scale(scale) *
+				Matrix4::Rotation(rotate.x, { 1,0,0 }) *
+				Matrix4::Rotation(rotate.y, { 0,1,0 }) *
+				Matrix4::Rotation(rotate.z, { 0,0,1 });
+				
+}
+
 
 void SceneNode::AddChild(SceneNode* s) {
 	if (!HasParent(s)) {

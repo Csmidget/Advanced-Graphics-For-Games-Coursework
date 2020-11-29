@@ -395,7 +395,8 @@ void Renderer::DrawNode(SceneNode* n) {
 			glBindTexture(GL_TEXTURE_2D, normal);
 		}
 
-		if (n->GetReflective()) {
+		if (n->IsReflective()) {
+			glUniform3fv(glGetUniformLocation(activeShader->GetProgram(), "cameraPos"), 1, (float*)&scene->camera->GetPosition());
 			glActiveTexture(GL_TEXTURE2);
 			glBindTexture(GL_TEXTURE_CUBE_MAP, scene->skybox);
 		}

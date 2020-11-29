@@ -73,7 +73,8 @@ void main(void) {
 
     shadow = 1 - shadow / float(samples);
 
-    float angleFade =  1 - clamp(angle / lightConeAngle,0.0f,1.0f);
+    //Softens edges of the spotlight
+    float angleFade = 1 - clamp( 1 /pow(lightConeAngle / angle, 8),0.0f,1.0f);
 
     vec3 attenuated = diffuseColour.xyz * atten * angleFade;
 

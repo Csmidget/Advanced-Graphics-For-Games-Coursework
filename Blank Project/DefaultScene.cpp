@@ -9,14 +9,27 @@
 #include "../nclgl/MeshAnimation.h"
 #include "../nclgl/MeshMaterial.h"
 #include "../nclgl/SceneNode.h"
-
+#include "CameraTrack.h"
+#include <limits>
 
 const int POINT_LIGHT_NUM = 20;
 const int SPOT_LIGHT_NUM = 20;
 
+CameraTrack BuildTrack(Camera* cam)
+{
+	CameraTrack track(cam, 0.5f);
+
+	track.AddWaypoint(Vector3(0, 0.0, 10.0), -45, 0, 0);
+	track.AddWaypoint(Vector3(7.756, -3.112, 26.47), -31.82, -33.3, 0);
+
+	return track;
+}
+
+
 DefaultScene::DefaultScene() : Scene() {
 
-	camera->SetPosition(Vector3(0, -15.0, 10.0));
+	camera->SetPosition(Vector3(0, 0.0, 10.0));
+	camera->SetPitch(-45);
 	rotateLights = true;
 	//Texture initialization
 	heighMapDiffuse	=	TextureManager::LoadTexture(TEXTUREDIR"Barren Reds.JPG", SOIL_FLAG_MIPMAPS);
@@ -26,6 +39,9 @@ DefaultScene::DefaultScene() : Scene() {
 														TEXTUREDIR"CosmicCoolCloudFront.jpg", TEXTUREDIR"CosmicCoolCloudBack.jpg");
 	waterDiffuse = TextureManager::LoadTexture(TEXTUREDIR"water.tga", SOIL_FLAG_MIPMAPS);
 	waterNormal = TextureManager::LoadTexture(TEXTUREDIR"waterbump.png", SOIL_FLAG_MIPMAPS);
+	wallDiffuse = TextureManager::LoadTexture(TEXTUREDIR"brick.tga", SOIL_FLAG_MIPMAPS);
+	wallNormal = TextureManager::LoadTexture(TEXTUREDIR"brickDOT3.tga", SOIL_FLAG_MIPMAPS);
+
 
 	if (!heighMapDiffuse || !heightMapNormal || !skybox) {
 		return;
@@ -36,9 +52,9 @@ DefaultScene::DefaultScene() : Scene() {
 	TextureManager::SetTextureRepeating(heightMapNormal, true);
 	TextureManager::SetTextureRepeating(waterDiffuse, true);
 	TextureManager::SetTextureRepeating(waterNormal, true);
-
+	TextureManager::SetTextureRepeating(wallDiffuse, true);
+	TextureManager::SetTextureRepeating(wallNormal, true);
 	////////////
-
 
 	//Shader setup//
 	defaultShader =  new Shader("BufferVertex.glsl", "BufferFragment.glsl");
@@ -64,9 +80,7 @@ DefaultScene::DefaultScene() : Scene() {
 	root->AddChild(heightMapNode);
 	///////////////
 
-
 	//Water//
-
 	waterMesh = Mesh::GenerateQuad();
 	water = new SceneNode(waterMesh);
 	water->SetTransform(Matrix4::Translation(Vector3(0,-16,0)) * Matrix4::Scale(heightmapSize * 0.5f) * Matrix4::Rotation(-90, Vector3(1, 0, 0)));
@@ -81,7 +95,6 @@ DefaultScene::DefaultScene() : Scene() {
 	/////////
 
 	//Walking man//
-
 	roleTMesh = Mesh::LoadFromMeshFile("Role_T.msh");
 	roleTAnim = new MeshAnimation("Role_T.anm");
 	roleTMat  = new MeshMaterial("Role_T.mat");
@@ -93,15 +106,50 @@ DefaultScene::DefaultScene() : Scene() {
 	root->AddChild(role_t);
 
 	role_t = new SceneNode(roleTMesh, roleTMat, roleTAnim, Vector4(1, 1, 1, 1), animatedShader);
-	role_t->SetTransform(Matrix4::Translation(Vector3(1, -15.4, 0)));
+	role_t->SetTransform(Vector3(25, -15.4, -37));
 	role_t->SetModelScale(Vector3(2.0f, 2.0f, 2.0f));
 	role_t->SetBoundingRadius(200.0f);
 	root->AddChild(role_t);
-
 	//////////////
+
+	cubeMesh = Mesh::LoadFromMeshFile("Cube.msh");
+	SceneNode* cube = new SceneNode(cubeMesh);
+	cube->SetShader(defaultShader);
+	cube->SetTexture(wallDiffuse);
+	root->AddChild(cube);
+
+	//Hut//
+	SceneNode* hut = new SceneNode();
+	hut->SetTransform({25,-16,-35 }, { 1,1,1 }, { 4, 4, 4 });
+	const int wallCount = 5;
+	const Vector3 wallPositions[wallCount]{ {0.0,1,-2}	,{2.0,1,0.0},{-2.0,1,0.0}	,{0.0,2,-1}	,{0.0,2,1}	};
+	const Vector3 wallRotations[wallCount]{ {0,90,0}	,{0,0,0}	,{0,0,0}		,{90,90,0}	,{90,90,0}	};
+	for (int i = 0; i < wallCount; i++) {
+		wallMesh = Mesh::LoadFromMeshFile("Wall.msh");
+		SceneNode* wall = new SceneNode(wallMesh);
+		wall->SetTexture(wallDiffuse);
+		wall->SetNormal(wallNormal);
+		wall->SetShader(bumpMapShader);
+		wall->SetBoundingRadius(15.0f);
+		wall->SetTransform(wallPositions[i], wallRotations[i]);
+		wall->SetTextureMatrix(Matrix4::Rotation(90, { 0,0,1 }));
+		wall->MakeStatic();
+		hut->AddChild(wall);
+	}
+	root->AddChild(hut);
+
+	//Hut Spotlight
+	SpotLight l;
+	l.SetPosition({ 25,-15,-30 });
+	l.SetRadius(50.0f);
+	l.SetAngle(20);
+	l.SetDiffuseColour({ 1.0, 0.1, 0.1, 1.0});
+	l.SetRotation({ 100,0,0 });
+	l.SetDirection(Vector3(0, -1, 0));
+	spotLights.emplace_back(l);
+	/////////
 	
 	//Barrel//
-
 	barrelMesh = Mesh::LoadFromMeshFile("Barrel_1.msh");
 	barrelMat = new MeshMaterial("Barrel_1.mat");
 	
@@ -117,7 +165,6 @@ DefaultScene::DefaultScene() : Scene() {
 		barrel->MakeStatic();
 		root->AddChild(barrel);
 	}
-
 	//////////
 
 	//Light setup
@@ -167,10 +214,17 @@ DefaultScene::DefaultScene() : Scene() {
 	waterRotate = 0.0f;
 	waterCycle = 0.0f;
 
+	track = new CameraTrack{BuildTrack(camera)};
+	//track->Start();
+
 	initialized = true;
 }
 
 DefaultScene::~DefaultScene() {
+
+	delete track;
+
+	delete wallMesh;
 
 	delete defaultShader;
 	delete bumpMapShader;
@@ -248,9 +302,20 @@ void DefaultScene::Update(float dt) {
 	}
 
 	if (rotateLights) {
-		for (int i = 0; i < spotLights.size(); i++) {
+		for (int i = 1; i < spotLights.size(); i++) {
 			spotLights[i].SetRotation(spotLights[i].GetRotation() + Vector3(1, 0, 0) * velocity * dt);
 		}
+	}
+
+	if (Window::GetKeyboard()->KeyTriggered(KEYBOARD_P)) {
+		Vector3 pos = camera->GetPosition();
+		Vector3 rot = { camera->GetPitch(), camera->GetYaw(), camera->GetRoll() };
+		std::cout.precision(4);
+		std::cout << "Camera pos: <" << pos.x << "," << pos.y << "," << pos.z << "> <" << rot.x << "," << rot.y << "," << rot.z << ">\n";
+	}
+
+	if (Window::GetKeyboard()->KeyTriggered(KEYBOARD_0)) {
+		track->Start();
 	}
 
 	waterRotate += dt * 2.0f; //2 degrees a second
@@ -261,7 +326,8 @@ void DefaultScene::Update(float dt) {
 		Matrix4::Scale(Vector3(10, 10, 10)) *
 		Matrix4::Rotation(waterRotate, Vector3(0, 0, 1)));
 
-	camera->UpdateCamera(dt);
+	track->Update(dt);
 
+	camera->UpdateCamera(dt);
 	Scene::Update(dt);
 }
