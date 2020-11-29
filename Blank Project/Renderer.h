@@ -25,6 +25,7 @@ protected:
 	void SortNodeLists();
 	void ClearNodeLists();
 	void DrawOpaques();
+	void DrawTransparents();
 	void DrawLights();
 	void DrawSkybox();
 	void DrawNode(SceneNode* n);
@@ -53,13 +54,13 @@ protected:
 	Shader* spotLightShader;
 	Shader* shadowShader;
 
-
 	GLuint bufferFBO;			//FBO for our G-Buffer pass
 	GLuint bufferColourTex;		//Albedo goes here
 	GLuint bufferNormalTex;		//Normals go here
 	GLuint bufferDepthStencilTex;		//Depth goes here
 
 	GLuint bufferTransparentColourTex; //Transparent Albedo goes here.
+	GLuint bufferTransparentNormalTex;	//Transparent Normals go here
 
 	GLuint skyboxFBO;
 	GLuint skyboxColourTex;

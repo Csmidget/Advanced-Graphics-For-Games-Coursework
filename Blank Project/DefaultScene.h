@@ -21,13 +21,16 @@ public:
 	Shader* defaultShader;
 	Shader* bumpMapShader;
 	Shader* animatedShader;
-	Shader* bumpAnimatedShader;
+	Shader* reflectShader;
 	
 	Mesh* roleTMesh;
 	MeshAnimation* roleTAnim;
 	MeshMaterial* roleTMat;
 
+	SceneNode* water;
 	Mesh* waterMesh;
+	GLuint waterDiffuse;
+	GLuint waterNormal;
 
 	HeightMap* heightMapMesh;
 	GLuint heighMapDiffuse;
@@ -35,4 +38,7 @@ public:
 
 	Mesh* barrelMesh;
 	MeshMaterial* barrelMat;	
+
+	float waterRotate;
+	float waterCycle = 0.0f;
 };

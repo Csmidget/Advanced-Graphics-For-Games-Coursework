@@ -38,19 +38,21 @@ Renderer::Renderer(Window& parent) : OGLRenderer(parent) {
 	lightDiffuseTex = 0;
 	lightSpecularTex = 0;
 	skyboxColourTex = 0;
+	bufferTransparentColourTex = 0;
+	bufferTransparentNormalTex = 0;
 	outputPostProcessTex = 0;
 	postProcessColourTex[0] = 0;
 	postProcessColourTex[1] = 0;
 
 	projMatrix = Matrix4::Perspective(1.0f, 10000.0f, (float)width / (float)height, 45.0f);
 
-	combineShader = new Shader("CombineVertex.glsl", "CombineFragment.glsl");
 	skyboxShader = new Shader("SkyboxVertex.glsl", "SkyboxFragment.glsl");
 	blurShader = new Shader("TexturedVertex.glsl", "ProcessFragment.glsl");
 	sceneShader = new Shader("TexturedVertex.glsl", "TexturedFragment.glsl");
 	pointLightShader = new Shader("PointLightVertex.glsl", "PointLightShadowFragment.glsl");
 	spotLightShader = new Shader("PointLightVertex.glsl", "SpotLightShadowFragment.glsl");
 	shadowShader = new Shader("ShadowVert.glsl", "ShadowFrag.glsl", "ShadowGeom.glsl");
+	combineShader = new Shader("CombineVertex.glsl", "CombineFragment.glsl");
 
 	if (!defaultShader->LoadSuccess()	|| !pointLightShader->LoadSuccess()	|| !spotLightShader->LoadSuccess()	||
 		!combineShader->LoadSuccess()	|| !skyboxShader->LoadSuccess()		|| !blurShader->LoadSuccess()		||
@@ -72,6 +74,8 @@ Renderer::Renderer(Window& parent) : OGLRenderer(parent) {
 	GenerateScreenTexture(bufferDepthStencilTex, true);
 	GenerateScreenTexture(bufferColourTex);
 	GenerateScreenTexture(bufferNormalTex);
+	GenerateScreenTexture(bufferTransparentColourTex);
+	GenerateScreenTexture(bufferTransparentNormalTex);
 	GenerateScreenTexture(lightDiffuseTex);
 	GenerateScreenTexture(lightSpecularTex);
 	GenerateScreenTexture(skyboxColourTex);
@@ -366,6 +370,7 @@ void Renderer::DrawNode(SceneNode* n) {
 		
 		glUniform1i(glGetUniformLocation(activeShader->GetProgram(), "diffuseTex"), 0);
 		glUniform1i(glGetUniformLocation(activeShader->GetProgram(), "normalTex"), 1);
+		glUniform1i(glGetUniformLocation(activeShader->GetProgram(), "reflectCube"), 2);
 	}
 
 	if (n->GetMesh()) {
@@ -388,6 +393,11 @@ void Renderer::DrawNode(SceneNode* n) {
 			glBindTexture(GL_TEXTURE_2D, normal);
 		}
 
+		if (n->GetReflective()) {
+			glActiveTexture(GL_TEXTURE2);
+			glBindTexture(GL_TEXTURE_CUBE_MAP, scene->skybox);
+		}
+
 		n->Draw();
 	}
 }
@@ -401,7 +411,7 @@ void Renderer::RenderScene() {
 
 	DrawDynamicShadowMaps();
 	DrawOpaques();
-//	DrawTransparents();
+	DrawTransparents();
 	DrawSkybox();
 	DrawLights();
 	PostProcessing();
@@ -411,6 +421,8 @@ void Renderer::RenderScene() {
 
 void Renderer::DrawOpaques() {
 	glBindFramebuffer(GL_FRAMEBUFFER, bufferFBO);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, bufferColourTex, 0);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, bufferNormalTex, 0);
 	glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
 	glEnable(GL_STENCIL_TEST);
@@ -425,8 +437,32 @@ void Renderer::DrawOpaques() {
 	{
 		DrawNode(i);
 	}
+	textureMatrix.ToIdentity();
 
 	glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+void Renderer::DrawTransparents() {
+	glBindFramebuffer(GL_FRAMEBUFFER, bufferFBO);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, bufferTransparentColourTex, 0);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, bufferTransparentNormalTex, 0);
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	glDisable(GL_STENCIL_TEST);
+	glDepthMask(GL_FALSE);
+
+	modelMatrix.ToIdentity();
+	viewMatrix = scene->camera->BuildViewMatrix();
+
+	for (auto i : transparentNodeList)
+	{
+		DrawNode(i);
+	}
+	textureMatrix.ToIdentity();
+
+	glEnable(GL_STENCIL_TEST);
+	glDepthMask(GL_TRUE);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
@@ -442,6 +478,7 @@ void Renderer::DrawLights() {
 	glDepthMask(GL_FALSE);
 
 	//ONLY light where something is already drawn.
+	glEnable(GL_STENCIL_TEST);
 	glStencilFunc(GL_EQUAL, 2, ~0);
 	glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
 
@@ -541,7 +578,6 @@ void Renderer::PostProcessing() {
 	modelMatrix.ToIdentity();
 	viewMatrix.ToIdentity();
 	projMatrix.ToIdentity();
-
 	//Combine the buffers and put the output into the postprocessing shader
 	CombineBuffers();
 	if (doBlur) Blur();
@@ -572,8 +608,16 @@ void Renderer::CombineBuffers() {
 	glActiveTexture(GL_TEXTURE2);
 	glBindTexture(GL_TEXTURE_2D, lightSpecularTex);
 
-	glUniform1i(glGetUniformLocation(combineShader->GetProgram(), "skyboxTex"), 3);
+	glUniform1i(glGetUniformLocation(combineShader->GetProgram(), "transparentDiffuseTex"), 3);
 	glActiveTexture(GL_TEXTURE3);
+	glBindTexture(GL_TEXTURE_2D, bufferTransparentColourTex);
+
+	//glUniform1i(glGetUniformLocation(combineShader->GetProgram(), "transparentDiffuseLight"), 4);
+//	glActiveTexture(GL_TEXTURE4);
+//	glBindTexture(GL_TEXTURE_2D, lightDiffuseTex);
+
+	glUniform1i(glGetUniformLocation(combineShader->GetProgram(), "skyboxTex"), 5);
+	glActiveTexture(GL_TEXTURE5);
 	glBindTexture(GL_TEXTURE_2D, skyboxColourTex);
 
 	quad->Draw();

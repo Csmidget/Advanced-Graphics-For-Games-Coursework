@@ -20,6 +20,7 @@ public:
 	Matrix4 GetWorldTransform() const { return worldTransform; }
 
 	const Matrix4& GetTextureMatrix() const { return texMatrix; }
+	void SetTextureMatrix(Matrix4 val) { texMatrix = val; }
 
 	Vector4 GetColour() const { return colour; }
 	void SetColour(Vector4 c) { colour = c; }
@@ -32,6 +33,9 @@ public:
 
 	Shader* GetShader() const { return shader; }
 	void SetShader(Shader* s) { shader = s; }
+
+	bool GetReflective() const { return reflective; }
+	void SetReflective(bool r) { reflective = r; }
 
 	float GetBoundingRadius() const { return boundingRadius; }
 	void SetBoundingRadius(float f) { boundingRadius = f; }
@@ -98,6 +102,7 @@ protected:
 	float frameTime;
 	int currentFrame;
 	bool isStatic;
+	bool reflective;
 	GLuint texture;
 	GLuint normal;
 };

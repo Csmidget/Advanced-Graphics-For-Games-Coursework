@@ -1,9 +1,9 @@
 #version 330 core
 
 uniform sampler2D diffuseTex;
-uniform sampler2D bumpTex;
+uniform sampler2D normalTex;
 
-uniform samplerCube cubeTex;
+uniform samplerCube reflectCube;
 
 uniform vec3 cameraPos;
 uniform vec4 diffuseColour;
@@ -26,12 +26,12 @@ void main(void) {
     vec3 viewDir = normalize(cameraPos - IN.worldPos);
   
     mat3 TBN = mat3(normalize(IN.tangent), normalize(IN.binormal), normalize(IN.normal));
-    vec3 bumpNormal = texture(bumpTex, IN.texCoord).rgb;
+    vec3 bumpNormal = texture(normalTex, IN.texCoord).rgb;
     bumpNormal = normalize(TBN * normalize(bumpNormal * 2.0 - 1.0));
 
     vec3 reflectDir = reflect(-viewDir, normalize(bumpNormal));
-    vec4 reflectTex = texture(cubeTex, reflectDir);
+    vec4 reflectTex = texture(reflectCube, reflectDir);
 
     fragColour = reflectTex + (diffuse * 0.25f);
-    fragColour.a = 1f;
+    fragColour.a = 0.75f;
 }

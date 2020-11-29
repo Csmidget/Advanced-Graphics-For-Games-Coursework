@@ -24,6 +24,8 @@ DefaultScene::DefaultScene() : Scene() {
 	skybox				=	TextureManager::LoadCubemap(TEXTUREDIR"CosmicCoolCloudLeft.jpg", TEXTUREDIR"CosmicCoolCloudRight.jpg",
 														TEXTUREDIR"CosmicCoolCloudTop.jpg",  TEXTUREDIR"CosmicCoolCloudBottom.jpg",
 														TEXTUREDIR"CosmicCoolCloudFront.jpg", TEXTUREDIR"CosmicCoolCloudBack.jpg");
+	waterDiffuse = TextureManager::LoadTexture(TEXTUREDIR"water.tga", SOIL_FLAG_MIPMAPS);
+	waterNormal = TextureManager::LoadTexture(TEXTUREDIR"waterbump.png", SOIL_FLAG_MIPMAPS);
 
 	if (!heighMapDiffuse || !heightMapNormal || !skybox) {
 		return;
@@ -31,6 +33,10 @@ DefaultScene::DefaultScene() : Scene() {
 
 	TextureManager::SetTextureRepeating(heighMapDiffuse, true);
 	TextureManager::SetTextureRepeating(heightMapNormal, true);
+	TextureManager::SetTextureRepeating(heightMapNormal, true);
+	TextureManager::SetTextureRepeating(waterDiffuse, true);
+	TextureManager::SetTextureRepeating(waterNormal, true);
+
 	////////////
 
 
@@ -38,9 +44,9 @@ DefaultScene::DefaultScene() : Scene() {
 	defaultShader =  new Shader("BufferVertex.glsl", "BufferFragment.glsl");
 	bumpMapShader =  new Shader("BufferBumpVertex.glsl", "BufferBumpFragment.glsl");
 	animatedShader = new Shader("SkinningVertex.glsl", "BufferFragment.glsl");
-	//bumpAnimated
+	reflectShader = new Shader("ReflectBumpVertex.glsl", "ReflectBumpFragment.glsl");
 
-	if (!defaultShader->LoadSuccess() || !bumpMapShader->LoadSuccess() || !animatedShader->LoadSuccess())
+	if (!defaultShader->LoadSuccess() || !bumpMapShader->LoadSuccess() || !animatedShader->LoadSuccess() || !reflectShader->LoadSuccess())
 		return;
 	////////////////
 	
@@ -54,8 +60,6 @@ DefaultScene::DefaultScene() : Scene() {
 	heightMapNode->SetNormal(heightMapNormal);
 	heightMapNode->MakeStatic();
 	heightMapNode->SetModelScale(Vector3(0.1f, 0.1f, 0.1f));
-
-
 	heightMapNode->SetShader(bumpMapShader);
 	root->AddChild(heightMapNode);
 	///////////////
@@ -64,14 +68,15 @@ DefaultScene::DefaultScene() : Scene() {
 	//Water//
 
 	waterMesh = Mesh::GenerateQuad();
-	SceneNode* water = new SceneNode(waterMesh);
+	water = new SceneNode(waterMesh);
 	water->SetTransform(Matrix4::Translation(Vector3(0,-16,0)) * Matrix4::Scale(heightmapSize * 0.5f) * Matrix4::Rotation(-90, Vector3(1, 0, 0)));
-	water->SetShader(bumpMapShader);
-	water->SetTexture(TextureManager::LoadTexture(TEXTUREDIR"water.tga", SOIL_FLAG_MIPMAPS));
-	water->SetNormal(TextureManager::LoadTexture(TEXTUREDIR"waterbump.png", SOIL_FLAG_MIPMAPS));
+	water->SetShader(reflectShader);
+	water->SetTexture(waterDiffuse);
+	water->SetNormal(waterNormal);
 	water->SetBoundingRadius((heightMapMesh->GetHeightMapSize()).Length());
-	water->SetColour(Vector4(1, 1, 1, 0.5f));
+	water->SetColour(Vector4(1, 1, 1, 0.9f));
 	water->MakeStatic();
+	water->SetReflective(true);
 	root->AddChild(water);
 	/////////
 
@@ -159,6 +164,9 @@ DefaultScene::DefaultScene() : Scene() {
 	}
 	////////////
 
+	waterRotate = 0.0f;
+	waterCycle = 0.0f;
+
 	initialized = true;
 }
 
@@ -167,7 +175,7 @@ DefaultScene::~DefaultScene() {
 	delete defaultShader;
 	delete bumpMapShader;
 	delete animatedShader;
-	delete bumpAnimatedShader;
+	delete reflectShader;
 
 	delete roleTMesh;
 	delete roleTAnim;
@@ -179,7 +187,8 @@ DefaultScene::~DefaultScene() {
 
 	delete barrelMesh;
 	delete barrelMat;
-
+	
+	//We only need to delete manually generated textures. The texturemanager handles external textures.
 	glDeleteTextures(1, &heighMapDiffuse);
 	glDeleteTextures(1, &heightMapNormal);
 }
@@ -243,6 +252,15 @@ void DefaultScene::Update(float dt) {
 			spotLights[i].SetRotation(spotLights[i].GetRotation() + Vector3(1, 0, 0) * velocity * dt);
 		}
 	}
+
+	waterRotate += dt * 2.0f; //2 degrees a second
+	waterCycle += dt * 0.05f; //10 units a second
+
+	water->SetTextureMatrix(
+		Matrix4::Translation(Vector3(waterCycle, 0.0f, waterCycle)) *
+		Matrix4::Scale(Vector3(10, 10, 10)) *
+		Matrix4::Rotation(waterRotate, Vector3(0, 0, 1)));
+
 	camera->UpdateCamera(dt);
 
 	Scene::Update(dt);
