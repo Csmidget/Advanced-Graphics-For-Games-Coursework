@@ -602,7 +602,7 @@ void Renderer::CombineBuffers() {
 	UpdateShaderMatrices();
 
 	float ambient = doNeonGrid ? 0.0f : 0.1f;
-	float transparentAmbient = doNeonGrid ? 0.0f : 0.5f;
+	float transparentAmbient = doNeonGrid ? 0.0f : 0.2f;
 
 	glUniform1f(glGetUniformLocation(combineShader->GetProgram(), "ambient"), ambient);
 	glUniform1f(glGetUniformLocation(combineShader->GetProgram(), "transparentAmbient"), transparentAmbient);

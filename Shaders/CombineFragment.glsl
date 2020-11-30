@@ -28,7 +28,7 @@ void main(void) {
     fragColour.xyz = diffuse.xyz * ambient;
     fragColour.xyz += diffuse.xyz * light.xyz;
     fragColour.xyz += specular;
-    fragColour.xyz += transparentDiffuse.xyz * ambient;// * 0.1;
+    fragColour.xyz += transparentDiffuse.xyz * transparentAmbient;// * 0.1;
     fragColour.xyz += transparentDiffuse.xyz * light.xyz;
     fragColour.xyz += skyBox;
     fragColour.xyz += neonGridTex;

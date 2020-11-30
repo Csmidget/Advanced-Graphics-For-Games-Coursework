@@ -140,7 +140,7 @@ DefaultScene::DefaultScene() : Scene() {
 	//Compound Lights//
 	const int pointLightCount = 6;
 	Vector3 pLightPositions[pointLightCount]{ {-36.43,2.387,-50.42}, {-26.29,3.548,37.42}, {37.95,3.45,37.01},{37.95,3.477,-48.96},{7.964,3.734,-3.472},{7.964,3.734,3.714} };
-	Vector4 pLightColours[pointLightCount]{ {1,0.4,0.4,1},{0.4,1,0.4,1},{0.4,0.4,1,1},{1,0.4,1,1} };
+	Vector4 pLightColours[pointLightCount]{ {1,0.4,0.4,1},{0.4,1,0.4,1},{0.4,0.4,1,1},{1,0.4,1,1},{1,1,1,1},{1,1,1,1}  };
 	bool	pIsStatic[pointLightCount]{ true,true,true,true,false,false };
 	for (int i = 0; i < pointLightCount; i++) {
 		PointLight l;
