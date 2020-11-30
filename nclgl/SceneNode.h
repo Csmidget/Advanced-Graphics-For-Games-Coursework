@@ -15,13 +15,24 @@ public:
 	SceneNode(Mesh* m = NULL, MeshMaterial* = NULL, MeshAnimation* anm = NULL, Vector4 colour = Vector4(1, 1, 1, 1), Shader * s = NULL);
 	~SceneNode(void);
 
-	void SetTransform(const Matrix4& matrix) { transform = matrix; }
-	void SetTransform(const Vector3& translate, const Vector3& rotate = {1,1,1}, const Vector3& scale = {1,1,1});
 	const Matrix4& GetTransform() const { return transform; }
+	void SetTransform(const Vector3& translate, const Vector3& rotate = { 0,0,0 }, const Vector3& scale = { 1,1,1 });
 	Matrix4 GetWorldTransform() const { return worldTransform; }
 
 	const Matrix4& GetTextureMatrix() const { return texMatrix; }
 	void SetTextureMatrix(Matrix4 val) { texMatrix = val; }
+
+	Vector3 GetPosition() const { return position; }
+	void	SetPosition(Vector3 val) { position = val; }
+	void	Translate(Vector3 val) { position += val; }
+
+	Vector3 GetRotation() const { return rotation; }
+	void	SetRotation(Vector3 val) { rotation = val; }
+	void	rotate(Vector3 val) { rotation += val; }
+
+	Vector3 GetScale() const { return scale; }
+	void SetScale(Vector3 val) { scale = val; }
+	void Scale(Vector3 val) { scale += val; }
 
 	Vector4 GetColour() const { return colour; }
 	void SetColour(Vector4 c) { colour = c; }
@@ -75,10 +86,18 @@ public:
 
 
 protected:
+
+	void UpdateTransform();
+	void SetTransform(const Matrix4& matrix) { transform = matrix; }
+
 	bool HasParent(SceneNode* _parent) const;
 	const Matrix4* GetRelativeJointData(unsigned int frame) const;
 
 	SceneNode* parent;
+
+	Vector3 position;
+	Vector3 rotation;
+	Vector3 scale;
 
 	Shader* shader;
 	Mesh* mesh;

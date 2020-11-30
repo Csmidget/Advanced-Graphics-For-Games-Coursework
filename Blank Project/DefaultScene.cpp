@@ -68,13 +68,12 @@ DefaultScene::DefaultScene() : Scene() {
 	////////////////
 	
 	//Terrain//
-
 	//As it is custom, we cannot use the MeshManager to load the heightmap.
 	heightMapMesh = new HeightMap(TEXTUREDIR"terraintest.png");
 	SceneNode* heightMapNode = new SceneNode(heightMapMesh);
 	Vector3 heightmapSize = heightMapMesh->GetHeightMapSize() * 0.1f;
 	heightMapNode->SetBoundingRadius((heightMapMesh->GetHeightMapSize()).Length());
-	heightMapNode->SetTransform(Matrix4::Translation(Vector3(-heightmapSize.x / 2, -heightmapSize.y, -heightmapSize.z / 2)));
+	heightMapNode->SetTransform(Vector3(-heightmapSize.x / 2, -heightmapSize.y, -heightmapSize.z / 2));
 	heightMapNode->SetTexture(heightMapDiffuse);
 	heightMapNode->SetNormal(heightMapNormal);
 	heightMapNode->MakeStatic();
@@ -84,10 +83,10 @@ DefaultScene::DefaultScene() : Scene() {
 	///////////////
 
 	//Water//
-	//As with the terrain, this quad is generated in program, so we have to manage it's lifecycle here.
+	//As with the terrain, this quad is generated in program, so we will manage it's lifecycle here.
 	waterMesh = Mesh::GenerateQuad();
 	water = new SceneNode(waterMesh);
-	water->SetTransform(Matrix4::Translation(Vector3(0,-16,0)) * Matrix4::Scale(heightmapSize * 0.5f) * Matrix4::Rotation(-90, Vector3(1, 0, 0)));
+	water->SetTransform(Vector3(0,-16,0), Vector3(-90, 0, 0), heightmapSize * 0.5f);
 	water->SetShader(reflectShader);
 	water->SetTexture(waterDiffuse);
 	water->SetNormal(waterNormal);
@@ -104,7 +103,7 @@ DefaultScene::DefaultScene() : Scene() {
 	MeshMaterial* roleTMat  = MeshManager::LoadMeshMaterial("Role_T.mat");
 	
 	SceneNode* role_t = new SceneNode(roleTMesh,  roleTMat, roleTAnim, Vector4(1, 1, 1, 1), animatedShader);
-	role_t->SetTransform(Matrix4::Translation(Vector3(0, -15.4, 0)));
+	role_t->SetTransform(Vector3(0, -15.4, 0));
 	role_t->SetModelScale(Vector3(2.0f, 2.0f, 2.0f));
 	role_t->SetBoundingRadius(200.0f);
 	root->AddChild(role_t);
@@ -163,7 +162,7 @@ DefaultScene::DefaultScene() : Scene() {
 
 	for (int i = 0; i < barrelCount; ++i) {
 		SceneNode* barrel = new SceneNode(barrelMesh, barrelMat);
-		barrel->SetTransform(Matrix4::Translation(barrelPositions[i]) * Matrix4::Rotation(barrelRotations[i].x, { 1,0,0 })* Matrix4::Rotation(barrelRotations[i].y, { 0,1,0 }) * Matrix4::Rotation(barrelRotations[i].z, { 0,1,0 }));
+		barrel->SetTransform(barrelPositions[i], barrelRotations[i]);
 		barrel->SetBoundingRadius(200.0f);
 		barrel->SetShader(bumpMapShader);
 		barrel->MakeStatic();
@@ -235,7 +234,6 @@ DefaultScene::~DefaultScene() {
 
 	delete waterMesh;
 	delete heightMapMesh;
-
 }
 
 void DefaultScene::Update(float dt) {

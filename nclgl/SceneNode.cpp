@@ -10,6 +10,9 @@ SceneNode::SceneNode(Mesh* m,  MeshMaterial* mat, MeshAnimation* anm, Vector4 co
 
 	this->shader = s;
 	this->colour = colour;
+	position = {};
+	rotation = {};
+	scale = { 1,1,1 };
 	boundingRadius = 1.0f;
 	distanceFromCamera = 0.0f;
 	texture = 0;
@@ -58,14 +61,22 @@ SceneNode::~SceneNode(void) {
 }
 
 void SceneNode::SetTransform(const Vector3& translate, const Vector3& rotate, const Vector3& scale) {
-	transform = Matrix4::Translation(translate) *
-				Matrix4::Scale(scale) *
-				Matrix4::Rotation(rotate.x, { 1,0,0 }) *
-				Matrix4::Rotation(rotate.y, { 0,1,0 }) *
-				Matrix4::Rotation(rotate.z, { 0,0,1 });
-				
+	
+	this->position = translate;
+	this->rotation = rotate;
+	this->scale = scale;
+	
+	UpdateTransform();
 }
 
+void SceneNode::UpdateTransform() {
+
+	transform = Matrix4::Translation(position) *
+		Matrix4::Scale(scale) *
+		Matrix4::Rotation(rotation.x, { 1,0,0 }) *
+		Matrix4::Rotation(rotation.y, { 0,1,0 }) *
+		Matrix4::Rotation(rotation.z, { 0,0,1 });
+}
 
 void SceneNode::AddChild(SceneNode* s) {
 	if (!HasParent(s)) {
@@ -158,6 +169,8 @@ void SceneNode::Update(float dt) {
 			frameMatrices.push_back(Matrix4::Lerp(progress, currFrameData[j], prevFrameData[j]));
 		}
 	}
+
+	UpdateTransform();
 }
 
 const Matrix4* SceneNode::GetRelativeJointData(unsigned int frame) const {
