@@ -49,7 +49,7 @@ public:
 	bool IsReflective() const { return reflective; }
 	void SetReflective(bool r) { reflective = r; }
 
-	float GetBoundingRadius() const;
+	float GetBoundingRadius() const { return mesh ? (worldScale * mesh->GetRadius()).Length() : 0.0f; }
 
 	float GetCameraDistance() const { return distanceFromCamera; }
 	void SetCameraDistance(float f) { distanceFromCamera = f; }
@@ -80,8 +80,16 @@ public:
 	}
 
 	bool IsStatic() const { return isStatic; }
-	void MakeStatic() { isStatic = true; }
-	void MakeDynamic() { isStatic = false; }
+	void MakeStatic() {
+		isStatic = true; 
+		for (auto c : children)
+			c->MakeStatic();
+	}
+	void MakeDynamic() { 
+		isStatic = false; 
+		for (auto c : children)
+			c->MakeDynamic();
+	}
 
 
 protected:

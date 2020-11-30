@@ -7,5 +7,5 @@ namespace Templates {
 
 	SceneNode* Hut();
 
-	SceneNode* Prison();
+	SceneNode* Compound();
 }

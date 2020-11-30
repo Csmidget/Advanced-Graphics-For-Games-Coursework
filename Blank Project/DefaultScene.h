@@ -24,6 +24,7 @@ public:
 
 	CameraTrack* track;
 
+	SceneNode* compound;
 	SceneNode* water;
 	Mesh* waterMesh;
 

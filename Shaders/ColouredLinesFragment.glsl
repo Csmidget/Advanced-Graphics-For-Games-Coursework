@@ -9,7 +9,7 @@ in Vertex {
 out vec4 fragColour;
 
 const int LINEDENSITY = 10;
-const float LINETHICKNESS = 0.05;
+const float LINETHICKNESS = 0.1;
 
 void main(void) {
 	vec2 scaledTexCoord = IN.texCoord * LINEDENSITY - vec2(0.5);

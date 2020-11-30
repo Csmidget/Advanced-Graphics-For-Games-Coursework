@@ -72,10 +72,10 @@ void SceneNode::SetTransform(const Vector3& translate, const Vector3& rotate, co
 void SceneNode::UpdateTransform() {
 
 	transform = Matrix4::Translation(position) *
-		Matrix4::Scale(scale) *
-		Matrix4::Rotation(rotation.x, { 1,0,0 }) *
-		Matrix4::Rotation(rotation.y, { 0,1,0 }) *
-		Matrix4::Rotation(rotation.z, { 0,0,1 });
+				Matrix4::Scale(scale) *
+				Matrix4::Rotation(rotation.x, { 1,0,0 }) *
+				Matrix4::Rotation(rotation.y, { 0,1,0 }) *
+				Matrix4::Rotation(rotation.z, { 0,0,1 });
 }
 
 void SceneNode::AddChild(SceneNode* s) {
@@ -122,22 +122,33 @@ void SceneNode::Draw(const Shader* activeShader) {
 			glUniform1i(glGetUniformLocation(activeShader->GetProgram(), "hasJoints"), false);
 		}
 
-		if (material) {
+		if (mesh->GetSubMeshCount() > 0) {
 			for (int i = 0; i < mesh->GetSubMeshCount(); ++i) {
-				glActiveTexture(GL_TEXTURE0);
-				glBindTexture(GL_TEXTURE_2D, matTextures[i]);
-				glActiveTexture(GL_TEXTURE1);
-				glBindTexture(GL_TEXTURE_2D, matNormals[i]);
+				if (material) {
+					glActiveTexture(GL_TEXTURE0);
+					glBindTexture(GL_TEXTURE_2D, matTextures[i]);
+					glActiveTexture(GL_TEXTURE1);
+					glBindTexture(GL_TEXTURE_2D, matNormals[i]);
+				}
 				mesh->DrawSubMesh(i);
 			}
-		}
+		}	
 		else {
+			if (material) {
+				glActiveTexture(GL_TEXTURE0);
+				glBindTexture(GL_TEXTURE_2D, matTextures[0]);
+				glActiveTexture(GL_TEXTURE1);
+				glBindTexture(GL_TEXTURE_2D, matNormals[0]);
+			}
 			mesh->Draw();
 		}
 	}
 }
 
 void SceneNode::Update(float dt) {
+
+	UpdateTransform();
+
 	if (parent) {
 		worldTransform = parent->worldTransform * transform;
 		worldScale = parent->worldScale * scale;
@@ -171,8 +182,6 @@ void SceneNode::Update(float dt) {
 			frameMatrices.push_back(Matrix4::Lerp(progress, currFrameData[j], prevFrameData[j]));
 		}
 	}
-
-	UpdateTransform();
 }
 
 const Matrix4* SceneNode::GetRelativeJointData(unsigned int frame) const {
@@ -184,13 +193,4 @@ const Matrix4* SceneNode::GetRelativeJointData(unsigned int frame) const {
 	Matrix4* dataStart = (Matrix4*)animRelativeJoints.data();
 
 	return dataStart + matStart;
-}
-
-float SceneNode::GetBoundingRadius() const {
-
-	if (!mesh)
-		return 0.0f;
-
-	float radius = (worldScale * mesh->GetRadius()).Length();
-	return radius;
 }

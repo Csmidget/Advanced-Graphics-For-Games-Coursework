@@ -400,7 +400,6 @@ void Renderer::RenderScene() {
 	SortNodeLists();
 
 	glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
-
 	DrawShadowMaps(false);
 	DrawOpaques();
 	DrawTransparents();

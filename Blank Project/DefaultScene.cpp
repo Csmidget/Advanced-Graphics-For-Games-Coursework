@@ -16,8 +16,8 @@
 
 #include <limits>
 
-const int POINT_LIGHT_NUM = 5;
-const int SPOT_LIGHT_NUM = 5;
+const int POINT_LIGHT_NUM = 0;
+const int SPOT_LIGHT_NUM = 0;
 
 CameraTrack BuildTrack(Camera* cam)
 {
@@ -104,24 +104,21 @@ DefaultScene::DefaultScene() : Scene() {
 
 	//Walking man//
 	Mesh* roleTMesh = MeshManager::LoadMesh("Role_T.msh");
-	MeshAnimation* roleTAnim = MeshManager::LoadMeshAnimation("Role_T.anm");
+	MeshAnimation* roleTRunAnim = MeshManager::LoadMeshAnimation("Role_T.anm");
+	MeshAnimation* roleTStandAnim = MeshManager::LoadMeshAnimation("Role_T_stand.anm");
 	MeshMaterial* roleTMat  = MeshManager::LoadMeshMaterial("Role_T.mat");
 	
-	SceneNode* role_t = new SceneNode(roleTMesh,  roleTMat, roleTAnim, Vector4(1, 1, 1, 1), animatedShader);
+	SceneNode* role_t = new SceneNode(roleTMesh,  roleTMat, roleTRunAnim, Vector4(1, 1, 1, 1), animatedShader);
 	role_t->SetTransform(Vector3(0, -15.4, 0));
 	role_t->SetModelScale(Vector3(2.0f, 2.0f, 2.0f));
 	root->AddChild(role_t);
 
-	role_t = new SceneNode(roleTMesh, roleTMat, roleTAnim, Vector4(1, 1, 1, 1), animatedShader);
+	role_t = new SceneNode(roleTMesh, roleTMat, roleTStandAnim, Vector4(1, 1, 1, 1), animatedShader);
 	role_t->SetTransform(Vector3(25, -15.4, -37));
 	role_t->SetModelScale(Vector3(2.0f, 2.0f, 2.0f));
 	root->AddChild(role_t);
 	//////////////
 
-	//Hut//
-	auto hut = Templates::Hut();
-	hut->SetTransform({ 25,-16,-35 }, { 1,1,1 }, { 4, 4, 4 });
-	root->AddChild(hut);
 	//Hut Spotlight
 	SpotLight l;
 	l.SetPosition({ 25,-14.5,-30 });
@@ -133,11 +130,30 @@ DefaultScene::DefaultScene() : Scene() {
 	spotLights.emplace_back(l);
 	/////////
 
-	//Prison//
-	auto prison = Templates::Prison();
-	prison->SetTransform({ 0,-16,0 }, { 1,1,1 }, { 4, 4, 4 });
-	root->AddChild(prison);
+	//Compound//
+	compound = Templates::Compound();
+	compound->SetTransform({ 0,-15.4,0 }, { 0,0,0 }, { 4, 4, 4 });
+	compound->MakeStatic();
+	root->AddChild(compound);
 	//////////
+
+	//Compound Lights//
+	const int pointLightCount = 6;
+	Vector3 pLightPositions[pointLightCount]{ {-36.43,2.387,-50.42}, {-26.29,3.548,37.42}, {37.95,3.45,37.01},{37.95,3.477,-48.96},{7.964,3.734,-3.472},{7.964,3.734,3.714} };
+	Vector4 pLightColours[pointLightCount]{ {1,0.4,0.4,1},{0.4,1,0.4,1},{0.4,0.4,1,1},{1,0.4,1,1} };
+	bool	pIsStatic[pointLightCount]{ true,true,true,true,false,false };
+	for (int i = 0; i < pointLightCount; i++) {
+		PointLight l;
+		l.SetPosition(pLightPositions[i]);
+		l.SetDiffuseColour(pLightColours[i]);
+		l.SetRadius(75.0f);
+		pIsStatic[i] ? l.MakeStatic() : l.MakeDynamic();
+		pointLights.push_back(l);
+	}
+
+
+
+	/////////////////
 	
 	//Barrel//
 	Mesh* barrelMesh = MeshManager::LoadMesh("Barrel_1.msh");
@@ -156,11 +172,11 @@ DefaultScene::DefaultScene() : Scene() {
 	}
 	//////////
 
-	PointLight centralLight;
-	centralLight.SetPosition({ 0, 10, 0 });
-	centralLight.SetRadius(100.0f);
-	centralLight.MakeStatic();
-	pointLights.emplace_back(centralLight);
+	//PointLight centralLight;
+	//centralLight.SetPosition({ 0, 10, 0 });
+	//centralLight.SetRadius(100.0f);
+	//centralLight.MakeStatic();
+	//pointLights.emplace_back(centralLight);
 
 	//Light setup
 	pointLights.reserve(POINT_LIGHT_NUM);
@@ -231,7 +247,7 @@ void DefaultScene::Update(float dt) {
 	Vector3 forward = rotation * Vector3(0, 0, -1) * dt;
 	Vector3 right = rotation * Vector3(1, 0, 0) * dt;
 	Vector3 up = Vector3(0, 1, 0);
-	Vector3 velocity = Vector3(90, 90, 90);
+	Vector3 velocity = Vector3(45, 45, 45);
 
 	if (Window::GetKeyboard()->KeyDown(KEYBOARD_W)) {
 		camera->Translate(forward * velocity);
@@ -252,25 +268,26 @@ void DefaultScene::Update(float dt) {
 		camera->Translate(-up * velocity.y * dt);
 	}
 
+	if (Window::GetKeyboard()->KeyDown(KEYBOARD_Q)) {
+		compound->rotate({ 0,45 * dt,0 });
+	}
+
+	if (Window::GetKeyboard()->KeyDown(KEYBOARD_E)) {
+		compound->rotate({ 0,-45 * dt,0 });
+	}
+
 	if (Window::GetKeyboard()->KeyDown(KEYBOARD_UP)) {
-		for (int i = 0; i < spotLights.size(); ++i) {
-			spotLights[i].Translate(Vector3(0, 0, -1) * dt * velocity);
-		}
+		compound->Translate({0 ,0,-30*dt });
 	}
 	if (Window::GetKeyboard()->KeyDown(KEYBOARD_DOWN)) {
-		for (int i = 0; i < spotLights.size(); ++i) {
-			spotLights[i].Translate(-Vector3(0, 0, -1) * dt * velocity);
-		}
+		compound->Translate({ 0 ,0,30 * dt });
 	}
 	if (Window::GetKeyboard()->KeyDown(KEYBOARD_LEFT)) {
-		for (int i = 0; i < spotLights.size(); ++i) {
-			spotLights[i].Translate(-Vector3(1, 0, 0) * dt * velocity);
-		}
+		compound->Translate({ 30 * dt ,0,0 });
+
 	}
 	if (Window::GetKeyboard()->KeyDown(KEYBOARD_RIGHT)) {
-		for (int i = 0; i < spotLights.size(); ++i) {
-			spotLights[i].Translate(Vector3(1, 0, 0) * dt * velocity);
-		}
+		compound->Translate({ -30 * dt ,0,0 });
 	}
 
 	if (Window::GetKeyboard()->KeyTriggered(KEYBOARD_9)) {
