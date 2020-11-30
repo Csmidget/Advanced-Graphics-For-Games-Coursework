@@ -19,12 +19,10 @@ public:
 
 	bool rotateLights;
 
-	CameraTrack* track;
+	GLuint spaceSkybox;
+	GLuint normalSkybox;
 
-	Shader* defaultShader;
-	Shader* bumpMapShader;
-	Shader* animatedShader;
-	Shader* reflectShader;
+	CameraTrack* track;
 
 	SceneNode* water;
 	Mesh* waterMesh;

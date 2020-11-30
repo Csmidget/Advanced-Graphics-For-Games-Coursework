@@ -56,7 +56,7 @@ HeightMap::HeightMap(const std::string& name) {
 			indices[i++] = d;
 		}
 	}
-
+	GenerateExtents();
 	GenerateNormals();
 	GenerateTangents();
 	BufferData();

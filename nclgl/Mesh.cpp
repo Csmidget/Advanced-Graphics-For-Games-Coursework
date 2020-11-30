@@ -22,6 +22,9 @@ Mesh::Mesh(void)	{
 	colours			= nullptr;
 	weights			= nullptr;
 	weightIndices	= nullptr;
+	
+	minExtents = {};
+	maxExtents = {};
 }
 
 Mesh::~Mesh(void)	{
@@ -87,6 +90,7 @@ Mesh* Mesh::GenerateTriangle()	{
 
 	m->GenerateNormals();
 	m->GenerateTangents();
+	m->GenerateExtents();
 	m->BufferData();
 
 	return m;
@@ -119,6 +123,8 @@ Mesh* Mesh::GenerateQuad()	{
 		m->normals[i] = Vector3(0.0f, 0.0f,-1.0f);
 		m->tangents[i] = Vector4(1.0f, 0.0f,0.0f, 1.0f);
 	}
+
+	m->GenerateExtents();
 
 	m->BufferData();
 
@@ -215,6 +221,20 @@ void Mesh::GenerateNormals()	{
 	for(GLuint i = 0; i < numVertices; ++i){
 		normals[i].Normalise();
 	}
+}
+
+void Mesh::GenerateExtents() {
+	//Generate min and max extents for object, helps with generating bounding volumes.
+
+	for (int i = 0; i < numVertices; ++i) {
+		minExtents.x = std::min(minExtents.x, vertices[i].x);
+		minExtents.y = std::min(minExtents.y, vertices[i].y);
+		minExtents.z = std::min(minExtents.z, vertices[i].z);
+		maxExtents.x = std::max(maxExtents.x, vertices[i].x);
+		maxExtents.y = std::max(maxExtents.y, vertices[i].y);
+		maxExtents.z = std::max(maxExtents.z, vertices[i].z);
+	}
+	radius = std::max(minExtents.Length(), maxExtents.Length());
 }
 
 void Mesh::GenerateTangents() {
@@ -475,8 +495,8 @@ Mesh* Mesh::LoadFromMeshFile(const string& name) {
 		case GeometryChunkTypes::SubMeshNames: 		ReadSubMeshNames(file, numMeshes, mesh->layerNames); break;
 		}
 	}
-	//Now that the data has been read, we can shove it into the actual Mesh object
 
+	//Now that the data has been read, we can shove it into the actual Mesh object
 	mesh->numVertices	= numVertices;
 	mesh->numIndices	= numIndices;
 
@@ -519,6 +539,7 @@ Mesh* Mesh::LoadFromMeshFile(const string& name) {
 		memcpy(mesh->weightIndices, readWeightIndices.data(), numVertices * sizeof(int) * 4);
 	}
 
+	mesh->GenerateExtents();
 	mesh->BufferData();
 
 	return mesh;

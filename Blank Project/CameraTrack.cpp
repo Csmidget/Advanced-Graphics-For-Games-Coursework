@@ -47,7 +47,7 @@ void CameraTrack::Update(float dt)
 	Waypoint curr = waypoints[current];
 	Waypoint next = waypoints[current+1];
 
-	progress += speedMultiplier * dt;
+	progress += speedMultiplier * dt / next.travelTime;
 	progress = std::min(progress, 1.0f);
 
 	cam->SetPosition(Vector3(cosineInterp(curr.pos.x, next.pos.x, progress),
@@ -72,7 +72,7 @@ void CameraTrack::Update(float dt)
 }
 
 
-void CameraTrack::AddWaypoint(Vector3 _pos, float _pitch, float _yaw, float _roll)
+void CameraTrack::AddWaypoint(Vector3 _pos, float _pitch, float _yaw, float _roll,float travelTime)
 {
-	waypoints.push_back({ _pos,_pitch,_yaw,_roll });
+	waypoints.push_back({ _pos,_pitch,_yaw,_roll,travelTime});
 }

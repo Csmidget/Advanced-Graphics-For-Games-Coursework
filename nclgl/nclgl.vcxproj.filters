@@ -40,6 +40,7 @@
     <ClCompile Include="TextureManager.cpp" />
     <ClCompile Include="Light.cpp" />
     <ClCompile Include="MeshManager.cpp" />
+    <ClCompile Include="ShaderManager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="common.h" />
@@ -91,6 +92,7 @@
     <ClInclude Include="Light.h" />
     <ClInclude Include="TextureManager.h" />
     <ClInclude Include="MeshManager.h" />
+    <ClInclude Include="ShaderManager.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="GLAD">

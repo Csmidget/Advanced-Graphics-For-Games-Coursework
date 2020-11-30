@@ -49,8 +49,7 @@ public:
 	bool IsReflective() const { return reflective; }
 	void SetReflective(bool r) { reflective = r; }
 
-	float GetBoundingRadius() const { return boundingRadius; }
-	void SetBoundingRadius(float f) { boundingRadius = f; }
+	float GetBoundingRadius() const;
 
 	float GetCameraDistance() const { return distanceFromCamera; }
 	void SetCameraDistance(float f) { distanceFromCamera = f; }
@@ -110,6 +109,7 @@ protected:
 	vector<GLuint> matNormals;
 
 	Matrix4 worldTransform;
+	Vector3 worldScale;
 	Matrix4 transform;
 	Matrix4 texMatrix;
 	Vector3 modelScale;

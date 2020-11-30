@@ -24,8 +24,8 @@ void main(void) {
 
     vec3 worldPosToLightPos = worldPos - lightPos;
     float dist = length(worldPosToLightPos);
-    float atten = 1.0 - clamp( dist / lightRadius, 0.0, 1.0);
-    //float atten = 1.0 - clamp(1 / pow(lightRadius / dist, 2), 0.0, 1.0);
+    //float atten = 1.0 - clamp( dist / lightRadius, 0.0, 1.0);
+    float atten = 1.0 - clamp(1 / pow(lightRadius / dist, 2), 0.0, 1.0);
 
     if (atten == 0.0) {
         discard;
@@ -61,9 +61,12 @@ void main(void) {
         if(dist - bias > shadowMapDepth)
             shadow += 1.0;
     }   
-
     shadow = 1 - shadow / float(samples);
 
+    if (shadow == 0.0f) {
+        discard;
+    }
+    
     vec3 attenuated = diffuseColour.xyz * atten;  
 
     diffuseOutput = vec4(attenuated * lambert * shadow, 1.0);

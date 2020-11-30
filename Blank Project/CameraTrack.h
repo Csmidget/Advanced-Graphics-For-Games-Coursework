@@ -11,6 +11,7 @@ private:
 		float pitch;
 		float yaw;
 		float roll;
+		float travelTime;
 	};
 
 	Camera* cam;
@@ -27,5 +28,5 @@ public:
 
 	void Start();
 	void Update(float dt);
-	void AddWaypoint(Vector3 _pos, float _pitch, float _yaw, float _roll);
+	void AddWaypoint(Vector3 _pos, float _pitch, float _yaw, float _roll, float travelTime = 1);
 };

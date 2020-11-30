@@ -1,8 +1,11 @@
 #include "DefaultScene.h"
 
+#include "CameraTrack.h"
+#include "NodeTemplates.h"
+
 #include "../nclgl/TextureManager.h"
 #include "../nclgl/MeshManager.h"
-
+#include "../nclgl/ShaderManager.h"
 #include "../nclgl/Camera.h"
 #include "../nclgl/Window.h"
 #include "../nclgl/Light.h"
@@ -10,18 +13,20 @@
 #include "../nclgl/MeshAnimation.h"
 #include "../nclgl/MeshMaterial.h"
 #include "../nclgl/SceneNode.h"
-#include "CameraTrack.h"
+
 #include <limits>
 
-const int POINT_LIGHT_NUM = 20;
-const int SPOT_LIGHT_NUM = 20;
+const int POINT_LIGHT_NUM = 5;
+const int SPOT_LIGHT_NUM = 5;
 
 CameraTrack BuildTrack(Camera* cam)
 {
 	CameraTrack track(cam, 0.5f);
 
 	track.AddWaypoint(Vector3(0, 0.0, 10.0), -45, 0, 0);
-	track.AddWaypoint(Vector3(7.756, -3.112, 26.47), -31.82, -33.3, 0);
+	track.AddWaypoint(Vector3(20.9, -12.1, -25.3), -1.73, -12.3, 0, 5.0f);
+	track.AddWaypoint(Vector3(7.756, -3.112, 26.47), -31.82, -33.3, 0, 5.0f);
+	track.AddWaypoint(Vector3(60.25, -14.15, 70.08), -4.6, 64.4, 0, 10.0f);
 
 	return track;
 }
@@ -33,16 +38,20 @@ DefaultScene::DefaultScene() : Scene() {
 	camera->SetPitch(-45);
 	rotateLights = true;
 	//Texture initialization
-	GLuint heightMapDiffuse	=	TextureManager::LoadTexture(TEXTUREDIR"Barren Reds.JPG", SOIL_FLAG_MIPMAPS);
-	GLuint heightMapNormal	=	TextureManager::LoadTexture(TEXTUREDIR"Barren RedsDOT3.JPG", SOIL_FLAG_MIPMAPS);
-	skybox				=	TextureManager::LoadCubemap(TEXTUREDIR"CosmicCoolCloudLeft.jpg", TEXTUREDIR"CosmicCoolCloudRight.jpg",
-														TEXTUREDIR"CosmicCoolCloudTop.jpg",  TEXTUREDIR"CosmicCoolCloudBottom.jpg",
-														TEXTUREDIR"CosmicCoolCloudFront.jpg", TEXTUREDIR"CosmicCoolCloudBack.jpg");
-	GLuint waterDiffuse = TextureManager::LoadTexture(TEXTUREDIR"water.tga", SOIL_FLAG_MIPMAPS);
-	GLuint waterNormal = TextureManager::LoadTexture(TEXTUREDIR"waterbump.png", SOIL_FLAG_MIPMAPS);
-	GLuint wallDiffuse = TextureManager::LoadTexture(TEXTUREDIR"brick.tga", SOIL_FLAG_MIPMAPS);
-	GLuint wallNormal = TextureManager::LoadTexture(TEXTUREDIR"brickDOT3.tga", SOIL_FLAG_MIPMAPS);
+	GLuint heightMapDiffuse	= TextureManager::LoadTexture(TEXTUREDIR"Barren Reds.JPG", SOIL_FLAG_MIPMAPS);
+	GLuint heightMapNormal	= TextureManager::LoadTexture(TEXTUREDIR"Barren RedsDOT3.JPG", SOIL_FLAG_MIPMAPS);
+	GLuint waterDiffuse		= TextureManager::LoadTexture(TEXTUREDIR"water.tga", SOIL_FLAG_MIPMAPS);
+	GLuint waterNormal		= TextureManager::LoadTexture(TEXTUREDIR"waterbump.png", SOIL_FLAG_MIPMAPS);
 
+	spaceSkybox  = TextureManager::LoadCubemap(	TEXTUREDIR"CosmicCoolCloudLeft.jpg", TEXTUREDIR"CosmicCoolCloudRight.jpg",
+												TEXTUREDIR"CosmicCoolCloudTop.jpg", TEXTUREDIR"CosmicCoolCloudBottom.jpg",
+												TEXTUREDIR"CosmicCoolCloudFront.jpg", TEXTUREDIR"CosmicCoolCloudBack.jpg");
+
+	normalSkybox = TextureManager::LoadCubemap(	TEXTUREDIR"rusted_west.jpg", TEXTUREDIR"rusted_east.jpg",
+												TEXTUREDIR"rusted_up.jpg", TEXTUREDIR"rusted_down.jpg",
+												TEXTUREDIR"rusted_south.jpg", TEXTUREDIR"rusted_north.jpg");
+
+	skybox = spaceSkybox;
 
 	if (!heightMapDiffuse || !heightMapNormal || !skybox) {
 		return;
@@ -53,15 +62,13 @@ DefaultScene::DefaultScene() : Scene() {
 	TextureManager::SetTextureRepeating(heightMapNormal, true);
 	TextureManager::SetTextureRepeating(waterDiffuse, true);
 	TextureManager::SetTextureRepeating(waterNormal, true);
-	TextureManager::SetTextureRepeating(wallDiffuse, true);
-	TextureManager::SetTextureRepeating(wallNormal, true);
 	////////////
 
 	//Shader setup//
-	defaultShader =  new Shader("BufferVertex.glsl", "BufferFragment.glsl");
-	bumpMapShader =  new Shader("BufferBumpVertex.glsl", "BufferBumpFragment.glsl");
-	animatedShader = new Shader("SkinningVertex.glsl", "BufferFragment.glsl");
-	reflectShader = new Shader("ReflectBumpVertex.glsl", "ReflectBumpFragment.glsl");
+	Shader* defaultShader	= ShaderManager::LoadShader("BufferVertex.glsl", "BufferFragment.glsl");
+	Shader* bumpMapShader	= ShaderManager::LoadShader("BufferBumpVertex.glsl", "BufferBumpFragment.glsl");
+	Shader* animatedShader	= ShaderManager::LoadShader("SkinningVertex.glsl", "BufferFragment.glsl");
+	Shader* reflectShader	= ShaderManager::LoadShader("ReflectBumpVertex.glsl", "ReflectBumpFragment.glsl");
 
 	if (!defaultShader->LoadSuccess() || !bumpMapShader->LoadSuccess() || !animatedShader->LoadSuccess() || !reflectShader->LoadSuccess())
 		return;
@@ -72,7 +79,6 @@ DefaultScene::DefaultScene() : Scene() {
 	heightMapMesh = new HeightMap(TEXTUREDIR"terraintest.png");
 	SceneNode* heightMapNode = new SceneNode(heightMapMesh);
 	Vector3 heightmapSize = heightMapMesh->GetHeightMapSize() * 0.1f;
-	heightMapNode->SetBoundingRadius((heightMapMesh->GetHeightMapSize()).Length());
 	heightMapNode->SetTransform(Vector3(-heightmapSize.x / 2, -heightmapSize.y, -heightmapSize.z / 2));
 	heightMapNode->SetTexture(heightMapDiffuse);
 	heightMapNode->SetNormal(heightMapNormal);
@@ -90,7 +96,6 @@ DefaultScene::DefaultScene() : Scene() {
 	water->SetShader(reflectShader);
 	water->SetTexture(waterDiffuse);
 	water->SetNormal(waterNormal);
-	water->SetBoundingRadius((heightMapMesh->GetHeightMapSize()).Length());
 	water->SetColour(Vector4(1, 1, 1, 0.9f));
 	water->MakeStatic();
 	water->SetReflective(true);
@@ -105,52 +110,34 @@ DefaultScene::DefaultScene() : Scene() {
 	SceneNode* role_t = new SceneNode(roleTMesh,  roleTMat, roleTAnim, Vector4(1, 1, 1, 1), animatedShader);
 	role_t->SetTransform(Vector3(0, -15.4, 0));
 	role_t->SetModelScale(Vector3(2.0f, 2.0f, 2.0f));
-	role_t->SetBoundingRadius(200.0f);
 	root->AddChild(role_t);
 
 	role_t = new SceneNode(roleTMesh, roleTMat, roleTAnim, Vector4(1, 1, 1, 1), animatedShader);
 	role_t->SetTransform(Vector3(25, -15.4, -37));
 	role_t->SetModelScale(Vector3(2.0f, 2.0f, 2.0f));
-	role_t->SetBoundingRadius(200.0f);
 	root->AddChild(role_t);
 	//////////////
 
-	Mesh* cubeMesh = MeshManager::LoadMesh("Cube.msh");
-	SceneNode* cube = new SceneNode(cubeMesh);
-	cube->SetShader(defaultShader);
-	cube->SetTexture(wallDiffuse);
-	root->AddChild(cube);
-
 	//Hut//
-	SceneNode* hut = new SceneNode();
-	hut->SetTransform({25,-16,-35 }, { 1,1,1 }, { 4, 4, 4 });
-	const int wallCount = 5;
-	const Vector3 wallPositions[wallCount]{ {0.0,1,-2}	,{2.0,1,0.0},{-2.0,1,0.0}	,{0.0,2,-1}	,{0.0,2,1}	};
-	const Vector3 wallRotations[wallCount]{ {0,90,0}	,{0,0,0}	,{0,0,0}		,{90,90,0}	,{90,90,0}	};
-	Mesh* wallMesh = MeshManager::LoadMesh("Wall.msh");
-	for (int i = 0; i < wallCount; i++) {
-		SceneNode* wall = new SceneNode(wallMesh);
-		wall->SetTexture(wallDiffuse);
-		wall->SetNormal(wallNormal);
-		wall->SetShader(bumpMapShader);
-		wall->SetBoundingRadius(15.0f);
-		wall->SetTransform(wallPositions[i], wallRotations[i]);
-		wall->SetTextureMatrix(Matrix4::Rotation(90, { 0,0,1 }));
-		wall->MakeStatic();
-		hut->AddChild(wall);
-	}
+	auto hut = Templates::Hut();
+	hut->SetTransform({ 25,-16,-35 }, { 1,1,1 }, { 4, 4, 4 });
 	root->AddChild(hut);
-
 	//Hut Spotlight
 	SpotLight l;
-	l.SetPosition({ 25,-15,-30 });
-	l.SetRadius(50.0f);
+	l.SetPosition({ 25,-14.5,-30 });
+	l.SetRadius(75.0f);
 	l.SetAngle(20);
 	l.SetDiffuseColour({ 1.0, 0.1, 0.1, 1.0});
 	l.SetRotation({ 100,0,0 });
 	l.SetDirection(Vector3(0, -1, 0));
 	spotLights.emplace_back(l);
 	/////////
+
+	//Prison//
+	auto prison = Templates::Prison();
+	prison->SetTransform({ 0,-16,0 }, { 1,1,1 }, { 4, 4, 4 });
+	root->AddChild(prison);
+	//////////
 	
 	//Barrel//
 	Mesh* barrelMesh = MeshManager::LoadMesh("Barrel_1.msh");
@@ -163,12 +150,17 @@ DefaultScene::DefaultScene() : Scene() {
 	for (int i = 0; i < barrelCount; ++i) {
 		SceneNode* barrel = new SceneNode(barrelMesh, barrelMat);
 		barrel->SetTransform(barrelPositions[i], barrelRotations[i]);
-		barrel->SetBoundingRadius(200.0f);
 		barrel->SetShader(bumpMapShader);
 		barrel->MakeStatic();
 		root->AddChild(barrel);
 	}
 	//////////
+
+	PointLight centralLight;
+	centralLight.SetPosition({ 0, 10, 0 });
+	centralLight.SetRadius(100.0f);
+	centralLight.MakeStatic();
+	pointLights.emplace_back(centralLight);
 
 	//Light setup
 	pointLights.reserve(POINT_LIGHT_NUM);
@@ -227,11 +219,6 @@ DefaultScene::~DefaultScene() {
 
 	delete track;
 
-	delete defaultShader;
-	delete bumpMapShader;
-	delete animatedShader;
-	delete reflectShader;
-
 	delete waterMesh;
 	delete heightMapMesh;
 }
@@ -286,8 +273,12 @@ void DefaultScene::Update(float dt) {
 		}
 	}
 
-	if (Window::GetKeyboard()->KeyTriggered(KEYBOARD_2)) {
+	if (Window::GetKeyboard()->KeyTriggered(KEYBOARD_9)) {
 		rotateLights = !rotateLights;
+	}
+
+	if (Window::GetKeyboard()->KeyTriggered(KEYBOARD_8)) {
+		skybox = skybox == spaceSkybox ? normalSkybox : spaceSkybox;
 	}
 
 	if (rotateLights) {

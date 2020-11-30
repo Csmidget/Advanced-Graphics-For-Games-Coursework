@@ -141,10 +141,12 @@
     <ClCompile Include="DefaultScene.cpp" />
     <ClCompile Include="Renderer.cpp" />
     <ClCompile Include="Scene.cpp" />
+    <ClCompile Include="NodeTemplates.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CameraTrack.h" />
     <ClInclude Include="DefaultScene.h" />
+    <ClInclude Include="NodeTemplates.h" />
     <ClInclude Include="Renderer.h" />
     <ClInclude Include="Scene.h" />
   </ItemGroup>

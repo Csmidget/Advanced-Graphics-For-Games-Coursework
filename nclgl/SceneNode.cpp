@@ -140,9 +140,11 @@ void SceneNode::Draw(const Shader* activeShader) {
 void SceneNode::Update(float dt) {
 	if (parent) {
 		worldTransform = parent->worldTransform * transform;
+		worldScale = parent->worldScale * scale;
 	}
 	else {
 		worldTransform = transform;
+		worldScale = scale;
 	}
 
 	if (anim) {
@@ -182,4 +184,13 @@ const Matrix4* SceneNode::GetRelativeJointData(unsigned int frame) const {
 	Matrix4* dataStart = (Matrix4*)animRelativeJoints.data();
 
 	return dataStart + matStart;
+}
+
+float SceneNode::GetBoundingRadius() const {
+
+	if (!mesh)
+		return 0.0f;
+
+	float radius = (worldScale * mesh->GetRadius()).Length();
+	return radius;
 }

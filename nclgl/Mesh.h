@@ -71,6 +71,8 @@ public:
 	int GetParentForJoint(const std::string& name) const;
 	int GetParentForJoint(int i) const;
 
+	float GetRadius() const { return radius; }
+
 	const Matrix4* GetBindPose() const {
 		return bindPose;
 	}
@@ -91,9 +93,13 @@ protected:
 
 	void	GenerateNormals();
 	void	GenerateTangents();
+	void	GenerateExtents();
 	Vector4 GenerateTangent(int vA, int vB, int vC);
 	bool	GetVertexIndicesForTri(unsigned int i, unsigned int& a, unsigned int& b, unsigned int& c) const;
 
+	Vector3 minExtents;
+	Vector3 maxExtents;
+	float radius;
 
 	GLuint	arrayObject;
 

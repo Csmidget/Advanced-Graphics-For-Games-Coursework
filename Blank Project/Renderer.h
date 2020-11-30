@@ -26,10 +26,11 @@ protected:
 	void ClearNodeLists();
 
 	void DrawShadowMaps(bool staticLights);
-	void DrawShadowMap(int resolution, Light& light, float farPlaneDist);
+	void DrawShadowMap(Light& light, float farPlaneDist);
 	void DrawOpaques();
 	void DrawTransparents();
-	void DrawNode(SceneNode* n);
+	void DrawNode(SceneNode* n, Shader* shaderOverride = nullptr);
+	void DrawNeonGrid();
 
 	void SetupLightShader(Shader* shader);
 	void DrawLights();
@@ -69,6 +70,10 @@ protected:
 	GLuint lightDiffuseTex;		//Store Diffuse Lighting
 	GLuint lightSpecularTex;	//Store Specular Lighting
 
+	Shader* neonGridShader;
+	GLuint neonGridFBO;
+	GLuint neonGridColourTex;
+
 	GLuint shadowFBO;
 
 	GLuint postProcessFBO;
@@ -79,6 +84,7 @@ protected:
 	int outputPostProcessTex;
 
 	bool doBlur;
+	bool doNeonGrid;
 
 	Frustum frameFrustum;
 

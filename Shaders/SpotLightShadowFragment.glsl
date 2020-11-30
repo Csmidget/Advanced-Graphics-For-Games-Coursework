@@ -73,6 +73,10 @@ void main(void) {
 
     shadow = 1 - shadow / float(samples);
 
+    if (shadow == 0.0f) {
+        discard;
+    }
+
     //Softens edges of the spotlight
     float angleFade = 1 - clamp( 1 /pow(lightConeAngle / angle, 8),0.0f,1.0f);
 
