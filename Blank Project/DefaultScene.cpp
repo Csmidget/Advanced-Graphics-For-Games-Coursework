@@ -41,15 +41,9 @@ DefaultScene::DefaultScene() : Scene() {
 	GLuint waterDiffuse		= TextureManager::LoadTexture(TEXTUREDIR"water.tga", SOIL_FLAG_MIPMAPS);
 	GLuint waterNormal		= TextureManager::LoadTexture(TEXTUREDIR"waterbump.png", SOIL_FLAG_MIPMAPS);
 
-	spaceSkybox  = TextureManager::LoadCubemap(	TEXTUREDIR"CosmicCoolCloudLeft.jpg", TEXTUREDIR"CosmicCoolCloudRight.jpg",
+	skybox  = TextureManager::LoadCubemap(	TEXTUREDIR"CosmicCoolCloudLeft.jpg", TEXTUREDIR"CosmicCoolCloudRight.jpg",
 												TEXTUREDIR"CosmicCoolCloudTop.jpg", TEXTUREDIR"CosmicCoolCloudBottom.jpg",
 												TEXTUREDIR"CosmicCoolCloudFront.jpg", TEXTUREDIR"CosmicCoolCloudBack.jpg");
-
-	normalSkybox = TextureManager::LoadCubemap(	TEXTUREDIR"rusted_west.jpg", TEXTUREDIR"rusted_east.jpg",
-												TEXTUREDIR"rusted_up.jpg", TEXTUREDIR"rusted_down.jpg",
-												TEXTUREDIR"rusted_south.jpg", TEXTUREDIR"rusted_north.jpg");
-
-	skybox = spaceSkybox;
 
 	if (!skybox || !waterDiffuse || !waterNormal) {
 		return;
@@ -69,7 +63,7 @@ DefaultScene::DefaultScene() : Scene() {
 		return;
 	////////////////
 	
-	//Terrain//
+	//########Terrain############
 	//As it is custom, we cannot use the MeshManager to load the heightmap.
 	heightMapMesh = new HeightMap(TEXTUREDIR"terraintest.png");
 	HeightMapNode* heightMapNode = new HeightMapNode(heightMapMesh,TEXTUREDIR"terrainassign.png", TEXTUREDIR"Barren Reds.JPG", TEXTUREDIR"ground_asphalt.png", TEXTUREDIR"Barren RedsDOT3.JPG", TEXTUREDIR"AsphaltNormal.png");
@@ -78,9 +72,9 @@ DefaultScene::DefaultScene() : Scene() {
 	heightMapNode->MakeStatic();
 	heightMapNode->SetModelScale(Vector3(0.1f, 0.1f, 0.1f));
 	root->AddChild(heightMapNode);
-	///////////////
+	//###########################
 
-	//Water//
+	//######Water######
 	//As with the terrain, this quad is generated in program, so we will manage it's lifecycle here.
 	waterMesh = Mesh::GenerateQuad();
 	water = new SceneNode(waterMesh);
@@ -92,9 +86,9 @@ DefaultScene::DefaultScene() : Scene() {
 	water->MakeStatic();
 	water->SetReflective(true);
 	root->AddChild(water);
-	/////////
+	//#################
 
-	//Soldiers//
+	//##########Soldiers##########
 	Mesh* roleTMesh = MeshManager::LoadMesh("Role_T.msh");
 	MeshAnimation* roleTRunAnim = MeshManager::LoadMeshAnimation("Role_T.anm");
 	MeshAnimation* roleTStandAnim = MeshManager::LoadMeshAnimation("Role_T_stand.anm");
@@ -105,44 +99,71 @@ DefaultScene::DefaultScene() : Scene() {
 	role_t->SetModelScale(Vector3(2.0f, 2.0f, 2.0f));
 	root->AddChild(role_t);
 
-	role_t = new SceneNode(roleTMesh, roleTMat, roleTStandAnim, Vector4(1, 1, 1, 1), animatedShader);
-	role_t->SetTransform(Vector3(25, -15.4, -37));
-	role_t->SetModelScale(Vector3(2.0f, 2.0f, 2.0f));
-	root->AddChild(role_t);
-	//////////////
+	root->AddChild(Templates::CompoundStationarySoldiers());
 
+	//#############################
 
-
-	//Compound//
+	//#########Compound########
 	compound = Templates::Compound();
 	compound->SetTransform({ 0,-15.4,0 }, { 0,0,0 }, { 4, 4, 4 });
 	compound->MakeStatic();
 	root->AddChild(compound);
-	//////////
 
 	//Hut Spotlight//
-	spotLights.emplace_back(new SpotLight({ 25,-14.5,-30 }, { 100,0,0 }, 75.0f, 20.0f, { 1.0, 0.1, 0.1, 1.0 }));
-	/////////
+	spotLights.emplace_back(new SpotLight({ 20,-14.5,-32 }, { 100,0,0 }, 75.0f, 20.0f, { 1.0, 0.1, 0.1, 1.0 }));
+	//#########################
 
-	//Compound Lights//
+	//##########Barrels###########
+	SceneNode* barrelStack = Templates::BarrelStack();
+	barrelStack->SetPosition({ 13,-11.4, 12.5 });
+	barrelStack->MakeStatic();
+	root->AddChild(barrelStack);
+
+	barrelStack = Templates::BarrelStack();
+	barrelStack->SetPosition({ -35,-11.4, -45 });
+	barrelStack->MakeStatic();
+	root->AddChild(barrelStack);
+
+	barrelStack = Templates::BarrelStack();
+	barrelStack->SetPosition({ -28,-11.4, 35 });
+	barrelStack->MakeStatic();
+	root->AddChild(barrelStack);
+	//###########################
+
+	//############Pond###########
+	SceneNode* pondLampPost = Templates::StreetLight({ -160,-15.4,-100 }, { 0,-90,0 });
+	pondLampPost->Scale({ 4,4,4 });
+	pondLampPost->MakeStatic();
+	root->AddChild(pondLampPost);
+	pointLights.emplace_back(new PointLight({ -164.4,8.443,-100.1 }, { 1,1,1,1 }, { 1,1,1,1 },100.0f));
+	//############################
+
+
+	//###Point Lights########
 	const int pointLightCount = 6;
-	Vector3 pLightPositions[pointLightCount]{ {-36.43,2.387,-50.42}, {-26.29,3.548,37.42}, {37.95,3.45,37.01},{37.95,3.477,-48.96},{7.964,3.734,-3.472},{7.964,3.734,3.714} };
-	Vector4 pLightColours[pointLightCount]{ {1,0,0,1},{0,1,0,1},{0,0,1,1},{1,0,1,1},{1,1,1,1},{1,1,1,1}  };
+	Vector3 pLightPositions[pointLightCount]{	{-36.43,2.387,-50.42},	{-26.29,3.548,37.42},	{37.95,3.45,37.01},
+												{37.95,3.477,-48.96},	{7.964,3.734,-3.472},	{7.964,3.734,3.714},
+												 };
+
+	Vector4 pLightColours[pointLightCount]{		{1,0,0,1},				{0,1,0,1},				{0,0,1,1},
+												{1,0,1,1},				{1,1,1,1},				{1,1,1,1}  };
+
 	bool	pIsStatic[pointLightCount]{ true,true,true,true,false,false };
 	for (int i = 0; i < pointLightCount; i++) {
 		PointLight* l = new PointLight(pLightPositions[i],pLightColours[i],pLightColours[i],75.0f);
 		pIsStatic[i] ? l->MakeStatic() : l->MakeDynamic();
 		pointLights.push_back(l);
 	}
-	/////////////////
-	
-	//Barrels//
-	SceneNode* barrelStack = Templates::BarrelStack();
-	barrelStack->SetPosition({ 13,-11.4, 12.5 });
-	root->AddChild(barrelStack);
-	//////////
+	//#########################
+
+
 	spinningLight = new SpotLight({ 2, 80, 0 }, { 50, 0, 0 }, 500.0f, 15.0f);
 	spotLights.emplace_back(spinningLight);
+
+	cameraLight = new SpotLight({ 0,0,0 }, { 0,0,0 }, 300.0f, 30.0f, { 2,2,2,2 });
+	cameraLight->SetActive(false);
+	spotLights.emplace_back(cameraLight);
+
 	Vector3 halfSize = { heightmapSize / 2 };
 	Scene::GenerateRandomLights(POINT_LIGHT_NUM, SPOT_LIGHT_NUM, { -halfSize.x,50,-halfSize.z }, { halfSize.x,50,halfSize.z });
 
@@ -192,34 +213,8 @@ void DefaultScene::Update(float dt) {
 		camera->Translate(-up * velocity.y * dt);
 	}
 
-	if (Window::GetKeyboard()->KeyDown(KEYBOARD_Q)) {
-		compound->rotate({ 0,45 * dt,0 });
-	}
-
-	if (Window::GetKeyboard()->KeyDown(KEYBOARD_E)) {
-		compound->rotate({ 0,-45 * dt,0 });
-	}
-
-	if (Window::GetKeyboard()->KeyDown(KEYBOARD_UP)) {
-		compound->Translate({0 ,0,-30*dt });
-	}
-	if (Window::GetKeyboard()->KeyDown(KEYBOARD_DOWN)) {
-		compound->Translate({ 0 ,0,30 * dt });
-	}
-	if (Window::GetKeyboard()->KeyDown(KEYBOARD_LEFT)) {
-		compound->Translate({ 30 * dt ,0,0 });
-
-	}
-	if (Window::GetKeyboard()->KeyDown(KEYBOARD_RIGHT)) {
-		compound->Translate({ -30 * dt ,0,0 });
-	}
-
 	if (Window::GetKeyboard()->KeyTriggered(KEYBOARD_9)) {
 		rotateLight = !rotateLight;
-	}
-
-	if (Window::GetKeyboard()->KeyTriggered(KEYBOARD_8)) {
-		skybox = skybox == spaceSkybox ? normalSkybox : spaceSkybox;
 	}
 
 	if (rotateLight) {
@@ -236,6 +231,14 @@ void DefaultScene::Update(float dt) {
 	if (Window::GetKeyboard()->KeyTriggered(KEYBOARD_0)) {
 		track->Start();
 	}
+
+	if (Window::GetKeyboard()->KeyTriggered(KEYBOARD_L)) {
+		cameraLight->SetActive(!cameraLight->GetActive());
+	}
+
+	cameraLight->SetPosition(camera->GetPosition());
+	cameraLight->SetRotation({ camera->GetPitch() + 90,camera->GetYaw(),camera->GetRoll() });
+
 
 	waterRotate += dt * 2.0f; //2 degrees a second
 	waterCycle += dt * 0.05f; //10 units a second

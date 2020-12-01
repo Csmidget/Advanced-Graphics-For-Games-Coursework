@@ -47,6 +47,7 @@ Renderer::Renderer(Window& parent) : OGLRenderer(parent) {
 	postProcessColourTex[0] = 0;
 	postProcessColourTex[1] = 0;
 	neonGridColourTex = 0;
+	saturationPoint = 1.0f;
 
 	projMatrix = scene->GetCameraPerspective(width, height);
 
@@ -58,7 +59,7 @@ Renderer::Renderer(Window& parent) : OGLRenderer(parent) {
 	combineShader = ShaderManager::LoadShader("CombineVertex.glsl", "CombineFragment.glsl");
 	neonGridShader = ShaderManager::LoadShader("FlexibleTextureVert.glsl", "ColouredLinesFragment.glsl");
 	sceneShader = ShaderManager::LoadShader("TexturedVertex.glsl", "TexturedFragment.glsl");
-	gammaSceneShader = ShaderManager::LoadShader("TexturedVertex.glsl", "ColourCorrectFragment.glsl");
+	colourCorrectionShader = ShaderManager::LoadShader("TexturedVertex.glsl", "ColourCorrectFragment.glsl");
 
 	glGenFramebuffers(1, &bufferFBO);
 	glGenFramebuffers(1, &lightingFBO);
@@ -187,7 +188,7 @@ void Renderer::GenerateScreenTexture(GLuint& into, bool depth) {
 
 	GLuint internalformat = depth ? GL_DEPTH24_STENCIL8 : GL_RGBA16F;
 	GLuint format = depth ? GL_DEPTH_STENCIL : GL_RGBA;
-	GLuint type = depth ? GL_UNSIGNED_INT_24_8 : GL_UNSIGNED_BYTE;
+	GLuint type = depth ? GL_UNSIGNED_INT_24_8 : GL_FLOAT;
 
 	glTexImage2D(GL_TEXTURE_2D, 0, internalformat, width, height, 0, format, type, NULL);
 
@@ -247,9 +248,17 @@ void Renderer::UpdateScene(float dt) {
 	}
 	if (Window::GetKeyboard()->KeyTriggered(KEYBOARD_3)) {
 		doColourCorrect = !doColourCorrect;
-		std::cout << "Gamma " << (doColourCorrect ? "ENABLED\n" : "DISABLED\n");
+		std::cout << "Colour Correction " << (doColourCorrect ? "ENABLED\n" : "DISABLED\n");
 	}
 
+	if (Window::GetKeyboard()->KeyDown(KEYBOARD_UP)) {
+		saturationPoint += dt;
+	}
+
+	if (Window::GetKeyboard()->KeyDown(KEYBOARD_DOWN)) {
+		saturationPoint -= dt;
+	}
+	saturationPoint = std::max(0.0f, saturationPoint);
 	scene->Update(dt);
 
 	viewMatrix = scene->camera->BuildViewMatrix();
@@ -285,12 +294,12 @@ void Renderer::DrawShadowMaps(bool staticLights) {
 	BindShader(shadowShader);
 
 	for (auto& l : scene->pointLights) {
-		if ((staticLights && l->IsStatic()) || !l->IsStatic())
+		if (l->GetActive() && ((staticLights && l->IsStatic()) || !l->IsStatic()))
 			DrawShadowMap(l, l->GetRadius());
 	}
 
 	for (auto& l : scene->spotLights) {
-		if ((staticLights && l->IsStatic()) || !l->IsStatic())
+		if (l->GetActive() && ((staticLights && l->IsStatic()) || !l->IsStatic()))
 			DrawShadowMap(l, l->GetRadius());
 	}
 
@@ -513,6 +522,10 @@ void Renderer::DrawLights() {
 	SetupLightShader(pointLightShader);
 	for (int i = 0; i < scene->pointLights.size(); ++i) {
 		Light* l = scene->pointLights[i];
+		
+		if (!l->GetActive())
+			continue;
+
 		glActiveTexture(GL_TEXTURE2);
 		glBindTexture(GL_TEXTURE_CUBE_MAP, l->GetShadowMap());
 
@@ -523,6 +536,10 @@ void Renderer::DrawLights() {
 	SetupLightShader(spotLightShader);
 	for (int i = 0; i < scene->spotLights.size(); ++i) {
 		Light* l = scene->spotLights[i];
+
+		if (!l->GetActive())
+			continue;
+
 		glActiveTexture(GL_TEXTURE2);
 		glBindTexture(GL_TEXTURE_CUBE_MAP, l->GetShadowMap());
 
@@ -661,14 +678,18 @@ void Renderer::Blur() {
 void Renderer::PresentScene() {
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glClear(GL_COLOR_BUFFER_BIT);
-
-	BindShader(doColourCorrect ? gammaSceneShader : sceneShader);
+	Shader* shader = doColourCorrect ? colourCorrectionShader : sceneShader;
+	BindShader(shader);
 
 	UpdateShaderMatrices();
 
-	glUniform1i(glGetUniformLocation(sceneShader->GetProgram(), "diffuseTex"), 0);
+	glUniform1i(glGetUniformLocation(shader->GetProgram(), "diffuseTex"), 0);
+	glUniform1f(glGetUniformLocation(shader->GetProgram(), "saturationPoint"), saturationPoint);
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, postProcessColourTex[!nextPostProcessOutput]);
+	glGenerateMipmap(GL_TEXTURE_2D);
+	
+
 
 
 	quad->Draw();

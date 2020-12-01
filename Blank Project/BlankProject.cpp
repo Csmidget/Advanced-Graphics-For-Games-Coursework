@@ -12,7 +12,8 @@ int main()	{
 	if(!renderer.HasInitialised()) {
 		return -1;
 	}
-
+	//Do a call to reset the timer before we begin our update loop.
+	w.GetTimer()->GetTimeDeltaSeconds();
 	while(w.UpdateWindow()  && !Window::GetKeyboard()->KeyDown(KEYBOARD_ESCAPE)){
 		renderer.UpdateScene(w.GetTimer()->GetTimeDeltaSeconds());
 		renderer.RenderScene();

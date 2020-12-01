@@ -5,12 +5,19 @@ uniform float offset;
 uniform sampler2D baseTex;
 uniform sampler2D circuitTex;
 uniform sampler2D overlayTex;
+uniform sampler2D normalTex;
 
 in Vertex {
-	vec2 texCoord;
+    vec4 colour;
+    vec2 texCoord;
+    vec3 normal;
+    vec3 tangent;
+    vec3 binormal;
+    vec3 worldPos;
 } IN;
 
-out vec4 fragColour;
+out vec4 fragColour[2];
+
 
 //Sin wave modifiers
 const float frequency = 0.08;
@@ -19,13 +26,19 @@ const float verticalOffset = 1;
 
 void main(void) {
 
-	fragColour = texture(baseTex, IN.texCoord);
+    mat3 TBN = mat3(normalize(IN.tangent), normalize(IN.binormal), normalize(IN.normal));
 
+    vec3 normal = (texture(normalTex, IN.texCoord).rgb * 2.0) - 1.0;
+    normal = normalize(TBN * normalize(normal));
+
+	fragColour[0] = texture(baseTex, IN.texCoord);
+    
     float distFromCentre = length(IN.texCoord - vec2(0.5,0.5));
 
     //Handy tool for calculating wave modifiers: https://www.desmos.com/calculator/w9jrdpvsmk
     float overlayStrength = amplitude * sin( (distFromCentre + offset) / frequency ) + verticalOffset; 
 
-    fragColour += texture(circuitTex, IN.texCoord) * texture(overlayTex, IN.texCoord) * overlayStrength;
+    fragColour[0] += texture(circuitTex, IN.texCoord) * texture(overlayTex, IN.texCoord) * overlayStrength;
+    fragColour[1] = vec4(normal.xyz * 0.5 + 0.5, 1.0);
 }
 

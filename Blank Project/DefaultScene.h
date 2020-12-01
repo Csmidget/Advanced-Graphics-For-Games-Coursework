@@ -19,9 +19,6 @@ public:
 
 	bool rotateLight;
 
-	GLuint spaceSkybox;
-	GLuint normalSkybox;
-
 	CameraTrack* track;
 
 	SceneNode* compound;
@@ -31,6 +28,7 @@ public:
 	HeightMap* heightMapMesh;
 
 	SpotLight* spinningLight;
+	SpotLight* cameraLight;
 
 	float waterRotate;
 	float waterCycle = 0.0f;

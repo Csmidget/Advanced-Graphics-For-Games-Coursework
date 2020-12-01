@@ -23,7 +23,7 @@ out vec4 fragColour;
 
 void main(void) {
     vec4 diffuse = texture(diffuseTex, IN.texCoord);
-    
+  //  diffuse = vec4(pow(diffuse.rgb, vec3(2.2)), diffuse.a);
     vec3 viewDir = normalize(cameraPos - IN.worldPos);
   
     mat3 TBN = mat3(normalize(IN.tangent), normalize(IN.binormal), normalize(IN.normal));
@@ -33,6 +33,7 @@ void main(void) {
     vec3 reflectDir = reflect(-viewDir, normalize(bumpNormal));
     vec4 reflectTex = texture(reflectCube, reflectDir);
 
-    fragColour = reflectTex + (diffuse * 0.25f);
-    fragColour.a = 0.75f;
+    //Cranked up the reflection amount to help reflect the very dark skybox more clearly.
+    fragColour = (reflectTex * 4 + (diffuse * 0.5f)); 
+    fragColour.a = 1.0f;
 }

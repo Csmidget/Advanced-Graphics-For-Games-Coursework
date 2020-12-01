@@ -1,4 +1,5 @@
 #include "NodeTemplates.h"
+#include "CircuitBoardNode.h"
 #include "../nclgl/SceneNode.h"
 #include "../nclgl/MeshManager.h"
 #include "../nclgl/TextureManager.h"
@@ -14,20 +15,32 @@ namespace Templates {
 		TextureManager::SetTextureRepeating(wallNormal, true);
 
 		SceneNode* hut = new SceneNode();
-		const int wallCount = 5;
-		const Vector3 wallPositions[wallCount]{ {0.0,0,-1.5}	,{1.5,0,0.0},{-1.5,0,0.0}	,{0.0,2,-1.5}	,{0.0,2,0} };
-		const Vector3 wallRotations[wallCount]{ {0,90,0}	,{0,0,0}	,{0,0,0}		,{90,90,0}	,{90,90,0} };
+
+		const int wallCount = 4;
+		const Vector3 wallPositions[wallCount]{ {0.0,0,-1.5}	,{1.5,0,0.0},{-1.5,0,0.0}	,{0.0,2,-1.5} };
+		const Vector3 wallRotations[wallCount]{ {0,90,0}	,{0,0,0}	,{0,0,0}		,{90,90,0} };
+		const Vector3 wallScales[wallCount]{ {1,1,1},{1,1,1},{1,1,1},{1,1,1.5} };
 		Mesh* wallMesh = MeshManager::LoadMesh("Wall.msh");
 		for (int i = 0; i < wallCount; i++) {
 			SceneNode* wall = new SceneNode(wallMesh);
 			wall->SetTexture(wallDiffuse);
 			wall->SetNormal(wallNormal);
 			wall->SetShader(wallShader);
-			wall->SetTransform(wallPositions[i], wallRotations[i]);
+			wall->SetTransform(wallPositions[i], wallRotations[i],wallScales[i]);
 			wall->SetTextureMatrix(Matrix4::Rotation(90, { 0,0,1 }));
-			wall->MakeStatic();
 			hut->AddChild(wall);
 		}
+
+		//####Circuit board####
+		//CircuitBoardNode* circuit = new CircuitBoardNode();
+		Mesh* circuitMesh = MeshManager::LoadMesh("SmallFloor.msh");
+		CircuitBoardNode* circuit = new CircuitBoardNode(circuitMesh);
+		circuit->SetTransform({ 1.5,1,0 }, { 90,0,90 }, {1.2,1,1 });
+		hut->AddChild(circuit);
+		//#####################
+
+
+
 		return hut;
 	}
 
@@ -129,7 +142,7 @@ namespace Templates {
 		return root;
 	}
 
-	SceneNode* StreetLight(Vector3 position = { 0,0,0 }, Vector3 rotation = { 0,0,0 }) {
+	SceneNode* StreetLight(Vector3 position, Vector3 rotation) {
 		Shader* defaultShader = ShaderManager::LoadShader("BufferBumpVertex.glsl", "BufferBumpFragment.glsl");
 
 		Mesh* streetLightMesh = MeshManager::LoadMesh("StreetLamp2.msh");
@@ -159,11 +172,11 @@ namespace Templates {
 
 		//Hut//
 		auto hut = Templates::Hut();
-		hut->SetTransform({ 6.25,0,-8.75 });
+		hut->SetTransform({ 5,0,-10 });
 		root->AddChild(hut);
 
 		hut = Templates::Hut();
-		hut->SetTransform({ 0,0,-8.75 });
+		hut->SetTransform({ -2,0,-10 });
 		root->AddChild(hut);
 		
 		//Upper Wall
@@ -233,10 +246,32 @@ namespace Templates {
 			SceneNode* barrel = new SceneNode(barrelMesh, barrelMat);
 			barrel->SetTransform(barrelPositions[i], barrelRotations[i]);
 			barrel->SetShader(barrelShader);
-			barrel->MakeStatic();
 			root->AddChild(barrel);
 		}
 		
+		return root;
+	}
+
+	SceneNode* CompoundStationarySoldiers() {
+		Mesh* roleTMesh = MeshManager::LoadMesh("Role_T.msh");
+		MeshAnimation* roleTStandAnim = MeshManager::LoadMeshAnimation("Role_T_stand.anm");
+		MeshMaterial* roleTMat = MeshManager::LoadMeshMaterial("Role_T.mat");
+		Shader* animatedShader = ShaderManager::LoadShader("SkinningVertex.glsl", "BufferFragment.glsl");
+
+		SceneNode* root = new SceneNode();
+
+		//Hut Soldier
+		SceneNode* soldier = new SceneNode(roleTMesh, roleTMat, roleTStandAnim, Vector4(1, 1, 1, 1), animatedShader);
+		soldier->SetTransform(Vector3(20, -15.4, -42));
+		soldier->SetModelScale(Vector3(2.0f, 2.0f, 2.0f));
+		root->AddChild(soldier);
+
+		//RightTower Soldier
+		soldier = new SceneNode(roleTMesh, roleTMat, roleTStandAnim, Vector4(1, 1, 1, 1), animatedShader);
+		soldier->SetTransform(Vector3(52, -3.2, -6.5), { 0,90,0 }, { 0.8,0.8,0.8 });
+		soldier->SetModelScale(Vector3(2.0f, 2.0f, 2.0f));
+		root->AddChild(soldier);
+
 		return root;
 	}
 }

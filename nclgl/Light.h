@@ -19,6 +19,7 @@ public:
 		this->specularColour = specularColour;
 		this->isStatic = false;
 		this->shadowMap = 0;
+		this->active = true;
 	}
 
 	~Light() {
@@ -40,6 +41,9 @@ public:
 
 	virtual void Translate(Vector3 val) { position += val; }
 
+	void SetActive(bool val) { active = val; }
+	bool GetActive() const { return active; }
+
 	bool IsStatic() const { return isStatic; }
 	void MakeStatic() { isStatic = true; }
 	void MakeDynamic() { isStatic = false; }
@@ -52,7 +56,7 @@ private:
 	Vector4 diffuseColour;
 	GLuint shadowMap;
 	bool isStatic;
-
+	bool active;
 };
 
 class PointLight : public Light{
@@ -125,6 +129,5 @@ public:
 protected:
 	float radius;
 	float coneAngle;
-	Vector3 direction;
 	Vector3 rotation;
 };

@@ -81,12 +81,13 @@ protected:
 	Shader* combineShader;
 	Shader* blurShader;
 	Shader* sceneShader;
-	Shader* gammaSceneShader;
+	Shader* colourCorrectionShader;
 	int nextPostProcessOutput;
 
 	bool doBlur;
 	bool doNeonGrid;
 	bool doColourCorrect;
+	float saturationPoint;
 
 	Frustum frameFrustum;
 

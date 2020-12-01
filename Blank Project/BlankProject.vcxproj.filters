@@ -9,6 +9,12 @@
       <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
       <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
     </Filter>
+    <Filter Include="Header Files\SceneNodes">
+      <UniqueIdentifier>{f60d995f-f9f5-4918-a0ca-23d40dfdd330}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\SceneNodes">
+      <UniqueIdentifier>{b3325f14-ff15-4613-adb6-a92fe7a5c456}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Renderer.cpp">
@@ -27,10 +33,13 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="NodeTemplates.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\SceneNodes</Filter>
+    </ClCompile>
+    <ClCompile Include="CircuitBoardNode.cpp">
+      <Filter>Source Files\SceneNodes</Filter>
     </ClCompile>
     <ClCompile Include="HeightMapNode.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\SceneNodes</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -46,11 +55,14 @@
     <ClInclude Include="CameraTrack.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="NodeTemplates.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="HeightMapNode.h">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\SceneNodes</Filter>
+    </ClInclude>
+    <ClInclude Include="CircuitBoardNode.h">
+      <Filter>Header Files\SceneNodes</Filter>
+    </ClInclude>
+    <ClInclude Include="NodeTemplates.h">
+      <Filter>Header Files\SceneNodes</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
