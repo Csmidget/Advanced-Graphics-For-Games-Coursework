@@ -6,14 +6,14 @@
 
 class Shader;
 
-#define STATIC_SHADOW_RESOLUTION 2048
+#define STATIC_SHADOW_RESOLUTION 1024
 #define DYNAMIC_SHADOW_RESOLUTION 1024
 
 class Light {
 
 public:
 
-	Light(const Vector4& diffuseColour = {}, const Vector4& specularColour = {}, const Vector3& position = {}) {
+	Light(const Vector3& position = {}, const Vector4& diffuseColour = {}, const Vector4& specularColour = {}) {
 		this->position = position;
 		this->diffuseColour = diffuseColour;
 		this->specularColour = specularColour;
@@ -58,7 +58,7 @@ private:
 class PointLight : public Light{
 public:
 	PointLight() : Light() {; radius = 0; }
-	PointLight(const Vector3& position, const Vector4& diffuseColour, const Vector4& specularColour, float radius) : Light(diffuseColour,specularColour,position) {
+	PointLight(const Vector3& position, const Vector4& diffuseColour, const Vector4& specularColour, float radius) : Light(position,diffuseColour,specularColour) {
 		this->radius = radius;
 	}
 
@@ -76,7 +76,7 @@ protected:
 class DirectionLight : public Light {
 public: 
 	DirectionLight() : Light() { direction = {}; }
-	DirectionLight(const Vector3& direction, const Vector4& diffuseColour, const Vector4& specularColour) :Light(diffuseColour,specularColour) {
+	DirectionLight(const Vector3& direction, const Vector4& diffuseColour, const Vector4& specularColour) :Light({ 0,0,0 }, diffuseColour, specularColour) {
 		this->direction = direction;
 	}
 
@@ -102,12 +102,10 @@ protected:
 
 class SpotLight : public Light {
 public:
-	SpotLight() : Light() { radius = 0; this->coneAngle = 0; direction = {}; rotation = {}; }
-	SpotLight(const Vector3& position, const Vector3& direction, const Vector4& diffuseColour, const Vector4& specularColour, float radius, float coneAngle) :Light(diffuseColour,specularColour,position) {
+	SpotLight(const Vector3 position = {}, const Vector3 rotation = {}, float radius = 50.0f, float coneAngle = 30.0f, const Vector4& diffuseColour = { 1,1,1,1 }, const Vector4& specularColour = { 1,1,1,1 }) :Light(position, diffuseColour, specularColour) {
 		this->radius = radius;
 		this->coneAngle = coneAngle;
-		this->direction = direction;
-		this->rotation = {};
+		this->rotation = rotation;
 	}
 
 	~SpotLight(void) {};
@@ -122,9 +120,7 @@ public:
 
 	Vector3 GetRotation() const { return rotation; }
 	void SetRotation(const Vector3& val) { rotation = val; }
-
-	Vector3 GetDirection() const { return direction; }
-	void SetDirection(Vector3 val) { direction = val; }
+	void Rotate(const Vector3& val) { rotation += val; }
 
 protected:
 	float radius;

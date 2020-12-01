@@ -21,6 +21,7 @@ public:
 	virtual void Update(float dt);
 
 	Matrix4 GetCameraPerspective(int width, int height);
+	void GenerateRandomLights(int pointLightCount, int spotLightCount, Vector3 minPos, Vector3 maxPos);
 
 protected:
 	bool initialized;
@@ -28,6 +29,6 @@ protected:
 	Camera* camera;
 	GLuint skybox;
 
-	std::vector<PointLight> pointLights;
-	std::vector<SpotLight> spotLights;
+	std::vector<PointLight*> pointLights;
+	std::vector<SpotLight*> spotLights;
 };

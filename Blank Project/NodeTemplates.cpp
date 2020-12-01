@@ -217,4 +217,26 @@ namespace Templates {
 
 		return root;
 	}
+
+	SceneNode* BarrelStack() {
+		Mesh* barrelMesh = MeshManager::LoadMesh("Barrel_1.msh");
+		MeshMaterial* barrelMat = MeshManager::LoadMeshMaterial("Barrel_1.mat");
+		Shader* barrelShader = ShaderManager::LoadShader("BufferBumpVertex.glsl", "BufferBumpFragment.glsl");
+
+		SceneNode* root = new SceneNode();
+
+		const int barrelCount = 4;
+		const Vector3 barrelPositions[barrelCount]{ {2,-4,2.5}	,{0.0,-4,0}		,{3.7,-4,0.1}		,{2.0,0,1} };
+		const Vector3 barrelRotations[barrelCount]{ {}			,{0  ,22.5 ,0  },{0 ,18.0 ,0  }	,{0 ,(float)rand() ,0 } };
+
+		for (int i = 0; i < barrelCount; ++i) {
+			SceneNode* barrel = new SceneNode(barrelMesh, barrelMat);
+			barrel->SetTransform(barrelPositions[i], barrelRotations[i]);
+			barrel->SetShader(barrelShader);
+			barrel->MakeStatic();
+			root->AddChild(barrel);
+		}
+		
+		return root;
+	}
 }

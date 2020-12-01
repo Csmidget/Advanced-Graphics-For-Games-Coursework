@@ -17,7 +17,7 @@ public:
 
 	void Update(float dt) override;
 
-	bool rotateLights;
+	bool rotateLight;
 
 	GLuint spaceSkybox;
 	GLuint normalSkybox;
@@ -29,6 +29,8 @@ public:
 	Mesh* waterMesh;
 
 	HeightMap* heightMapMesh;
+
+	SpotLight* spinningLight;
 
 	float waterRotate;
 	float waterCycle = 0.0f;

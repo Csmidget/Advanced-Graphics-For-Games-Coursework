@@ -41,11 +41,13 @@ void PointLight::SetShaderLightData(const Shader* shader) {
 
 void SpotLight::SetShaderLightData(const Shader* shader) {
 
-	Matrix4 rotMat = Matrix4::Rotation(rotation.x, Vector3(1, 0, 0)) *
-		Matrix4::Rotation(rotation.y, Vector3(0, 1, 0)) *
-		Matrix4::Rotation(rotation.z, Vector3(0, 0, 1));
+	Matrix4 rotMat = Matrix4::Rotation(rotation.z, Vector3(0, 0, 1)) *
+					 Matrix4::Rotation(rotation.y, Vector3(0, 1, 0)) *
+					 Matrix4::Rotation(rotation.x, Vector3(1, 0, 0)) *
+					 Matrix4::Translation({0,-1,0});
 
-	Vector3 dir = rotMat * direction;
+		Vector3 dir = rotMat * Vector3(0, 0, 0);
+	//dir.Normalise();
 	glUniform3fv(glGetUniformLocation(shader->GetProgram(), "lightDir"), 1, (float*)&dir);
 	glUniform3fv(glGetUniformLocation(shader->GetProgram(), "lightPos"), 1, (float*)&GetPosition());
 

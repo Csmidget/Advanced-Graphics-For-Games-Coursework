@@ -9,6 +9,7 @@
 #include "../nclgl/Light.h"
 #include "../nclgl/TextureManager.h"
 #include "../nclgl/MeshManager.h"
+#include "../nclgl/ShaderManager.h"
 
 #include <algorithm>
 
@@ -30,6 +31,7 @@ Renderer::Renderer(Window& parent) : OGLRenderer(parent) {
 
 	doBlur = false;
 	doNeonGrid = true;
+	doColourCorrect = true;
 
 	//Default all of our textures to 0. This is so that GenerateSceenTexture() recognises
 	//they are empty and generates a new texture for them.
@@ -41,26 +43,22 @@ Renderer::Renderer(Window& parent) : OGLRenderer(parent) {
 	skyboxColourTex = 0;
 	bufferTransparentColourTex = 0;
 	bufferTransparentNormalTex = 0;
-	outputPostProcessTex = 0;
+	nextPostProcessOutput = 0;
 	postProcessColourTex[0] = 0;
 	postProcessColourTex[1] = 0;
 	neonGridColourTex = 0;
 
 	projMatrix = scene->GetCameraPerspective(width, height);
 
-	skyboxShader = new Shader("SkyboxVertex.glsl", "SkyboxFragment.glsl");
-	blurShader = new Shader("TexturedVertex.glsl", "ProcessFragment.glsl");
-	sceneShader = new Shader("TexturedVertex.glsl", "TexturedFragment.glsl");
-	pointLightShader = new Shader("PointLightVertex.glsl", "PointLightShadowFragment.glsl");
-	spotLightShader = new Shader("PointLightVertex.glsl", "SpotLightShadowFragment.glsl");
-	shadowShader = new Shader("ShadowVert.glsl", "ShadowFrag.glsl", "ShadowGeom.glsl");
-	combineShader = new Shader("CombineVertex.glsl", "CombineFragment.glsl");
-	neonGridShader = new Shader("FlexibleTextureVert.glsl", "ColouredLinesFragment.glsl");
-
-	if (!pointLightShader->LoadSuccess()|| !spotLightShader->LoadSuccess()	||	!combineShader->LoadSuccess()	||
-		!skyboxShader->LoadSuccess()	|| !blurShader->LoadSuccess()		||	!sceneShader->LoadSuccess()		||
-		!shadowShader->LoadSuccess()	|| !neonGridShader->LoadSuccess())
-		return;
+	skyboxShader = ShaderManager::LoadShader("SkyboxVertex.glsl", "SkyboxFragment.glsl");
+	blurShader = ShaderManager::LoadShader("TexturedVertex.glsl", "ProcessFragment.glsl");
+	pointLightShader = ShaderManager::LoadShader("PointLightVertex.glsl", "PointLightShadowFragment.glsl");
+	spotLightShader = ShaderManager::LoadShader("PointLightVertex.glsl", "SpotLightShadowFragment.glsl");
+	shadowShader = ShaderManager::LoadShader("ShadowVert.glsl", "ShadowFrag.glsl", "ShadowGeom.glsl");
+	combineShader = ShaderManager::LoadShader("CombineVertex.glsl", "CombineFragment.glsl");
+	neonGridShader = ShaderManager::LoadShader("FlexibleTextureVert.glsl", "ColouredLinesFragment.glsl");
+	sceneShader = ShaderManager::LoadShader("TexturedVertex.glsl", "TexturedFragment.glsl");
+	gammaSceneShader = ShaderManager::LoadShader("TexturedVertex.glsl", "ColourCorrectFragment.glsl");
 
 	glGenFramebuffers(1, &bufferFBO);
 	glGenFramebuffers(1, &lightingFBO);
@@ -159,13 +157,6 @@ Renderer::~Renderer(void) {
 	delete scene;
 	delete quad;
 
-	delete pointLightShader;
-	delete spotLightShader;
-	delete combineShader;
-	delete skyboxShader;
-	delete blurShader;
-	delete sceneShader;
-
 	glDeleteTextures(1, &bufferDepthStencilTex);
 	glDeleteTextures(1, &bufferColourTex);
 	glDeleteTextures(1, &bufferNormalTex);
@@ -194,7 +185,7 @@ void Renderer::GenerateScreenTexture(GLuint& into, bool depth) {
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 
-	GLuint internalformat = depth ? GL_DEPTH24_STENCIL8 : GL_RGBA8;
+	GLuint internalformat = depth ? GL_DEPTH24_STENCIL8 : GL_RGBA16F;
 	GLuint format = depth ? GL_DEPTH_STENCIL : GL_RGBA;
 	GLuint type = depth ? GL_UNSIGNED_INT_24_8 : GL_UNSIGNED_BYTE;
 
@@ -254,6 +245,10 @@ void Renderer::UpdateScene(float dt) {
 	if (Window::GetKeyboard()->KeyTriggered(KEYBOARD_2)) {
 		doNeonGrid = !doNeonGrid;
 	}
+	if (Window::GetKeyboard()->KeyTriggered(KEYBOARD_3)) {
+		doColourCorrect = !doColourCorrect;
+		std::cout << "Gamma " << (doColourCorrect ? "ENABLED\n" : "DISABLED\n");
+	}
 
 	scene->Update(dt);
 
@@ -290,13 +285,13 @@ void Renderer::DrawShadowMaps(bool staticLights) {
 	BindShader(shadowShader);
 
 	for (auto& l : scene->pointLights) {
-		if ((staticLights && l.IsStatic()) || !l.IsStatic())
-			DrawShadowMap(l, l.GetRadius());
+		if ((staticLights && l->IsStatic()) || !l->IsStatic())
+			DrawShadowMap(l, l->GetRadius());
 	}
 
 	for (auto& l : scene->spotLights) {
-		if ((staticLights && l.IsStatic()) || !l.IsStatic())
-			DrawShadowMap(l, l.GetRadius());
+		if ((staticLights && l->IsStatic()) || !l->IsStatic())
+			DrawShadowMap(l, l->GetRadius());
 	}
 
 	glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
@@ -306,19 +301,19 @@ void Renderer::DrawShadowMaps(bool staticLights) {
 
 }
 
-void Renderer::DrawShadowMap(Light& light,float farPlaneDist) {
+void Renderer::DrawShadowMap(Light* light,float farPlaneDist) {
 
-	if (light.GetShadowMap() == 0)
-		light.GenerateShadowMapTexture();
+	if (light->GetShadowMap() == 0)
+		light->GenerateShadowMapTexture();
 
-	glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, light.GetShadowMap(), 0);
+	glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, light->GetShadowMap(), 0);
 
 	glClear(GL_DEPTH_BUFFER_BIT);
 
 	Matrix4 lightProjMatrix = Matrix4::Perspective(1, farPlaneDist, 1, 90);
 
 	std::vector<Matrix4> shadowTransforms;
-	Vector3 lightPos = light.GetPosition();
+	Vector3 lightPos = light->GetPosition();
 	shadowTransforms.emplace_back(lightProjMatrix * Matrix4::BuildViewMatrix(lightPos, lightPos + Vector3(1, 0, 0), Vector3(0.0, -1.0, 0.0)));
 	shadowTransforms.emplace_back(lightProjMatrix * Matrix4::BuildViewMatrix(lightPos, lightPos + Vector3(-1, 0, 0), Vector3(0.0, -1.0, 0.0)));
 	shadowTransforms.emplace_back(lightProjMatrix * Matrix4::BuildViewMatrix(lightPos, lightPos + Vector3(0, 1, 0), Vector3(0.0, 0.0, 1.0)));
@@ -329,8 +324,8 @@ void Renderer::DrawShadowMap(Light& light,float farPlaneDist) {
 	glUniform3fv(glGetUniformLocation(shadowShader->GetProgram(), "lightPos"), 1, (float*)&lightPos);
 	glUniform1f(glGetUniformLocation(shadowShader->GetProgram(), "lightFarPlane"), farPlaneDist);
 
-	bool staticLight = light.IsStatic();
-	for (auto& n : nodeList) {
+	bool staticLight = light->IsStatic();
+	for (auto n : nodeList) {
 		if (staticLight && !n->IsStatic())
 			continue; 
 
@@ -517,21 +512,21 @@ void Renderer::DrawLights() {
 
 	SetupLightShader(pointLightShader);
 	for (int i = 0; i < scene->pointLights.size(); ++i) {
-		Light& l = scene->pointLights[i];
+		Light* l = scene->pointLights[i];
 		glActiveTexture(GL_TEXTURE2);
-		glBindTexture(GL_TEXTURE_CUBE_MAP, l.GetShadowMap());
+		glBindTexture(GL_TEXTURE_CUBE_MAP, l->GetShadowMap());
 
- 		l.SetShaderLightData(pointLightShader);
+ 		l->SetShaderLightData(pointLightShader);
 		sphere->Draw();
 	}
 
 	SetupLightShader(spotLightShader);
 	for (int i = 0; i < scene->spotLights.size(); ++i) {
-		Light& l = scene->spotLights[i];
+		Light* l = scene->spotLights[i];
 		glActiveTexture(GL_TEXTURE2);
-		glBindTexture(GL_TEXTURE_CUBE_MAP, l.GetShadowMap());
+		glBindTexture(GL_TEXTURE_CUBE_MAP, l->GetShadowMap());
 
-		l.SetShaderLightData(spotLightShader);
+		l->SetShaderLightData(spotLightShader);
 		sphere->Draw();
 	}
 
@@ -574,7 +569,7 @@ void Renderer::DrawSkybox() {
 }
 
 void Renderer::PostProcessing() {
-	outputPostProcessTex = 0;
+	nextPostProcessOutput = 0;
 	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 
 	modelMatrix.ToIdentity();
@@ -593,7 +588,7 @@ void Renderer::PostProcessing() {
 void Renderer::CombineBuffers() {
 	
 	glBindFramebuffer(GL_FRAMEBUFFER, postProcessFBO);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, postProcessColourTex[outputPostProcessTex], 0);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, postProcessColourTex[nextPostProcessOutput], 0);
 
 	glClear(GL_COLOR_BUFFER_BIT);
 	
@@ -602,7 +597,7 @@ void Renderer::CombineBuffers() {
 	UpdateShaderMatrices();
 
 	float ambient = doNeonGrid ? 0.0f : 0.1f;
-	float transparentAmbient = doNeonGrid ? 0.0f : 0.2f;
+	float transparentAmbient = doNeonGrid ? 0.0f : 0.1f;
 
 	glUniform1f(glGetUniformLocation(combineShader->GetProgram(), "ambient"), ambient);
 	glUniform1f(glGetUniformLocation(combineShader->GetProgram(), "transparentAmbient"), transparentAmbient);
@@ -632,7 +627,7 @@ void Renderer::CombineBuffers() {
 
 	quad->Draw();
 
-	outputPostProcessTex = !outputPostProcessTex;
+	nextPostProcessOutput = !nextPostProcessOutput;
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glDisable(GL_STENCIL_TEST);
 }
@@ -643,36 +638,37 @@ void Renderer::Blur() {
 	BindShader(blurShader);
 	UpdateShaderMatrices();
 
-	glDisable(GL_DEPTH_TEST);
+	//glDisable(GL_DEPTH_TEST);
 
 	bool isVertical = 0;
 	glActiveTexture(GL_TEXTURE0);
 	glUniform1i(glGetUniformLocation(blurShader->GetProgram(), "sceneTex"), 0);
 	for (int i = 0; i < BLUR_PASSES * 2; ++i) {
-		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, postProcessColourTex[outputPostProcessTex], 0);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, postProcessColourTex[nextPostProcessOutput], 0);
 		glUniform1i(glGetUniformLocation(blurShader->GetProgram(), "isVertical"), isVertical);
-		glBindTexture(GL_TEXTURE_2D, postProcessColourTex[!outputPostProcessTex]);
+		glBindTexture(GL_TEXTURE_2D, postProcessColourTex[!nextPostProcessOutput]);
 		quad->Draw();
 
 		isVertical = !isVertical;
-		outputPostProcessTex = !outputPostProcessTex;
+		nextPostProcessOutput = !nextPostProcessOutput;
 	}
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	glEnable(GL_DEPTH_TEST);
+//	glEnable(GL_DEPTH_TEST);
 }
+
 
 void Renderer::PresentScene() {
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glClear(GL_COLOR_BUFFER_BIT);
 
-	BindShader(sceneShader);
+	BindShader(doColourCorrect ? gammaSceneShader : sceneShader);
 
 	UpdateShaderMatrices();
 
 	glUniform1i(glGetUniformLocation(sceneShader->GetProgram(), "diffuseTex"), 0);
 	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, postProcessColourTex[!outputPostProcessTex]);
+	glBindTexture(GL_TEXTURE_2D, postProcessColourTex[!nextPostProcessOutput]);
 
 
 	quad->Draw();

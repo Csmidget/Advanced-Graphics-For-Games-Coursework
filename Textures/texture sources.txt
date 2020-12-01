@@ -1,1 +1,4 @@
 https://www.filterforge.com/filters/3314-normal.html
+
+Asphalt: https://opengameart.org/content/real-asphalt-texture-pack
+Asphalt normal generated using: https://cpetry.github.io/NormalMap-Online/

@@ -6,6 +6,6 @@ class Shader;
 namespace Templates {
 
 	SceneNode* Hut();
-
 	SceneNode* Compound();
+	SceneNode* BarrelStack();
 }

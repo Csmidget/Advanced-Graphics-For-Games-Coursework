@@ -26,7 +26,7 @@ protected:
 	void ClearNodeLists();
 
 	void DrawShadowMaps(bool staticLights);
-	void DrawShadowMap(Light& light, float farPlaneDist);
+	void DrawShadowMap(Light* light, float farPlaneDist);
 	void DrawOpaques();
 	void DrawTransparents();
 	void DrawNode(SceneNode* n, Shader* shaderOverride = nullptr);
@@ -81,10 +81,12 @@ protected:
 	Shader* combineShader;
 	Shader* blurShader;
 	Shader* sceneShader;
-	int outputPostProcessTex;
+	Shader* gammaSceneShader;
+	int nextPostProcessOutput;
 
 	bool doBlur;
 	bool doNeonGrid;
+	bool doColourCorrect;
 
 	Frustum frameFrustum;
 
