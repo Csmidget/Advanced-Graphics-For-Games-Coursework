@@ -7,18 +7,15 @@ class Camera {
 public:
 
 	Camera(void) {
-		yaw = 0.0f;
-		pitch = 0.0f;
-		roll = 0.0f;
+		rotation = {};
+		position = {};
 		nearPlane = 1.0f;
 		farPlane = 10000.0f;
 		fov = 45.0f;
 	};
 
-	Camera(float pitch, float yaw, float roll, Vector3 position, float nearPlane, float farPlane, float fov) {
-		this->pitch = pitch;
-		this->yaw = yaw;
-		this->roll = roll;
+	Camera( Vector3 position, Vector3 rotation, float nearPlane, float farPlane, float fov) {
+		this->rotation = rotation;
 		this->position = position;
 		this->nearPlane = nearPlane;
 		this->farPlane = farPlane;
@@ -35,14 +32,9 @@ public:
 	void	SetPosition(Vector3 val)	{ position = val; }
 	void	Translate(Vector3 val) { position += val; }
 
-	float GetYaw() const { return yaw; }
-	void  SetYaw(float y) { yaw = y; }
-
-	float GetPitch() const { return pitch; }
-	void  SetPitch(float p) { pitch = p; }
-
-	float GetRoll() const { return roll; }
-	void  SetRoll(float p) { roll = p; }
+	Vector3 GetRotation() const { return rotation; }
+	void	SetRotation(Vector3 val) { rotation = val; }
+	void Rotate(Vector3 val) { rotation += val; }
 
 	float GetNearPlane() const { return nearPlane; }
 	void SetNearPlane(float val) { nearPlane = val; }
@@ -53,16 +45,12 @@ public:
 	float GetFOV() const { return fov; }
 	void SetFOV(float val) { fov = val; }
 
-	void Rotate(float _pitch, float _yaw, float _roll) {pitch += _pitch; yaw += _yaw; roll += _roll; }
 
 protected:
-	float yaw;
-	float pitch;
-	float roll;
-
 	float nearPlane;
 	float farPlane;
 	float fov;
 
 	Vector3 position;
+	Vector3 rotation;
 };

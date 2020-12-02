@@ -22,20 +22,20 @@
 
 CameraTrack BuildTrack(Camera* cam)
 {
-	CameraTrack track(cam, 0.5f);
+	CameraTrack track(cam, 0.5f, true);
 
-	track.AddWaypoint(Vector3(0, 0.0, 10.0), -45, 0, 0);
-	track.AddWaypoint(Vector3(20.9, -12.1, -25.3), -1.73, -12.3, 0, 5.0f);
-	track.AddWaypoint(Vector3(7.756, -3.112, 26.47), -31.82, -33.3, 0, 5.0f);
-	track.AddWaypoint(Vector3(60.25, -14.15, 70.08), -4.6, 64.4, 0, 10.0f);
-
+	track.AddWaypoint(Vector3(0, 0.0, 10.0), Vector3(-45, 0, 0));
+	track.AddWaypoint(Vector3(20.9, -12.1, -25.3), Vector3(-1.73, -12.3, 0), 5.0f);
+	track.AddWaypoint(Vector3(7.756, -3.112, 26.47), Vector3(-31.82, -33.3, 0), 5.0f);
+	track.AddWaypoint(Vector3(60.3,  25.02, 53.88), Vector3(-31.51, 43.01, 0), 8.0f);
+	track.AddWaypoint(Vector3(60.25, -14.15, 70.08), Vector3(-4.6, 64.4, 0), 10.0f);
 	return track;
 }
 
 DefaultScene::DefaultScene() : Scene() {
 
 	camera->SetPosition(Vector3(0, 0.0, 10.0));
-	camera->SetPitch(-45);
+	camera->SetRotation({ -45,0,0 });
 	rotateLight = true;
 	//Texture initialization
 	GLuint waterDiffuse		= TextureManager::LoadTexture(TEXTUREDIR"water.tga", SOIL_FLAG_MIPMAPS);
@@ -171,7 +171,7 @@ DefaultScene::DefaultScene() : Scene() {
 	waterCycle = 0.0f;
 
 	track = new CameraTrack{BuildTrack(camera)};
-
+	track->Start();
 
 	initialized = true;
 }
@@ -185,9 +185,9 @@ DefaultScene::~DefaultScene() {
 }
 
 void DefaultScene::Update(float dt) {
-	camera->Rotate(-Window::GetMouse()->GetRelativePosition().y, -Window::GetMouse()->GetRelativePosition().x, 0);
-
-	Matrix4 rotation = Matrix4::Rotation(camera->GetYaw(), Vector3(0, 1, 0)) * Matrix4::Rotation(camera->GetRoll(), Vector3(0, 0, 1));
+	camera->Rotate({ -Window::GetMouse()->GetRelativePosition().y, -Window::GetMouse()->GetRelativePosition().x, 0 });
+	Vector3 rotVec = camera->GetRotation();
+	Matrix4 rotation = Matrix4::Rotation(rotVec.y, Vector3(0, 1, 0)) * Matrix4::Rotation(rotVec.z, Vector3(0, 0, 1));
 
 	Vector3 forward = rotation * Vector3(0, 0, -1) * dt;
 	Vector3 right = rotation * Vector3(1, 0, 0) * dt;
@@ -223,13 +223,13 @@ void DefaultScene::Update(float dt) {
 
 	if (Window::GetKeyboard()->KeyTriggered(KEYBOARD_P)) {
 		Vector3 pos = camera->GetPosition();
-		Vector3 rot = { camera->GetPitch(), camera->GetYaw(), camera->GetRoll() };
+		Vector3 rot = camera->GetRotation();
 		std::cout.precision(4);
 		std::cout << "Camera pos: <" << pos.x << "," << pos.y << "," << pos.z << "> <" << rot.x << "," << rot.y << "," << rot.z << ">\n";
 	}
 
 	if (Window::GetKeyboard()->KeyTriggered(KEYBOARD_0)) {
-		track->Start();
+		track->IsActive() ? track->Stop() : track->Start();
 	}
 
 	if (Window::GetKeyboard()->KeyTriggered(KEYBOARD_L)) {
@@ -237,7 +237,7 @@ void DefaultScene::Update(float dt) {
 	}
 
 	cameraLight->SetPosition(camera->GetPosition());
-	cameraLight->SetRotation({ camera->GetPitch() + 90,camera->GetYaw(),camera->GetRoll() });
+	cameraLight->SetRotation(camera->GetRotation() + Vector3(90, 0, 0));
 
 
 	waterRotate += dt * 2.0f; //2 degrees a second

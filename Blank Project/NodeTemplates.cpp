@@ -272,6 +272,18 @@ namespace Templates {
 		soldier->SetModelScale(Vector3(2.0f, 2.0f, 2.0f));
 		root->AddChild(soldier);
 
+		//LowerTower Soldier
+		soldier = new SceneNode(roleTMesh, roleTMat, roleTStandAnim, Vector4(1, 1, 1, 1), animatedShader);
+		soldier->SetTransform(Vector3(8.601, -3.2, 37.96), { 0,0,0 }, { 0.8,0.8,0.8 });
+		soldier->SetModelScale(Vector3(2.0f, 2.0f, 2.0f));
+		root->AddChild(soldier);
+
+		//UpperTower Soldier
+		soldier = new SceneNode(roleTMesh, roleTMat, roleTStandAnim, Vector4(1, 1, 1, 1), animatedShader);
+		soldier->SetTransform(Vector3(7.7, -3.2, -50), { 0,180,0 }, { 0.8,0.8,0.8 });
+		soldier->SetModelScale(Vector3(2.0f, 2.0f, 2.0f));
+		root->AddChild(soldier);
+
 		return root;
 	}
 }

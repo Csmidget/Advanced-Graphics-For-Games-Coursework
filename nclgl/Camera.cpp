@@ -3,27 +3,27 @@
 
 void Camera::UpdateCamera(float dt) {
 	
-	pitch = std::min(pitch, 90.0f);
-	pitch = std::max(pitch, -90.0f);
+	rotation.x = std::min(rotation.x, 90.0f);
+	rotation.x = std::max(rotation.x, -90.0f);
 
-	if (yaw <= 0) {
-		yaw += 360.0f;
+	if (rotation.y <= 0) {
+		rotation.y += 360.0f;
 	}
-	if (yaw >= 360.0f) {
-		yaw -= 360.0f;
+	if (rotation.y >= 360.0f) {
+		rotation.y -= 360.0f;
 	}
 
-	if (roll <= 0) {
-		roll += 360.0f;
+	if (rotation.z <= 0) {
+		rotation.z += 360.0f;
 	}
-	if (roll >= 360.0f) {
-		roll -= 360.0f;
+	if (rotation.z >= 360.0f) {
+		rotation.z -= 360.0f;
 	}
 }
 
 Matrix4 Camera::BuildViewMatrix() {
-	return	Matrix4::Rotation(-pitch,	Vector3(1,0,0)) *
-			Matrix4::Rotation(-yaw,		Vector3(0, 1, 0)) *
-			Matrix4::Rotation(-roll,	Vector3(0,0,1)) *
+	return	Matrix4::Rotation(-rotation.x,	Vector3(1,0,0)) *
+			Matrix4::Rotation(-rotation.y,		Vector3(0, 1, 0)) *
+			Matrix4::Rotation(-rotation.z,	Vector3(0,0,1)) *
 			Matrix4::Translation(-position);
 }
