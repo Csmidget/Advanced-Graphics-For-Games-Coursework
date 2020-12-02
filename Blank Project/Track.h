@@ -2,6 +2,7 @@
 #include "../nclgl/Vector3.h"
 #include "../nclgl/Camera.h"
 #include <vector>
+#include <algorithm>
 
 template<typename T>
 class Track{

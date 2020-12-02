@@ -1,5 +1,6 @@
 #include "Mesh.h"
 #include "Matrix2.h"
+#include <algorithm>
 
 using std::string;
 

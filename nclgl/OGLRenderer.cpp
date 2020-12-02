@@ -18,6 +18,7 @@ _-_-_-_-_-_-_-""  ""
 #include "MeshManager.h"
 #include "TextureManager.h"
 #include "ShaderManager.h"
+#include <algorithm>
 
 using std::string;
 

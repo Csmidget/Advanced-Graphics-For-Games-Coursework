@@ -1,5 +1,6 @@
 #include "HeightMap.h"
 #include <iostream>
+#include <algorithm>
 
 HeightMap::HeightMap(const std::string& name) {
 	int iWidth, iHeight, iChans;

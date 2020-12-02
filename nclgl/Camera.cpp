@@ -1,5 +1,6 @@
 #include "Camera.h"
 #include "Window.h"
+#include <algorithm>
 
 void Camera::UpdateCamera(float dt) {
 	
