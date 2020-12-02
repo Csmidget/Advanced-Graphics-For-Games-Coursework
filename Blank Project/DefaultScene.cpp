@@ -21,13 +21,28 @@
 
 Track<Camera>* BuildTrack(Camera* cam)
 {
-	auto track = new Track<Camera>(cam, 0.5f, true);
+	auto track = new Track<Camera>(cam, 0.5f, true,true);
 
 	track->AddWaypoint(Vector3(0, 0.0, 10.0), Vector3(-45, 0, 0));
 	track->AddWaypoint(Vector3(20.9, -12.1, -25.3), Vector3(-1.73, -12.3, 0), 5.0f);
 	track->AddWaypoint(Vector3(7.756, -3.112, 26.47), Vector3(-31.82, -33.3, 0), 5.0f);
 	track->AddWaypoint(Vector3(60.3,  25.02, 53.88), Vector3(-31.51, 43.01, 0), 8.0f);
 	track->AddWaypoint(Vector3(60.25, -14.15, 70.08), Vector3(-4.6, 64.4, 0), 10.0f);
+	return track;
+}
+
+Track<SceneNode>* BuildCompoundPatrol(SceneNode* target) {
+	auto track = new Track<SceneNode>(target, 0.5f, true,false);
+	track->AddWaypoint(Vector3(-10, -15.4, -10), Vector3(0, 0, 0));
+	track->AddWaypoint(Vector3(-10, -15.4, 10), Vector3(0, 0, 0),5);
+	track->AddWaypoint(Vector3(-10, -15.4, 10), Vector3(0, 90, 0));
+	track->AddWaypoint(Vector3(10, -15.4, 10), Vector3(0, 90, 0),5);
+	track->AddWaypoint(Vector3(10, -15.4, 10), Vector3(0, 180, 0));
+	track->AddWaypoint(Vector3(10, -15.4, -10), Vector3(0, 180, 0), 5);
+	track->AddWaypoint(Vector3(10, -15.4, -10), Vector3(0, 270, 0));
+	track->AddWaypoint(Vector3(-10, -15.4, -10), Vector3(0, 270, 0), 5);
+	track->AddWaypoint(Vector3(-10, -15.4, -10), Vector3(0, 360, 0));
+	track->Start();
 	return track;
 }
 
@@ -87,7 +102,7 @@ DefaultScene::DefaultScene() : Scene() {
 	root->AddChild(water);
 	//#################
 
-	//##########Soldiers##########
+	//##########Active Soldiers##########
 	Mesh* roleTMesh = MeshManager::LoadMesh("Role_T.msh");
 	MeshAnimation* roleTRunAnim = MeshManager::LoadMeshAnimation("Role_T.anm");
 	MeshAnimation* roleTStandAnim = MeshManager::LoadMeshAnimation("Role_T_stand.anm");
@@ -96,10 +111,12 @@ DefaultScene::DefaultScene() : Scene() {
 	SceneNode* role_t = new SceneNode(roleTMesh,  roleTMat, roleTRunAnim, Vector4(1, 1, 1, 1), animatedShader);
 	role_t->SetTransform(Vector3(0, -15.4, 0));
 	role_t->SetModelScale(Vector3(2.0f, 2.0f, 2.0f));
+	patrols.push_back(BuildCompoundPatrol(role_t));
 	root->AddChild(role_t);
+	//###################################
 
+	//#######Stationary soldiers#########
 	root->AddChild(Templates::CompoundStationarySoldiers());
-
 	//#############################
 
 	//#########Compound########
@@ -250,6 +267,10 @@ void DefaultScene::Update(float dt) {
 		Matrix4::Rotation(waterRotate, Vector3(0, 0, 1)));
 
 	track->Update(dt);
+
+	for (auto t : patrols) {
+		t->Update(dt);
+	}
 
 	camera->UpdateCamera(dt);
 	Scene::Update(dt);

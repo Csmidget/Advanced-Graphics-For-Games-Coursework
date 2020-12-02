@@ -16,11 +16,15 @@ private:
 	T* target;
 	std::vector<Waypoint> waypoints;
 	float speedMultiplier;
-	float hangTime;
 	float progress;
 	bool active;
 	bool loop;
+	bool smooth;
 	int current;
+
+	float Interp(float start, float end, float progress) { return smooth ? CosineInterp(start, end, progress) : Lerp(start, end, progress); }
+
+	float Lerp(float start, float end, float progress) { return (start * (1.0f - progress) + end * progress); }
 
 	float CosineInterp(float start, float end, float progress) {
 		double cosProgress;
@@ -38,13 +42,14 @@ public:
 		current = 0;
 	}
 
-	Track(T* target, float speedMultiplier, bool loop) {
+	Track(T* target, float speedMultiplier, bool loop, bool smooth) {
 		this->target = target;
 		this->speedMultiplier = speedMultiplier;
-		hangTime = 0.0f;
+		this->smooth = smooth;
 		progress = 0.0f;
 		active = false;
 		current = 0;
+		
 	}
 
 
@@ -70,13 +75,13 @@ public:
 		progress += speedMultiplier * dt / next.travelTime;
 		progress = std::min(progress, 1.0f);
 
-		target->SetPosition(Vector3(CosineInterp(curr.pos.x, next.pos.x, progress),
-									CosineInterp(curr.pos.y, next.pos.y, progress),
-									CosineInterp(curr.pos.z, next.pos.z, progress)));
+		target->SetPosition(Vector3(Interp(curr.pos.x, next.pos.x, progress),
+									Interp(curr.pos.y, next.pos.y, progress),
+									Interp(curr.pos.z, next.pos.z, progress)));
 
-		target->SetRotation(Vector3(CosineInterp(curr.rot.x, next.rot.x, progress),
-									CosineInterp(curr.rot.y, next.rot.y, progress),
-									CosineInterp(curr.rot.z, next.rot.z, progress)));
+		target->SetRotation(Vector3(Interp(curr.rot.x, next.rot.x, progress),
+									Interp(curr.rot.y, next.rot.y, progress),
+									Interp(curr.rot.z, next.rot.z, progress)));
 
 		if (progress == 1.0f)
 		{

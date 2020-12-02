@@ -137,11 +137,9 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="BlankProject.cpp" />
-    <ClCompile Include="Track.cpp" />
     <ClCompile Include="CircuitBoardNode.cpp" />
     <ClCompile Include="DefaultScene.cpp" />
     <ClCompile Include="HeightMapNode.cpp" />
-    <ClCompile Include="Patrol.cpp" />
     <ClCompile Include="Renderer.cpp" />
     <ClCompile Include="Scene.cpp" />
     <ClCompile Include="NodeTemplates.cpp" />
@@ -152,7 +150,6 @@
     <ClInclude Include="DefaultScene.h" />
     <ClInclude Include="HeightMapNode.h" />
     <ClInclude Include="NodeTemplates.h" />
-    <ClInclude Include="Patrol.h" />
     <ClInclude Include="Renderer.h" />
     <ClInclude Include="Scene.h" />
   </ItemGroup>

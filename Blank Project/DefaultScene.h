@@ -22,6 +22,7 @@ public:
 	bool rotateLight;
 
 	Track<Camera>* track;
+	std::vector<Track<SceneNode>*> patrols;
 
 	SceneNode* compound;
 	SceneNode* water;
