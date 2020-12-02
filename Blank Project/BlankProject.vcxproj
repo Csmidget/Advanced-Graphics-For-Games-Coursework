@@ -137,7 +137,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="BlankProject.cpp" />
-    <ClCompile Include="CameraTrack.cpp" />
+    <ClCompile Include="Track.cpp" />
     <ClCompile Include="CircuitBoardNode.cpp" />
     <ClCompile Include="DefaultScene.cpp" />
     <ClCompile Include="HeightMapNode.cpp" />
@@ -147,7 +147,7 @@
     <ClCompile Include="NodeTemplates.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="CameraTrack.h" />
+    <ClInclude Include="Track.h" />
     <ClInclude Include="CircuitBoardNode.h" />
     <ClInclude Include="DefaultScene.h" />
     <ClInclude Include="HeightMapNode.h" />

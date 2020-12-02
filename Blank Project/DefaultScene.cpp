@@ -1,6 +1,5 @@
 #include "DefaultScene.h"
 
-#include "CameraTrack.h"
 #include "NodeTemplates.h"
 
 #include "../nclgl/TextureManager.h"
@@ -20,15 +19,15 @@
 #define POINT_LIGHT_NUM 0
 #define SPOT_LIGHT_NUM 0
 
-CameraTrack BuildTrack(Camera* cam)
+Track<Camera>* BuildTrack(Camera* cam)
 {
-	CameraTrack track(cam, 0.5f, true);
+	auto track = new Track<Camera>(cam, 0.5f, true);
 
-	track.AddWaypoint(Vector3(0, 0.0, 10.0), Vector3(-45, 0, 0));
-	track.AddWaypoint(Vector3(20.9, -12.1, -25.3), Vector3(-1.73, -12.3, 0), 5.0f);
-	track.AddWaypoint(Vector3(7.756, -3.112, 26.47), Vector3(-31.82, -33.3, 0), 5.0f);
-	track.AddWaypoint(Vector3(60.3,  25.02, 53.88), Vector3(-31.51, 43.01, 0), 8.0f);
-	track.AddWaypoint(Vector3(60.25, -14.15, 70.08), Vector3(-4.6, 64.4, 0), 10.0f);
+	track->AddWaypoint(Vector3(0, 0.0, 10.0), Vector3(-45, 0, 0));
+	track->AddWaypoint(Vector3(20.9, -12.1, -25.3), Vector3(-1.73, -12.3, 0), 5.0f);
+	track->AddWaypoint(Vector3(7.756, -3.112, 26.47), Vector3(-31.82, -33.3, 0), 5.0f);
+	track->AddWaypoint(Vector3(60.3,  25.02, 53.88), Vector3(-31.51, 43.01, 0), 8.0f);
+	track->AddWaypoint(Vector3(60.25, -14.15, 70.08), Vector3(-4.6, 64.4, 0), 10.0f);
 	return track;
 }
 
@@ -170,7 +169,7 @@ DefaultScene::DefaultScene() : Scene() {
 	waterRotate = 0.0f;
 	waterCycle = 0.0f;
 
-	track = new CameraTrack{BuildTrack(camera)};
+	track = BuildTrack(camera);
 	track->Start();
 
 	initialized = true;

@@ -1,8 +1,10 @@
 #pragma once
 
 #include "Scene.h"
-#include "CameraTrack.h"
+#include "Track.h"
 #include <glad/glad.h>
+
+#include "../nclgl/Camera.h"
 
 class Mesh;
 class MeshMaterial;
@@ -19,7 +21,7 @@ public:
 
 	bool rotateLight;
 
-	CameraTrack* track;
+	Track<Camera>* track;
 
 	SceneNode* compound;
 	SceneNode* water;
