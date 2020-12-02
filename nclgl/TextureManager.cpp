@@ -11,6 +11,9 @@ GLuint TextureManager::LoadTexture(std::string textureName, unsigned int flags,b
 
 	GLuint newTexture = SOIL_load_OGL_texture(textureName.c_str(), SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, flags);
 
+	if (!newTexture)
+		return 0;
+
 	glBindTexture(GL_TEXTURE_2D, newTexture);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, linearFilter ? GL_LINEAR_MIPMAP_LINEAR : GL_NEAREST_MIPMAP_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, linearFilter ? GL_LINEAR :GL_NEAREST);
@@ -35,6 +38,9 @@ GLuint TextureManager::LoadCubemap(std::string xPos, std::string xNeg, std::stri
 		yPos.c_str(), yNeg.c_str(),
 		zPos.c_str(), zNeg.c_str(),
 		SOIL_LOAD_RGB, SOIL_CREATE_NEW_ID, flags);
+
+	if (!newCubemap)
+		return 0;
 
 	loadedTextures.emplace(combined, newCubemap);
 

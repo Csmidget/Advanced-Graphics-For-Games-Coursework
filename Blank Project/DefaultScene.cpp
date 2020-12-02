@@ -1,7 +1,7 @@
 #include "DefaultScene.h"
 
-#include "NodeTemplates.h"
-#include "Tracks.h"
+#include "NodePrefabs.h"
+#include "TrackPrefabs.h"
 
 #include "../nclgl/TextureManager.h"
 #include "../nclgl/MeshManager.h"
@@ -17,44 +17,48 @@
 
 #include <limits>
 
+//These are set to 0, but you can add randomly positioned lights to the scene here.
+//Be careful, any added lights will have shadow maps generated, too many may crash the application.
+//My computer supports up to ~40 before seeing performance issues.
 #define POINT_LIGHT_NUM 0
 #define SPOT_LIGHT_NUM 0
 
-
-
 DefaultScene::DefaultScene() : Scene() {
 
+	rotateLight = true;
+	waterRotate = 0.0f;
+	waterCycle = 0.0f;
+
+
+	//##### Camera #####
 	camera->SetPosition(Vector3(0, 0.0, 10.0));
 	camera->SetRotation({ -45,0,0 });
-	rotateLight = true;
-	//Texture initialization
-	GLuint waterDiffuse		= TextureManager::LoadTexture(TEXTUREDIR"water.tga", SOIL_FLAG_MIPMAPS);
-	GLuint waterNormal		= TextureManager::LoadTexture(TEXTUREDIR"waterbump.png", SOIL_FLAG_MIPMAPS);
 
+	track = Prefabs::BuildCameraTrack(camera);
+	track->Start();
+	//##################
+
+
+	//##### Skybox #####
 	skybox  = TextureManager::LoadCubemap(	TEXTUREDIR"CosmicCoolCloudLeft.jpg", TEXTUREDIR"CosmicCoolCloudRight.jpg",
 												TEXTUREDIR"CosmicCoolCloudTop.jpg", TEXTUREDIR"CosmicCoolCloudBottom.jpg",
 												TEXTUREDIR"CosmicCoolCloudFront.jpg", TEXTUREDIR"CosmicCoolCloudBack.jpg");
-
-	if (!skybox || !waterDiffuse || !waterNormal) {
+	if (!skybox) 
 		return;
-	}
+	//##################
 
-	TextureManager::SetTextureRepeating(waterDiffuse, true);
-	TextureManager::SetTextureRepeating(waterNormal, true);
-	////////////
 
-	//Shader setup//
-	Shader* defaultShader	= ShaderManager::LoadShader("BufferVertex.glsl", "BufferFragment.glsl");
-	Shader* bumpMapShader	= ShaderManager::LoadShader("BufferBumpVertex.glsl", "BufferBumpFragment.glsl");
+	//##### Shaders #####
 	Shader* animatedShader	= ShaderManager::LoadShader("SkinningVertex.glsl", "BufferFragment.glsl");
 	Shader* reflectShader	= ShaderManager::LoadShader("ReflectBumpVertex.glsl", "ReflectBumpFragment.glsl");
 
-	if (!defaultShader->LoadSuccess() || !bumpMapShader->LoadSuccess() || !animatedShader->LoadSuccess() || !reflectShader->LoadSuccess())
+	if (!animatedShader->LoadSuccess() || !reflectShader->LoadSuccess())
 		return;
-	////////////////
+	//###################
 	
-	//########Terrain############
-	//As it is custom, we cannot use the MeshManager to load the heightmap.
+
+	//##### Terrain #####
+	//As it is a custom mesh, we cannot use the MeshManager to load the heightmap.
 	heightMapMesh = new HeightMap(TEXTUREDIR"terraintest.png");
 	HeightMapNode* heightMapNode = new HeightMapNode(heightMapMesh,TEXTUREDIR"terrainassign.png", TEXTUREDIR"Barren Reds.JPG", TEXTUREDIR"ground_asphalt.png", TEXTUREDIR"Barren RedsDOT3.JPG", TEXTUREDIR"AsphaltNormal.png");
 	Vector3 heightmapSize = heightMapMesh->GetHeightMapSize() * 0.1f;
@@ -62,10 +66,15 @@ DefaultScene::DefaultScene() : Scene() {
 	heightMapNode->MakeStatic();
 	heightMapNode->SetModelScale(Vector3(0.1f, 0.1f, 0.1f));
 	root->AddChild(heightMapNode);
-	//###########################
+	//################### 
 
-	//######Water######
+
+	//##### Water #####
 	//As with the terrain, this quad is generated in program, so we will manage it's lifecycle here.
+	GLuint waterDiffuse = TextureManager::LoadTexture(TEXTUREDIR"water.tga", SOIL_FLAG_MIPMAPS);
+	GLuint waterNormal = TextureManager::LoadTexture(TEXTUREDIR"waterbump.png", SOIL_FLAG_MIPMAPS);
+	TextureManager::SetTextureRepeating(waterDiffuse, true);
+	TextureManager::SetTextureRepeating(waterNormal, true);
 	waterMesh = Mesh::GenerateQuad();
 	water = new SceneNode(waterMesh);
 	water->SetTransform(Vector3(0,-16,0), Vector3(-90, 0, 0), heightmapSize * 0.5f);
@@ -78,7 +87,8 @@ DefaultScene::DefaultScene() : Scene() {
 	root->AddChild(water);
 	//#################
 
-	//##########Active Soldiers##########
+
+	//##### Moving Soldiers #####
 	Mesh* roleTMesh = MeshManager::LoadMesh("Role_T.msh");
 	MeshAnimation* roleTRunAnim = MeshManager::LoadMeshAnimation("Role_T.anm");
 	MeshAnimation* roleTStandAnim = MeshManager::LoadMeshAnimation("Role_T_stand.anm");
@@ -87,71 +97,75 @@ DefaultScene::DefaultScene() : Scene() {
 	SceneNode* role_t = new SceneNode(roleTMesh,  roleTMat, roleTRunAnim, Vector4(1, 1, 1, 1), animatedShader);
 	role_t->SetTransform(Vector3(0, -15.4, 0));
 	role_t->SetModelScale(Vector3(2.0f, 2.0f, 2.0f));
-	patrols.push_back(Tracks::BuildCompoundPatrol(role_t));
+	patrols.push_back(Prefabs::BuildCompoundPatrol(role_t));
 	root->AddChild(role_t);
 
 	role_t = new SceneNode(roleTMesh, roleTMat, roleTRunAnim, Vector4(1, 1, 1, 1), animatedShader);
 	role_t->SetTransform(Vector3(0, -15.4, 0));
 	role_t->SetModelScale(Vector3(2.0f, 2.0f, 2.0f));
-	patrols.push_back(Tracks::BuildBottomRightPatrol(role_t));
+	patrols.push_back(Prefabs::BuildBottomRightPatrol(role_t));
 	root->AddChild(role_t);
 
 	role_t = new SceneNode(roleTMesh, roleTMat, roleTRunAnim, Vector4(1, 1, 1, 1), animatedShader);
 	role_t->SetTransform(Vector3(0, -15.4, 0));
 	role_t->SetModelScale(Vector3(2.0f, 2.0f, 2.0f));
-	patrols.push_back(Tracks::BuildLeftPatrol(role_t));
+	patrols.push_back(Prefabs::BuildLeftPatrol(role_t));
 	root->AddChild(role_t);
 
 	role_t = new SceneNode(roleTMesh, roleTMat, roleTRunAnim, Vector4(1, 1, 1, 1), animatedShader);
 	role_t->SetTransform(Vector3(0, -15.4, 0));
 	role_t->SetModelScale(Vector3(2.0f, 2.0f, 2.0f));
-	patrols.push_back(Tracks::BuildTopRightPatrol(role_t));
+	patrols.push_back(Prefabs::BuildTopRightPatrol(role_t));
 	root->AddChild(role_t);
-	//###################################
+	//###########################
 
-	//#######Stationary soldiers#########
-	root->AddChild(Templates::CompoundStationarySoldiers());
-	//#############################
 
-	//#########Compound########
-	compound = Templates::Compound();
+	//##### Stationary Soldiers #####
+	root->AddChild(Prefabs::CompoundStationarySoldiers());
+	//###############################
+
+
+	//##### Compound #####
+	SceneNode* compound = Prefabs::Compound();
 	compound->SetTransform({ 0,-15.4,0 }, { 0,0,0 }, { 4, 4, 4 });
 	compound->MakeStatic();
 	root->AddChild(compound);
 
-	//Hut Spotlight//
+	//Hut Spotlight
 	spotLights.emplace_back(new SpotLight({ 20,-14.5,-32 }, { 100,0,0 }, 75.0f, 20.0f, { 1.0, 0.1, 0.1, 1.0 }));
-	//#########################
+	//####################
 
-	//##########Barrels###########
-	SceneNode* barrelStack = Templates::BarrelStack();
+
+	//##### Barrels #####
+	SceneNode* barrelStack = Prefabs::BarrelStack();
 	barrelStack->SetPosition({ 13,-11.4, 12.5 });
 	barrelStack->MakeStatic();
 	root->AddChild(barrelStack);
 
-	barrelStack = Templates::BarrelStack();
+	barrelStack = Prefabs::BarrelStack();
 	barrelStack->SetPosition({ -35,-11.4, -45 });
 	barrelStack->MakeStatic();
 	root->AddChild(barrelStack);
 
-	barrelStack = Templates::BarrelStack();
+	barrelStack = Prefabs::BarrelStack();
 	barrelStack->SetPosition({ -28,-11.4, 35 });
 	barrelStack->MakeStatic();
 	root->AddChild(barrelStack);
-	//###########################
+	//###################
 
-	//############Pond###########
-	SceneNode* pondLampPost = Templates::StreetLight({ -160,-15.4,-100 }, { 0,-90,0 });
+
+	//##### Pond #####
+	SceneNode* pondLampPost = Prefabs::StreetLight({ -160,-15.4,-100 }, { 0,-90,0 });
 	pondLampPost->Scale({ 4,4,4 });
 	pondLampPost->MakeStatic();
 	root->AddChild(pondLampPost);
 	PointLight* pondLight = new PointLight({ -164.4,8.443,-100.1 }, { 1,1,1,1 }, { 1,1,1,1 }, 100.0f);
 	pondLight->MakeStatic();
 	pointLights.emplace_back(pondLight);
-	//############################
+	//################
 
 
-	//###Point Lights########
+	//##### Compound PointLights #####
 	const int pointLightCount = 6;
 	Vector3 pLightPositions[pointLightCount]{	{-36.43,2.387,-50.42},	{-26.29,3.548,37.42},	{37.95,3.45,37.01},
 												{37.95,3.477,-48.96},	{7.964,3.734,-3.472},	{7.964,3.734,3.714},
@@ -166,24 +180,27 @@ DefaultScene::DefaultScene() : Scene() {
 		pIsStatic[i] ? l->MakeStatic() : l->MakeDynamic();
 		pointLights.push_back(l);
 	}
-	//#########################
+	//################################
 
 
+	//##### Central Spinning Spotlight ######
 	spinningLight = new SpotLight({ 2, 80, 0 }, { 50, 0, 0 }, 500.0f, 15.0f);
 	spotLights.emplace_back(spinningLight);
+	//#######################################
 
+
+	//##### Camera Light #####
 	cameraLight = new SpotLight({ 0,0,0 }, { 0,0,0 }, 300.0f, 30.0f, { 2,2,2,2 });
 	cameraLight->SetActive(false);
 	spotLights.emplace_back(cameraLight);
+	//########################
 
-	Vector3 halfSize = { heightmapSize / 2 };
+
+	//##### Randomly Generated Lights #####
+	//If POINT_LIGHT_NUM or SPOT_LIGHT_NUM are greater than 0, generate that number of lights randomly in the scene.
+	Vector3 halfSize = { (heightmapSize / 2) - Vector3(20,0,20) };
 	Scene::GenerateRandomLights(POINT_LIGHT_NUM, SPOT_LIGHT_NUM, { -halfSize.x,50,-halfSize.z }, { halfSize.x,50,halfSize.z });
-
-	waterRotate = 0.0f;
-	waterCycle = 0.0f;
-
-	track = Tracks::BuildCameraTrack(camera);
-	track->Start();
+	//#####################################
 
 	initialized = true;
 }
@@ -192,12 +209,21 @@ DefaultScene::~DefaultScene() {
 
 	delete track;
 
+	delete heightMapMesh;
+
+	for (auto p : patrols) {
+		delete p;
+	}
+
 	delete waterMesh;
 	delete heightMapMesh;
 }
 
 void DefaultScene::Update(float dt) {
+
+	//##### Camera Controls ######
 	camera->Rotate({ -Window::GetMouse()->GetRelativePosition().y, -Window::GetMouse()->GetRelativePosition().x, 0 });
+
 	Vector3 rotVec = camera->GetRotation();
 	Matrix4 rotation = Matrix4::Rotation(rotVec.y, Vector3(0, 1, 0)) * Matrix4::Rotation(rotVec.z, Vector3(0, 0, 1));
 
@@ -225,13 +251,8 @@ void DefaultScene::Update(float dt) {
 		camera->Translate(-up * velocity.y * dt);
 	}
 
-	if (Window::GetKeyboard()->KeyTriggered(KEYBOARD_9)) {
-		rotateLight = !rotateLight;
-	}
-
-	if (rotateLight) {
-		spinningLight->Rotate({ 0,10 * dt, 0 });
-	}
+	camera->UpdateCamera(dt);
+	//############################
 
 	if (Window::GetKeyboard()->KeyTriggered(KEYBOARD_P)) {
 		Vector3 pos = camera->GetPosition();
@@ -240,34 +261,36 @@ void DefaultScene::Update(float dt) {
 		std::cout << "Camera pos: <" << pos.x << "," << pos.y << "," << pos.z << "> <" << rot.x << "," << rot.y << "," << rot.z << ">\n";
 	}
 
+	if (Window::GetKeyboard()->KeyTriggered(KEYBOARD_L)) {
+		cameraLight->SetActive(!cameraLight->GetActive());
+	}
+	cameraLight->SetPosition(camera->GetPosition());
+	cameraLight->SetRotation(camera->GetRotation() + Vector3(90, 0, 0));
+
+	if (Window::GetKeyboard()->KeyTriggered(KEYBOARD_9)) {
+		rotateLight = !rotateLight;
+	}
+	if (rotateLight) {
+		spinningLight->Rotate({ 0,10 * dt, 0 });
+	}
+
 	if (Window::GetKeyboard()->KeyTriggered(KEYBOARD_0)) {
 		track->IsActive() ? track->Stop() : track->Start();
 	}
 
-	if (Window::GetKeyboard()->KeyTriggered(KEYBOARD_L)) {
-		cameraLight->SetActive(!cameraLight->GetActive());
-	}
-
-	cameraLight->SetPosition(camera->GetPosition());
-	cameraLight->SetRotation(camera->GetRotation() + Vector3(90, 0, 0));
-
-
 	waterRotate += dt * 1.0f; //1 degree a second
 	waterCycle += dt * 0.025f;
-
-//	spinningLight->Rotate()
 
 	water->SetTextureMatrix(
 		Matrix4::Translation(Vector3(waterCycle, 0.0f, waterCycle)) *
 		Matrix4::Scale(Vector3(10, 10, 10)) *
 		Matrix4::Rotation(waterRotate, Vector3(0, 0, 1)));
 
-	track->Update(dt);
 
+	track->Update(dt);
 	for (auto t : patrols) {
 		t->Update(dt);
 	}
 
-	camera->UpdateCamera(dt);
 	Scene::Update(dt);
 }

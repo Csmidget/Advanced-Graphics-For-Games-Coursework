@@ -80,7 +80,7 @@ protected:
 	GLuint postProcessColourTex[2];
 	Shader* combineShader;
 	Shader* blurShader;
-	Shader* sceneShader;
+	Shader* basicSceneShader;
 	Shader* colourCorrectionShader;
 	int nextPostProcessOutput;
 

@@ -24,7 +24,6 @@ public:
 	Track<Camera>* track;
 	std::vector<Track<SceneNode>*> patrols;
 
-	SceneNode* compound;
 	SceneNode* water;
 	Mesh* waterMesh;
 

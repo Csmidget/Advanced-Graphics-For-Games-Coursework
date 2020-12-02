@@ -4,7 +4,7 @@
 class Camera;
 class SceneNode;
 
-namespace Tracks {
+namespace Prefabs {
 
 	Track<Camera>* BuildCameraTrack(Camera* cam);
 	Track<SceneNode>* BuildCompoundPatrol(SceneNode* target);

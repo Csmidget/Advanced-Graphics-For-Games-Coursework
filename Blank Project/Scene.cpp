@@ -27,13 +27,15 @@ void Scene::Update(float dt) {
 	root->Update(dt);
 }
 
+Matrix4 Scene::GetCameraPerspective(int width, int height) {
+	return Matrix4::Perspective(camera->GetNearPlane(), camera->GetFarPlane(), (float)width / (float)height, camera->GetFOV());
+}
+
 float RandZeroToOne() {
 	return (float)rand() / (float)RAND_MAX;
 }
 
-Matrix4 Scene::GetCameraPerspective(int width, int height) {
-	return Matrix4::Perspective(camera->GetNearPlane(), camera->GetFarPlane(), (float)width / (float)height, camera->GetFOV());
-}
+//This should only be called before static shadowmaps are baked.
 void Scene::GenerateRandomLights(int pointLightCount, int spotLightCount, Vector3 minPos, Vector3 maxPos) {
 
 	//Light setup
@@ -48,12 +50,12 @@ void Scene::GenerateRandomLights(int pointLightCount, int spotLightCount, Vector
 								RandZeroToOne() * range.y + (int)minPos.y,
 								RandZeroToOne() * range.z + (int)minPos.z));
 
-		l->SetRadius(75.0);
+		l->SetRadius(80.0);
 
-		l->SetDiffuseColour(Vector4(0.5f + RandZeroToOne(),
-							0.5f + RandZeroToOne(),
-							0.5f + RandZeroToOne(),
-							1));
+		l->SetDiffuseColour(Vector4(RandZeroToOne() * 2,
+									RandZeroToOne() * 2,
+									RandZeroToOne() * 2,
+									1));
 		l->MakeStatic();
 
 		pointLights.emplace_back(l);
@@ -66,15 +68,14 @@ void Scene::GenerateRandomLights(int pointLightCount, int spotLightCount, Vector
 								RandZeroToOne() * range.y + (int)minPos.y,
 								RandZeroToOne() * range.z + (int)minPos.z));
 
-		l->SetDiffuseColour(Vector4(0.5f + (float)(rand() / (float)RAND_MAX),
-			0.5f + (float)(rand() / (float)RAND_MAX),
-			0.5f + (float)(rand() / (float)RAND_MAX),
-			1));
-
-		l->SetRotation(Vector3(rand() % 360, 0, 0));
+		l->SetDiffuseColour(Vector4(RandZeroToOne() * 2,
+									RandZeroToOne() * 2,
+									RandZeroToOne() * 2,
+									1));
 
 		l->SetRadius(75);
 		l->SetAngle(20 + rand() % 45);
+		l->MakeStatic();
 		spotLights.emplace_back(l);
 	}
 	////////////

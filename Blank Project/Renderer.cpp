@@ -16,24 +16,12 @@
 const int BLUR_PASSES = 10;
 
 Renderer::Renderer(Window& parent) : OGLRenderer(parent) {
-	
-	scene = new DefaultScene();
-
-	if (!scene->initialized) {
-		return;
-	}
-	//Run a single update on scene to initialize world transforms etc.
-	scene->Update(0);
-
-	quad = Mesh::GenerateQuad();
-	//The mesh manager will handle the lifecycle of this, so we won't need to delete them in the renderer.
-	sphere = MeshManager::LoadMesh("Sphere.msh");
-
 	doBlur = false;
 	doNeonGrid = true;
 	doColourCorrect = true;
+	saturationPoint = 2.0f;
 
-	//Default all of our textures to 0. This is so that GenerateSceenTexture() recognises
+	//Default all of our screen textures to 0. This is so that GenerateSceenTexture() recognises
 	//they are empty and generates a new texture for them.
 	bufferDepthStencilTex = 0;
 	bufferColourTex = 0;
@@ -47,7 +35,17 @@ Renderer::Renderer(Window& parent) : OGLRenderer(parent) {
 	postProcessColourTex[0] = 0;
 	postProcessColourTex[1] = 0;
 	neonGridColourTex = 0;
-	saturationPoint = 2.0f;
+
+	scene = new DefaultScene();
+	if (!scene->initialized) {
+		return;
+	}
+	//A single update to initialize world transforms etc.
+	scene->Update(0.0f);
+
+	//Our fundamental meshes
+	quad = Mesh::GenerateQuad();					//For screenspace shaders
+	sphere = MeshManager::LoadMesh("Sphere.msh");	//For Lights
 
 	projMatrix = scene->GetCameraPerspective(width, height);
 
@@ -58,7 +56,7 @@ Renderer::Renderer(Window& parent) : OGLRenderer(parent) {
 	shadowShader = ShaderManager::LoadShader("ShadowVert.glsl", "ShadowFrag.glsl", "ShadowGeom.glsl");
 	combineShader = ShaderManager::LoadShader("CombineVertex.glsl", "CombineFragment.glsl");
 	neonGridShader = ShaderManager::LoadShader("FlexibleTextureVert.glsl", "ColouredLinesFragment.glsl");
-	sceneShader = ShaderManager::LoadShader("TexturedVertex.glsl", "TexturedFragment.glsl");
+	basicSceneShader = ShaderManager::LoadShader("TexturedVertex.glsl", "TexturedFragment.glsl");
 	colourCorrectionShader = ShaderManager::LoadShader("TexturedVertex.glsl", "ColourCorrectFragment.glsl");
 
 	glGenFramebuffers(1, &bufferFBO);
@@ -145,6 +143,7 @@ Renderer::Renderer(Window& parent) : OGLRenderer(parent) {
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
+	//This bakes our static shadow maps.
 	BuildNodeLists(scene->root, false);
 	DrawShadowMaps(true);
 	ClearNodeLists();
@@ -173,7 +172,7 @@ Renderer::~Renderer(void) {
 
 void Renderer::GenerateScreenTexture(GLuint& into, bool depth) {
 	
-	//Generate a new gl texture if a pointer isn't already provided.
+	//Generate a new gl texture if a valid GLuint isn't already provided.
 	if (!into) {
 		glGenTextures(1, &into);
 	}
@@ -197,7 +196,7 @@ void Renderer::GenerateScreenTexture(GLuint& into, bool depth) {
 void Renderer::Resize(int x, int y) {
 	OGLRenderer::Resize(x, y);
 
-	//Generate our scene depth texture...
+	//Regenerate our screen textures to fit the new resolution.
 	GenerateScreenTexture(bufferDepthStencilTex, true);
 	GenerateScreenTexture(bufferColourTex);
 	GenerateScreenTexture(bufferNormalTex);
@@ -210,7 +209,7 @@ void Renderer::Resize(int x, int y) {
 	GenerateScreenTexture(postProcessColourTex[1]);
 	GenerateScreenTexture(neonGridColourTex);
 
-
+	//Set out FBO's to use the regenerated textures.
 	glBindFramebuffer(GL_FRAMEBUFFER, bufferFBO);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, bufferColourTex, 0);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, bufferNormalTex, 0);
@@ -222,8 +221,6 @@ void Renderer::Resize(int x, int y) {
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, lightSpecularTex, 0);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_TEXTURE_2D, bufferDepthStencilTex, 0);
 
-
-	//Reuse the same depth/stencil texture for the skybox.
 	glBindFramebuffer(GL_FRAMEBUFFER, skyboxFBO);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, skyboxColourTex, 0);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, bufferDepthStencilTex, 0);
@@ -238,10 +235,10 @@ void Renderer::Resize(int x, int y) {
 
 void Renderer::UpdateScene(float dt) {
 
+	//Enable/Disable various effects
 	if (Window::GetKeyboard()->KeyTriggered(KEYBOARD_1)) {
 		doBlur = !doBlur;
 	}
-
 	if (Window::GetKeyboard()->KeyTriggered(KEYBOARD_2)) {
 		doNeonGrid = !doNeonGrid;
 	}
@@ -250,19 +247,48 @@ void Renderer::UpdateScene(float dt) {
 		std::cout << "Colour Correction " << (doColourCorrect ? "ENABLED\n" : "DISABLED\n");
 	}
 
+	//Control the point at which colour becomes saturated.
 	if (Window::GetKeyboard()->KeyDown(KEYBOARD_UP)) {
 		saturationPoint += dt;
 	}
-
 	if (Window::GetKeyboard()->KeyDown(KEYBOARD_DOWN)) {
 		saturationPoint -= dt;
 	}
 	saturationPoint = std::max(0.0f, saturationPoint);
 	saturationPoint = std::min(2.0f, saturationPoint);
+
 	scene->Update(dt);
 
+	//Rebuild our view based on the cameras position and update the frustum for culling
 	viewMatrix = scene->camera->BuildViewMatrix();
 	frameFrustum.FromMatrix(projMatrix * viewMatrix);
+}
+
+void Renderer::RenderScene() {
+
+	BuildNodeLists(scene->root, true);
+	SortNodeLists();
+
+	glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
+	
+	//Generate dynamic shadow maps for this frame. 
+	//Only objects within view frustum will be used
+	DrawShadowMaps(false);
+
+	DrawOpaques();
+	DrawTransparents();
+
+	//Deferred rendering, light our scene
+	DrawLights();
+	
+	//If neon grid is enabled, draw it unlit areas
+	DrawNeonGrid();
+
+	DrawSkybox();
+
+	PostProcessing();
+
+	ClearNodeLists();
 }
 
 void Renderer::BuildNodeLists(SceneNode* from, bool frustumCheck) {
@@ -283,17 +309,33 @@ void Renderer::BuildNodeLists(SceneNode* from, bool frustumCheck) {
 	}
 }
 
+void Renderer::SortNodeLists() {
+	std::sort(transparentNodeList.rbegin(),
+		transparentNodeList.rend(),
+		SceneNode::CompareByCameraDistance);
+
+	std::sort(nodeList.begin(),
+		nodeList.end(),
+		SceneNode::CompareByCameraDistance);
+}
+
+void Renderer::ClearNodeLists() {
+	transparentNodeList.clear();
+	nodeList.clear();
+}
+
 void Renderer::DrawShadowMaps(bool staticLights) {
 
 	int resolution = staticLights ? STATIC_SHADOW_RESOLUTION : DYNAMIC_SHADOW_RESOLUTION;
 	glBindFramebuffer(GL_FRAMEBUFFER, shadowFBO);
 	glViewport(0, 0, resolution, resolution);
 	glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
-	glClearColor(0, 0, 0, 0);
+	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 
 	BindShader(shadowShader);
 
 	for (auto& l : scene->pointLights) {
+		//If the light is active, and is of the correct type (static/dynamic)
 		if (l->GetActive() && ((staticLights && l->IsStatic()) || !l->IsStatic()))
 			DrawShadowMap(l, l->GetRadius());
 	}
@@ -335,6 +377,7 @@ void Renderer::DrawShadowMap(Light* light,float farPlaneDist) {
 
 	bool staticLight = light->IsStatic();
 	for (auto n : nodeList) {
+		//If the light is static, do not draw shadows for dynamic objects
 		if (staticLight && !n->IsStatic())
 			continue; 
 
@@ -344,14 +387,26 @@ void Renderer::DrawShadowMap(Light* light,float farPlaneDist) {
 	}
 }
 
-void Renderer::SortNodeLists() {
-	std::sort(transparentNodeList.rbegin(),
-		transparentNodeList.rend(),
-		SceneNode::CompareByCameraDistance);
+void Renderer::DrawOpaques() {
+	glBindFramebuffer(GL_FRAMEBUFFER, bufferFBO);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, bufferColourTex, 0);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, bufferNormalTex, 0);
+	glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
-	std::sort(nodeList.begin(),
-		nodeList.end(),
-		SceneNode::CompareByCameraDistance);
+	glEnable(GL_STENCIL_TEST);
+
+	glStencilFunc(GL_ALWAYS, 1, ~0);
+	glStencilOp(GL_REPLACE, GL_REPLACE, GL_REPLACE);
+
+	//viewMatrix = scene->camera->BuildViewMatrix();
+
+	for (auto i : nodeList) {
+		DrawNode(i);
+	}
+	textureMatrix.ToIdentity();
+
+	glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 void Renderer::DrawNode(SceneNode* n, Shader* shaderOverride) {
@@ -363,6 +418,7 @@ void Renderer::DrawNode(SceneNode* n, Shader* shaderOverride) {
 		return;
 	}
 
+	//If we're using a different shader to previous, setup some default uniforms.
 	if (currentShader != activeShader) {
 		BindShader(activeShader);
 		
@@ -389,6 +445,7 @@ void Renderer::DrawNode(SceneNode* n, Shader* shaderOverride) {
 		}
 
 		if (n->IsReflective()) {
+			//We only need the camera position and skybox if the object is reflective (water)
 			glUniform3fv(glGetUniformLocation(activeShader->GetProgram(), "cameraPos"), 1, (float*)&scene->camera->GetPosition());
 			glActiveTexture(GL_TEXTURE2);
 			glBindTexture(GL_TEXTURE_CUBE_MAP, scene->skybox);
@@ -398,51 +455,14 @@ void Renderer::DrawNode(SceneNode* n, Shader* shaderOverride) {
 	}
 }
 
-void Renderer::RenderScene() {
-
-	BuildNodeLists(scene->root, true);
-	SortNodeLists();
-
-	glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
-	DrawShadowMaps(false);
-	DrawOpaques();
-	DrawTransparents();
-	DrawLights();
-	DrawNeonGrid();
-	DrawSkybox();
-	PostProcessing();
-
-	ClearNodeLists();
-}
-
-void Renderer::DrawOpaques() {
-	glBindFramebuffer(GL_FRAMEBUFFER, bufferFBO);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, bufferColourTex, 0);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, bufferNormalTex, 0);
-	glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-
-	glEnable(GL_STENCIL_TEST);
-
-	glStencilFunc(GL_ALWAYS, 1, ~0);
-	glStencilOp(GL_REPLACE, GL_REPLACE, GL_REPLACE);
-
-	viewMatrix = scene->camera->BuildViewMatrix();
-
-	for (auto i : nodeList) {
-		DrawNode(i);
-	}
-	textureMatrix.ToIdentity();
-
-	glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-}
-
 void Renderer::DrawTransparents() {
+	//Reuse the same FBO as opaques, just switch out the target textures.
 	glBindFramebuffer(GL_FRAMEBUFFER, bufferFBO);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, bufferTransparentColourTex, 0);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, bufferTransparentNormalTex, 0);
 	glClear(GL_COLOR_BUFFER_BIT);
 
+	//We don't want transparents to write to the depth or stencil buffers
 	glDisable(GL_STENCIL_TEST);
 	glDepthMask(GL_FALSE);
 
@@ -456,39 +476,9 @@ void Renderer::DrawTransparents() {
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-void Renderer::DrawNeonGrid() {
-	glBindFramebuffer(GL_FRAMEBUFFER, neonGridFBO);
-	glClear(GL_COLOR_BUFFER_BIT);
-
-	if (!doNeonGrid)
-		return;
-
-	glDepthFunc(GL_ALWAYS);
-	glDepthMask(GL_FALSE);
-
-	glEnable(GL_STENCIL_TEST);
-	glStencilFunc(GL_NOTEQUAL, 3, ~0);
-	glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
-
-	BindShader(neonGridShader);
-	viewMatrix = scene->camera->BuildViewMatrix();
-	glUniform4fv(glGetUniformLocation(neonGridShader->GetProgram(), "colour"), 1, (float*)&Vector4( 1, 0, 1, 1 ));
-	glUniform1i(glGetUniformLocation(neonGridShader->GetProgram(), "diffuseTex"), 0);
-	glUniform1i(glGetUniformLocation(neonGridShader->GetProgram(), "normalTex"), 1);
-	glUniform1i(glGetUniformLocation(neonGridShader->GetProgram(), "jointCount"), 0);
-
-	for (auto i : nodeList) {
-		DrawNode(i, neonGridShader);
-	}
-
-	glDisable(GL_STENCIL_TEST);
-	glDepthFunc(GL_LEQUAL);
-	glDepthMask(GL_TRUE);
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-}
-
 void Renderer::SetupLightShader(Shader* shader) {
 	BindShader(shader);
+
 	glUniform1i(glGetUniformLocation(shader->GetProgram(), "depthTex"), 0);
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, bufferDepthStencilTex);
@@ -519,27 +509,25 @@ void Renderer::DrawLights() {
 
 	//Only draw lights where something is already drawn.
 	glEnable(GL_STENCIL_TEST);
+	//Set the second bit if we do draw the light. This lets us test for
+	//areas that have been lit.
 	glStencilFunc(GL_EQUAL, 3, 1);
 	glStencilOp(GL_REPLACE, GL_REPLACE, GL_REPLACE);
 
 	SetupLightShader(pointLightShader);
-	for (int i = 0; i < scene->pointLights.size(); ++i) {
-		Light* l = scene->pointLights[i];
-		
+	for (auto l : scene->pointLights) {
 		if (!l->GetActive())
 			continue;
 
 		glActiveTexture(GL_TEXTURE2);
 		glBindTexture(GL_TEXTURE_CUBE_MAP, l->GetShadowMap());
 
- 		l->SetShaderLightData(pointLightShader);
+		l->SetShaderLightData(pointLightShader);
 		sphere->Draw();
 	}
 
 	SetupLightShader(spotLightShader);
-	for (int i = 0; i < scene->spotLights.size(); ++i) {
-		Light* l = scene->spotLights[i];
-
+	for (auto l : scene->spotLights) {
 		if (!l->GetActive())
 			continue;
 
@@ -559,6 +547,40 @@ void Renderer::DrawLights() {
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
+void Renderer::DrawNeonGrid() {
+	glBindFramebuffer(GL_FRAMEBUFFER, neonGridFBO);
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	if (!doNeonGrid)
+		return;
+
+	//We don't care about depth for the neon grid. If it passes the stencil test
+	//then it should definitely be drawn.
+	glDepthFunc(GL_ALWAYS);
+	glDepthMask(GL_FALSE);
+
+	//Draw only in areas that have NOT been lit at all.
+	glEnable(GL_STENCIL_TEST);
+	glStencilFunc(GL_NOTEQUAL, 3, ~0);
+	glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+
+	BindShader(neonGridShader);
+	viewMatrix = scene->camera->BuildViewMatrix();
+	glUniform4fv(glGetUniformLocation(neonGridShader->GetProgram(), "colour"), 1, (float*)&Vector4( 1, 0, 1, 1 ));
+	glUniform1i(glGetUniformLocation(neonGridShader->GetProgram(), "diffuseTex"), 0);
+	glUniform1i(glGetUniformLocation(neonGridShader->GetProgram(), "normalTex"), 1);
+	glUniform1i(glGetUniformLocation(neonGridShader->GetProgram(), "jointCount"), 0);
+
+	for (auto i : nodeList) {
+		DrawNode(i, neonGridShader);
+	}
+
+	glDisable(GL_STENCIL_TEST);
+	glDepthFunc(GL_LEQUAL);
+	glDepthMask(GL_TRUE);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
 void Renderer::DrawSkybox() {
 
 	glBindFramebuffer(GL_FRAMEBUFFER, skyboxFBO);
@@ -571,16 +593,14 @@ void Renderer::DrawSkybox() {
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_CUBE_MAP, scene->skybox);
 
-	//DO NOT draw skybox where something is already drawn.
-	
+	//Only draw the skybox where we haven't drawn land.
+	//If the neon grid is enabled we also want the skybox to appear behind it, so
+	//draw in all areas that were left unlit.
 	glEnable(GL_STENCIL_TEST);
 	doNeonGrid ? glStencilFunc(GL_NOTEQUAL, 3, ~0) : glStencilFunc(GL_EQUAL, 0, ~0);
 	glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
 
-	glDepthMask(GL_FALSE);
-
 	quad->Draw();
-	glDepthMask(GL_TRUE);
 
 	glStencilFunc(GL_ALWAYS, 1, ~0);
 	glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
@@ -590,8 +610,7 @@ void Renderer::DrawSkybox() {
 
 void Renderer::PostProcessing() {
 	nextPostProcessOutput = 0;
-	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-
+	
 	modelMatrix.ToIdentity();
 	viewMatrix.ToIdentity();
 	projMatrix.ToIdentity();
@@ -607,7 +626,8 @@ void Renderer::PostProcessing() {
 }
 
 void Renderer::CombineBuffers() {
-	
+	//This takes in all of the graphics we've generated and produces a combined image ready for post processing.
+
 	glBindFramebuffer(GL_FRAMEBUFFER, postProcessFBO);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, postProcessColourTex[nextPostProcessOutput], 0);
 
@@ -676,9 +696,11 @@ void Renderer::Blur() {
 
 
 void Renderer::PresentScene() {
+	//Performs final colour correction (if enabled) and draws to the output buffer (finally)
+
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glClear(GL_COLOR_BUFFER_BIT);
-	Shader* shader = doColourCorrect ? colourCorrectionShader : sceneShader;
+	Shader* shader = doColourCorrect ? colourCorrectionShader : basicSceneShader;
 	BindShader(shader);
 
 	UpdateShaderMatrices();
@@ -690,9 +712,4 @@ void Renderer::PresentScene() {
 	glGenerateMipmap(GL_TEXTURE_2D);
 	
 	quad->Draw();
-}
-
-void Renderer::ClearNodeLists() {
-	transparentNodeList.clear();
-	nodeList.clear();
 }

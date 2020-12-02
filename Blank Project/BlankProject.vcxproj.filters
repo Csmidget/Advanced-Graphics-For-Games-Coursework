@@ -15,6 +15,12 @@
     <Filter Include="Source Files\SceneNodes">
       <UniqueIdentifier>{b3325f14-ff15-4613-adb6-a92fe7a5c456}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Prefabs">
+      <UniqueIdentifier>{9d533864-ba84-4691-b17b-f2e726262372}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Prefabs">
+      <UniqueIdentifier>{aa1bfdc8-7c5a-4677-918e-7273bb9c194c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Renderer.cpp">
@@ -29,17 +35,17 @@
     <ClCompile Include="DefaultScene.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="NodeTemplates.cpp">
-      <Filter>Source Files\SceneNodes</Filter>
-    </ClCompile>
     <ClCompile Include="CircuitBoardNode.cpp">
       <Filter>Source Files\SceneNodes</Filter>
     </ClCompile>
     <ClCompile Include="HeightMapNode.cpp">
       <Filter>Source Files\SceneNodes</Filter>
     </ClCompile>
-    <ClCompile Include="Tracks.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="NodePrefabs.cpp">
+      <Filter>Source Files\Prefabs</Filter>
+    </ClCompile>
+    <ClCompile Include="TrackPrefabs.cpp">
+      <Filter>Source Files\Prefabs</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -58,14 +64,14 @@
     <ClInclude Include="CircuitBoardNode.h">
       <Filter>Header Files\SceneNodes</Filter>
     </ClInclude>
-    <ClInclude Include="NodeTemplates.h">
-      <Filter>Header Files\SceneNodes</Filter>
-    </ClInclude>
     <ClInclude Include="Track.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Tracks.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="NodePrefabs.h">
+      <Filter>Header Files\Prefabs</Filter>
+    </ClInclude>
+    <ClInclude Include="TrackPrefabs.h">
+      <Filter>Header Files\Prefabs</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

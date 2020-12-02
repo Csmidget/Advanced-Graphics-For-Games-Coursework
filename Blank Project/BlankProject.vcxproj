@@ -142,18 +142,18 @@
     <ClCompile Include="HeightMapNode.cpp" />
     <ClCompile Include="Renderer.cpp" />
     <ClCompile Include="Scene.cpp" />
-    <ClCompile Include="NodeTemplates.cpp" />
-    <ClCompile Include="Tracks.cpp" />
+    <ClCompile Include="NodePrefabs.cpp" />
+    <ClCompile Include="TrackPrefabs.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Track.h" />
     <ClInclude Include="CircuitBoardNode.h" />
     <ClInclude Include="DefaultScene.h" />
     <ClInclude Include="HeightMapNode.h" />
-    <ClInclude Include="NodeTemplates.h" />
+    <ClInclude Include="NodePrefabs.h" />
     <ClInclude Include="Renderer.h" />
     <ClInclude Include="Scene.h" />
-    <ClInclude Include="Tracks.h" />
+    <ClInclude Include="TrackPrefabs.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

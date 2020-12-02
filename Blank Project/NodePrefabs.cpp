@@ -1,11 +1,11 @@
-#include "NodeTemplates.h"
+#include "NodePrefabs.h"
 #include "CircuitBoardNode.h"
 #include "../nclgl/SceneNode.h"
 #include "../nclgl/MeshManager.h"
 #include "../nclgl/TextureManager.h"
 #include "../nclgl/ShaderManager.h"
 
-namespace Templates {
+namespace Prefabs {
 	SceneNode* Hut() {
 
 		Shader* wallShader	= ShaderManager::LoadShader("BufferBumpVertex.glsl", "BufferBumpFragment.glsl");
@@ -31,15 +31,12 @@ namespace Templates {
 			hut->AddChild(wall);
 		}
 
-		//####Circuit board####
-		//CircuitBoardNode* circuit = new CircuitBoardNode();
+		//#### Circuit board ####
 		Mesh* circuitMesh = MeshManager::LoadMesh("SmallFloor.msh");
 		CircuitBoardNode* circuit = new CircuitBoardNode(circuitMesh);
 		circuit->SetTransform({ 1.5,1,0 }, { 90,0,90 }, {1.2,1,1 });
 		hut->AddChild(circuit);
-		//#####################
-
-
+		//#######################
 
 		return hut;
 	}
@@ -48,8 +45,8 @@ namespace Templates {
 		//A bit inefficient to look these up every time we create a fence but it only happens in initialization
 		//and it won't create duplicates so its fine.
 		Shader* defaultShader	= ShaderManager::LoadShader("BufferBumpVertex.glsl", "BufferBumpFragment.glsl");
-		GLuint wallDiffuse		= TextureManager::LoadTexture(TEXTUREDIR"metall010-new-tileable.png", SOIL_FLAG_MIPMAPS);
-		GLuint wallNormal		= TextureManager::LoadTexture(TEXTUREDIR"metalbump.png", SOIL_FLAG_MIPMAPS);
+		GLuint  wallDiffuse		= TextureManager::LoadTexture(TEXTUREDIR"metall010-new-tileable.png", SOIL_FLAG_MIPMAPS);
+		GLuint  wallNormal		= TextureManager::LoadTexture(TEXTUREDIR"metalbump.png", SOIL_FLAG_MIPMAPS);
 		TextureManager::SetTextureRepeating(wallDiffuse, true);
 		TextureManager::SetTextureRepeating(wallNormal, true);
 
@@ -84,7 +81,6 @@ namespace Templates {
 	}
 
 	SceneNode* WatchTower(Vector3 position = { 0,0,0 }, Vector3 rotation = { 0,0,0 }) {
-
 		Shader* defaultShader = ShaderManager::LoadShader("BufferBumpVertex.glsl", "BufferBumpFragment.glsl");
 		Mesh* ladderMesh = MeshManager::LoadMesh("Ladder.msh");
 		Mesh* columnMesh = MeshManager::LoadMesh("FenceColumn.msh");
@@ -136,8 +132,6 @@ namespace Templates {
 		ceiling->SetShader(defaultShader);
 		root->AddChild(ceiling);
 
-
-
 		root->SetTransform(position, rotation);
 		return root;
 	}
@@ -171,11 +165,11 @@ namespace Templates {
 		SceneNode* root = new SceneNode();
 
 		//Hut//
-		auto hut = Templates::Hut();
+		auto hut = Prefabs::Hut();
 		hut->SetTransform({ 5,0,-10 });
 		root->AddChild(hut);
 
-		hut = Templates::Hut();
+		hut = Prefabs::Hut();
 		hut->SetTransform({ -2,0,-10 });
 		root->AddChild(hut);
 		

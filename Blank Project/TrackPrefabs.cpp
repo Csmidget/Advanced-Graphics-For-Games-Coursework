@@ -1,6 +1,6 @@
-#include "Tracks.h"
+#include "TrackPrefabs.h"
 
-namespace Tracks {
+namespace Prefabs {
 	Track<Camera>* BuildCameraTrack(Camera* cam)
 	{
 		auto track = new Track<Camera>(cam, 0.5f, true, true);
