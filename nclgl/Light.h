@@ -6,7 +6,7 @@
 
 class Shader;
 
-#define STATIC_SHADOW_RESOLUTION 1024
+#define STATIC_SHADOW_RESOLUTION 2048
 #define DYNAMIC_SHADOW_RESOLUTION 1024
 
 class Light {

@@ -3,7 +3,7 @@
 
 std::map<std::string, GLuint> TextureManager::loadedTextures;
 
-GLuint TextureManager::LoadTexture(std::string textureName, unsigned int flags) {
+GLuint TextureManager::LoadTexture(std::string textureName, unsigned int flags,bool linearFilter, bool aniso) {
 	
 	//If we have loaded this texture in the past, just return it again.
 	if (loadedTextures.find(textureName) != loadedTextures.end())
@@ -12,9 +12,9 @@ GLuint TextureManager::LoadTexture(std::string textureName, unsigned int flags) 
 	GLuint newTexture = SOIL_load_OGL_texture(textureName.c_str(), SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, flags);
 
 	glBindTexture(GL_TEXTURE_2D, newTexture);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY, 16.0f);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, linearFilter ? GL_LINEAR_MIPMAP_LINEAR : GL_NEAREST_MIPMAP_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, linearFilter ? GL_LINEAR :GL_NEAREST);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY, aniso ? 16.0f : 1.0f);
 	glBindTexture(GL_TEXTURE_2D, 0);
 
 	loadedTextures.emplace(textureName, newTexture);
