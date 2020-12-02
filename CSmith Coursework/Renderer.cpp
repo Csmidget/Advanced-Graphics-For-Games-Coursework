@@ -50,12 +50,12 @@ Renderer::Renderer(Window& parent) : OGLRenderer(parent) {
 	projMatrix = scene->GetCameraPerspective(width, height);
 
 	skyboxShader = ShaderManager::LoadShader("SkyboxVertex.glsl", "SkyboxFragment.glsl");
-	blurShader = ShaderManager::LoadShader("TexturedVertex.glsl", "ProcessFragment.glsl");
-	pointLightShader = ShaderManager::LoadShader("PointLightVertex.glsl", "PointLightShadowFragment.glsl");
-	spotLightShader = ShaderManager::LoadShader("PointLightVertex.glsl", "SpotLightShadowFragment.glsl");
-	shadowShader = ShaderManager::LoadShader("ShadowVert.glsl", "ShadowFrag.glsl", "ShadowGeom.glsl");
+	blurShader = ShaderManager::LoadShader("TexturedVertex.glsl", "BlurFragment.glsl");
+	pointLightShader = ShaderManager::LoadShader("LightVertex.glsl", "PointLightShadowFragment.glsl");
+	spotLightShader = ShaderManager::LoadShader("LightVertex.glsl", "SpotLightShadowFragment.glsl");
+	shadowShader = ShaderManager::LoadShader("ShadowVertex.glsl", "ShadowFragment.glsl", "ShadowGeometry.glsl");
 	combineShader = ShaderManager::LoadShader("CombineVertex.glsl", "CombineFragment.glsl");
-	neonGridShader = ShaderManager::LoadShader("FlexibleTextureVert.glsl", "ColouredLinesFragment.glsl");
+	neonGridShader = ShaderManager::LoadShader("FlexibleTextureVertex.glsl", "ColouredLinesFragment.glsl");
 	basicSceneShader = ShaderManager::LoadShader("TexturedVertex.glsl", "TexturedFragment.glsl");
 	colourCorrectionShader = ShaderManager::LoadShader("TexturedVertex.glsl", "ColourCorrectFragment.glsl");
 
