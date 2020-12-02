@@ -1,6 +1,7 @@
 #include "DefaultScene.h"
 
 #include "NodeTemplates.h"
+#include "Tracks.h"
 
 #include "../nclgl/TextureManager.h"
 #include "../nclgl/MeshManager.h"
@@ -19,32 +20,7 @@
 #define POINT_LIGHT_NUM 0
 #define SPOT_LIGHT_NUM 0
 
-Track<Camera>* BuildTrack(Camera* cam)
-{
-	auto track = new Track<Camera>(cam, 0.5f, true,true);
 
-	track->AddWaypoint(Vector3(0, 0.0, 10.0), Vector3(-45, 0, 0));
-	track->AddWaypoint(Vector3(20.9, -12.1, -25.3), Vector3(-1.73, -12.3, 0), 5.0f);
-	track->AddWaypoint(Vector3(7.756, -3.112, 26.47), Vector3(-31.82, -33.3, 0), 5.0f);
-	track->AddWaypoint(Vector3(60.3,  25.02, 53.88), Vector3(-31.51, 43.01, 0), 8.0f);
-	track->AddWaypoint(Vector3(60.25, -14.15, 70.08), Vector3(-4.6, 64.4, 0), 10.0f);
-	return track;
-}
-
-Track<SceneNode>* BuildCompoundPatrol(SceneNode* target) {
-	auto track = new Track<SceneNode>(target, 0.5f, true,false);
-	track->AddWaypoint(Vector3(-10, -15.4, -10), Vector3(0, 0, 0));
-	track->AddWaypoint(Vector3(-10, -15.4, 10), Vector3(0, 0, 0),5);
-	track->AddWaypoint(Vector3(-10, -15.4, 10), Vector3(0, 90, 0));
-	track->AddWaypoint(Vector3(10, -15.4, 10), Vector3(0, 90, 0),5);
-	track->AddWaypoint(Vector3(10, -15.4, 10), Vector3(0, 180, 0));
-	track->AddWaypoint(Vector3(10, -15.4, -10), Vector3(0, 180, 0), 5);
-	track->AddWaypoint(Vector3(10, -15.4, -10), Vector3(0, 270, 0));
-	track->AddWaypoint(Vector3(-10, -15.4, -10), Vector3(0, 270, 0), 5);
-	track->AddWaypoint(Vector3(-10, -15.4, -10), Vector3(0, 360, 0));
-	track->Start();
-	return track;
-}
 
 DefaultScene::DefaultScene() : Scene() {
 
@@ -111,7 +87,25 @@ DefaultScene::DefaultScene() : Scene() {
 	SceneNode* role_t = new SceneNode(roleTMesh,  roleTMat, roleTRunAnim, Vector4(1, 1, 1, 1), animatedShader);
 	role_t->SetTransform(Vector3(0, -15.4, 0));
 	role_t->SetModelScale(Vector3(2.0f, 2.0f, 2.0f));
-	patrols.push_back(BuildCompoundPatrol(role_t));
+	patrols.push_back(Tracks::BuildCompoundPatrol(role_t));
+	root->AddChild(role_t);
+
+	role_t = new SceneNode(roleTMesh, roleTMat, roleTRunAnim, Vector4(1, 1, 1, 1), animatedShader);
+	role_t->SetTransform(Vector3(0, -15.4, 0));
+	role_t->SetModelScale(Vector3(2.0f, 2.0f, 2.0f));
+	patrols.push_back(Tracks::BuildBottomRightPatrol(role_t));
+	root->AddChild(role_t);
+
+	role_t = new SceneNode(roleTMesh, roleTMat, roleTRunAnim, Vector4(1, 1, 1, 1), animatedShader);
+	role_t->SetTransform(Vector3(0, -15.4, 0));
+	role_t->SetModelScale(Vector3(2.0f, 2.0f, 2.0f));
+	patrols.push_back(Tracks::BuildLeftPatrol(role_t));
+	root->AddChild(role_t);
+
+	role_t = new SceneNode(roleTMesh, roleTMat, roleTRunAnim, Vector4(1, 1, 1, 1), animatedShader);
+	role_t->SetTransform(Vector3(0, -15.4, 0));
+	role_t->SetModelScale(Vector3(2.0f, 2.0f, 2.0f));
+	patrols.push_back(Tracks::BuildTopRightPatrol(role_t));
 	root->AddChild(role_t);
 	//###################################
 
@@ -151,7 +145,9 @@ DefaultScene::DefaultScene() : Scene() {
 	pondLampPost->Scale({ 4,4,4 });
 	pondLampPost->MakeStatic();
 	root->AddChild(pondLampPost);
-	pointLights.emplace_back(new PointLight({ -164.4,8.443,-100.1 }, { 1,1,1,1 }, { 1,1,1,1 },100.0f));
+	PointLight* pondLight = new PointLight({ -164.4,8.443,-100.1 }, { 1,1,1,1 }, { 1,1,1,1 }, 100.0f);
+	pondLight->MakeStatic();
+	pointLights.emplace_back(pondLight);
 	//############################
 
 
@@ -161,8 +157,8 @@ DefaultScene::DefaultScene() : Scene() {
 												{37.95,3.477,-48.96},	{7.964,3.734,-3.472},	{7.964,3.734,3.714},
 												 };
 
-	Vector4 pLightColours[pointLightCount]{		{1,0,0,1},				{0,1,0,1},				{0,0,1,1},
-												{1,0,1,1},				{1,1,1,1},				{1,1,1,1}  };
+	Vector4 pLightColours[pointLightCount]{		{5,0,0,1},				{0,5,0,1},				{0,0,5,1},
+												{5,0,5,1},				{1,1,1,1},				{1,1,1,1}  };
 
 	bool	pIsStatic[pointLightCount]{ true,true,true,true,false,false };
 	for (int i = 0; i < pointLightCount; i++) {
@@ -186,7 +182,7 @@ DefaultScene::DefaultScene() : Scene() {
 	waterRotate = 0.0f;
 	waterCycle = 0.0f;
 
-	track = BuildTrack(camera);
+	track = Tracks::BuildCameraTrack(camera);
 	track->Start();
 
 	initialized = true;
@@ -256,8 +252,8 @@ void DefaultScene::Update(float dt) {
 	cameraLight->SetRotation(camera->GetRotation() + Vector3(90, 0, 0));
 
 
-	waterRotate += dt * 2.0f; //2 degrees a second
-	waterCycle += dt * 0.05f; //10 units a second
+	waterRotate += dt * 1.0f; //1 degree a second
+	waterCycle += dt * 0.025f;
 
 //	spinningLight->Rotate()
 

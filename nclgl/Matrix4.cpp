@@ -1,4 +1,5 @@
 #include "Matrix4.h"
+#include "Quaternion.h"
 
 Matrix4::Matrix4(void)	{
 	ToIdentity();
@@ -62,14 +63,44 @@ Matrix4 Matrix4::Perspective(float znear, float zfar, float aspect, float fov) {
 	return m;
 }
 
-Matrix4 Matrix4::Lerp(float p, const Matrix4& mat1, const Matrix4& mat2)
+Matrix4 Matrix4::Lerp(float p, const Matrix4& matFrom, const Matrix4& matTo)
 {
 	Matrix4 newMat{};
-	for (int i = 0; i < 16; i++)
-	{
-		newMat.values[i] = (1 - p) * mat1.values[i] + p * mat2.values[i];
+	for (int i = 0; i < 16; i++) {
+		newMat.values[i] = (1 - p) * matFrom.values[i] + p * matTo.values[i];
 	}
 	return newMat;
+
+	//Non working attempt at proper rotational slerping.
+	//Matrix4 newMat{};
+	//
+	//Vector3 pos1 = matFrom.GetPositionVector();
+	//Vector3 pos2 = matTo.GetPositionVector();
+	//Vector3 lerpedPos;
+	//lerpedPos.x = (1 - p) * pos1.x + p * pos2.x;
+	//lerpedPos.y = (1 - p) * pos1.y + p * pos2.y;
+	//lerpedPos.z = (1 - p) * pos1.z + p * pos2.z;
+	//
+	//Vector3 scaleFrom = matFrom.GetScalingVector();
+	//Vector3 scaleTo = matTo.GetScalingVector();
+	//Vector3 lerpedScale; 
+	//lerpedScale.x = (1 - p) * scaleFrom.x + p * scaleTo.x;
+	//lerpedScale.y = (1 - p) * scaleFrom.y + p * scaleTo.y;
+	//lerpedScale.z = (1 - p) * scaleFrom.z + p * scaleTo.z;
+	//
+	//Quaternion q1 = matFrom * Matrix4::Scale(Vector3(1/scaleFrom.x,1/scaleFrom.y,1/scaleFrom.z));
+	//Quaternion q2 = matTo * Matrix4::Scale(Vector3(1 / scaleTo.x, 1 / scaleTo.y, 1 / scaleTo.z));
+	//Quaternion lerpedQ = Quaternion::Slerp(q1, q2, p);// .ToEuler();
+	//
+	//Vector3 lerpedEulers = lerpedQ.ToEuler();
+	//
+	//newMat = Matrix4::Translation(lerpedPos) *
+	//Matrix4::Scale(lerpedScale)*
+	//	Matrix4::Rotation(lerpedEulers.x, { 1,0,0 })*
+	//	Matrix4::Rotation(lerpedEulers.y, { 0,1,0 })*
+	//	Matrix4::Rotation(lerpedEulers.z, { 0,0,1 });
+	//
+	//return newMat;
 }
 
 //http://www.opengl.org/sdk/docs/man/xhtml/glOrtho.xml

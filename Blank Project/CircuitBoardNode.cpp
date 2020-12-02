@@ -33,7 +33,6 @@ void CircuitBoardNode::Update(float dt) {
 }
 
 void CircuitBoardNode::Draw(const Shader* activeShader) {
-
 	if (mesh) {
 
 		if (activeShader == shader) {
@@ -53,6 +52,6 @@ void CircuitBoardNode::Draw(const Shader* activeShader) {
 			glBindTexture(GL_TEXTURE_2D, normal);
 		}
 
-		mesh->Draw();
+		SceneNode::Draw(activeShader);
 	}
 }

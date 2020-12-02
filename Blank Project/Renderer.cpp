@@ -47,7 +47,7 @@ Renderer::Renderer(Window& parent) : OGLRenderer(parent) {
 	postProcessColourTex[0] = 0;
 	postProcessColourTex[1] = 0;
 	neonGridColourTex = 0;
-	saturationPoint = 1.0f;
+	saturationPoint = 5.0f;
 
 	projMatrix = scene->GetCameraPerspective(width, height);
 
@@ -85,7 +85,6 @@ Renderer::Renderer(Window& parent) : OGLRenderer(parent) {
 	GenerateScreenTexture(postProcessColourTex[0]);
 	GenerateScreenTexture(postProcessColourTex[1]);
 	GenerateScreenTexture(neonGridColourTex);
-
 
 	glBindFramebuffer(GL_FRAMEBUFFER, bufferFBO);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, bufferColourTex, 0);
@@ -473,6 +472,9 @@ void Renderer::DrawNeonGrid() {
 	BindShader(neonGridShader);
 	viewMatrix = scene->camera->BuildViewMatrix();
 	glUniform4fv(glGetUniformLocation(neonGridShader->GetProgram(), "colour"), 1, (float*)&Vector4( 1, 0, 1, 1 ));
+	glUniform1i(glGetUniformLocation(neonGridShader->GetProgram(), "diffuseTex"), 0);
+	glUniform1i(glGetUniformLocation(neonGridShader->GetProgram(), "normalTex"), 1);
+	glUniform1i(glGetUniformLocation(neonGridShader->GetProgram(), "jointCount"), 0);
 
 	for (auto i : nodeList) {
 		DrawNode(i, neonGridShader);
@@ -592,6 +594,7 @@ void Renderer::PostProcessing() {
 	modelMatrix.ToIdentity();
 	viewMatrix.ToIdentity();
 	projMatrix.ToIdentity();
+	textureMatrix.ToIdentity();
 
 	//Combine the buffers and put the output into the postprocessing shader
 	CombineBuffers();
@@ -651,17 +654,15 @@ void Renderer::CombineBuffers() {
 
 void Renderer::Blur() {
 	glBindFramebuffer(GL_FRAMEBUFFER, postProcessFBO);
-		
 	BindShader(blurShader);
 	UpdateShaderMatrices();
-
-	//glDisable(GL_DEPTH_TEST);
 
 	bool isVertical = 0;
 	glActiveTexture(GL_TEXTURE0);
 	glUniform1i(glGetUniformLocation(blurShader->GetProgram(), "sceneTex"), 0);
 	for (int i = 0; i < BLUR_PASSES * 2; ++i) {
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, postProcessColourTex[nextPostProcessOutput], 0);
+		glClear(GL_COLOR_BUFFER_BIT);
 		glUniform1i(glGetUniformLocation(blurShader->GetProgram(), "isVertical"), isVertical);
 		glBindTexture(GL_TEXTURE_2D, postProcessColourTex[!nextPostProcessOutput]);
 		quad->Draw();
@@ -669,9 +670,7 @@ void Renderer::Blur() {
 		isVertical = !isVertical;
 		nextPostProcessOutput = !nextPostProcessOutput;
 	}
-
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-//	glEnable(GL_DEPTH_TEST);
 }
 
 
@@ -689,9 +688,6 @@ void Renderer::PresentScene() {
 	glBindTexture(GL_TEXTURE_2D, postProcessColourTex[!nextPostProcessOutput]);
 	glGenerateMipmap(GL_TEXTURE_2D);
 	
-
-
-
 	quad->Draw();
 }
 

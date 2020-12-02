@@ -28,7 +28,6 @@ HeightMapNode::HeightMapNode(HeightMap* mesh,	std::string assignMap,
 void HeightMapNode::Draw(const Shader* activeShader) {
 
 	if (mesh) {
-
 		if (activeShader == shader) {
 			glUniform1i(glGetUniformLocation(activeShader->GetProgram(), "diffuseTex1"), 0);
 			glUniform1i(glGetUniformLocation(activeShader->GetProgram(), "normalTex1"), 1);
@@ -49,6 +48,6 @@ void HeightMapNode::Draw(const Shader* activeShader) {
 		glActiveTexture(GL_TEXTURE4);
 		glBindTexture(GL_TEXTURE_2D, assignMap);
 
-		mesh->Draw();
+		SceneNode::Draw(activeShader);
 	}
 }

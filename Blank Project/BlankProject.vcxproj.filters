@@ -38,6 +38,9 @@
     <ClCompile Include="HeightMapNode.cpp">
       <Filter>Source Files\SceneNodes</Filter>
     </ClCompile>
+    <ClCompile Include="Tracks.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Renderer.h">
@@ -59,6 +62,9 @@
       <Filter>Header Files\SceneNodes</Filter>
     </ClInclude>
     <ClInclude Include="Track.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Tracks.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

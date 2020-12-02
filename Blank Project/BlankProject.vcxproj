@@ -143,6 +143,7 @@
     <ClCompile Include="Renderer.cpp" />
     <ClCompile Include="Scene.cpp" />
     <ClCompile Include="NodeTemplates.cpp" />
+    <ClCompile Include="Tracks.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Track.h" />
@@ -152,6 +153,7 @@
     <ClInclude Include="NodeTemplates.h" />
     <ClInclude Include="Renderer.h" />
     <ClInclude Include="Scene.h" />
+    <ClInclude Include="Tracks.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
