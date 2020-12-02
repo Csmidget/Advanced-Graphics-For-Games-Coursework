@@ -74,7 +74,7 @@ void Scene::GenerateRandomLights(int pointLightCount, int spotLightCount, Vector
 									1));
 
 		l->SetRadius(75);
-		l->SetAngle(20 + rand() % 45);
+		l->SetAngle(20.0f + (float)(rand() % 45));
 		l->MakeStatic();
 		spotLights.emplace_back(l);
 	}

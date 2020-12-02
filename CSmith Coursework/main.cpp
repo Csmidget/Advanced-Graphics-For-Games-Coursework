@@ -4,7 +4,7 @@
 int main()	{
 	Window w("Make your own project!", 1280, 720, false);
 
-	srand(time(NULL));
+	srand((unsigned int)time(NULL));
 
 	if(!w.HasInitialised()) {
 		return -1;

@@ -95,25 +95,25 @@ DefaultScene::DefaultScene() : Scene() {
 	MeshMaterial* roleTMat  = MeshManager::LoadMeshMaterial("Role_T.mat");
 	
 	SceneNode* role_t = new SceneNode(roleTMesh,  roleTMat, roleTRunAnim, Vector4(1, 1, 1, 1), animatedShader);
-	role_t->SetTransform(Vector3(0, -15.4, 0));
+	role_t->SetTransform(Vector3(0.0f, -15.4f, 0.0f));
 	role_t->SetModelScale(Vector3(2.0f, 2.0f, 2.0f));
 	patrols.push_back(Prefabs::BuildCompoundPatrol(role_t));
 	root->AddChild(role_t);
 
 	role_t = new SceneNode(roleTMesh, roleTMat, roleTRunAnim, Vector4(1, 1, 1, 1), animatedShader);
-	role_t->SetTransform(Vector3(0, -15.4, 0));
+	role_t->SetTransform(Vector3(0.0f, -15.4f, 0.0f));
 	role_t->SetModelScale(Vector3(2.0f, 2.0f, 2.0f));
 	patrols.push_back(Prefabs::BuildBottomRightPatrol(role_t));
 	root->AddChild(role_t);
 
 	role_t = new SceneNode(roleTMesh, roleTMat, roleTRunAnim, Vector4(1, 1, 1, 1), animatedShader);
-	role_t->SetTransform(Vector3(0, -15.4, 0));
+	role_t->SetTransform(Vector3(0.0f, -15.4f, 0.0f));
 	role_t->SetModelScale(Vector3(2.0f, 2.0f, 2.0f));
 	patrols.push_back(Prefabs::BuildLeftPatrol(role_t));
 	root->AddChild(role_t);
 
 	role_t = new SceneNode(roleTMesh, roleTMat, roleTRunAnim, Vector4(1, 1, 1, 1), animatedShader);
-	role_t->SetTransform(Vector3(0, -15.4, 0));
+	role_t->SetTransform(Vector3(0.0f, -15.4f, 0.0f));
 	role_t->SetModelScale(Vector3(2.0f, 2.0f, 2.0f));
 	patrols.push_back(Prefabs::BuildTopRightPatrol(role_t));
 	root->AddChild(role_t);
@@ -127,39 +127,39 @@ DefaultScene::DefaultScene() : Scene() {
 
 	//##### Compound #####
 	SceneNode* compound = Prefabs::Compound();
-	compound->SetTransform({ 0,-15.4,0 }, { 0,0,0 }, { 4, 4, 4 });
+	compound->SetTransform(Vector3(0.0f,-15.4f,0.0f), Vector3(0.0f,0.0f,0.0f), Vector3(4.0f, 4.0f, 4.0f));
 	compound->MakeStatic();
 	root->AddChild(compound);
 
 	//Hut Spotlight
-	spotLights.emplace_back(new SpotLight({ 20,-14.5,-32 }, { 100,0,0 }, 75.0f, 20.0f, { 1.0, 0.1, 0.1, 1.0 }));
+	spotLights.emplace_back(new SpotLight(Vector3(20.0f,-14.5f,-32.0f), Vector3(100.0f,0.0f,0.0f), 75.0f, 20.0f, Vector4(1.0f, 0.1f, 0.1f, 1.0f)));
 	//####################
 
 
 	//##### Barrels #####
 	SceneNode* barrelStack = Prefabs::BarrelStack();
-	barrelStack->SetPosition({ 13,-11.4, 12.5 });
+	barrelStack->SetPosition(Vector3( 13.0f,-11.4f, 12.5f ));
 	barrelStack->MakeStatic();
 	root->AddChild(barrelStack);
 
 	barrelStack = Prefabs::BarrelStack();
-	barrelStack->SetPosition({ -35,-11.4, -45 });
+	barrelStack->SetPosition(Vector3(-35.0f,-11.4f, -45.0f ));
 	barrelStack->MakeStatic();
 	root->AddChild(barrelStack);
 
 	barrelStack = Prefabs::BarrelStack();
-	barrelStack->SetPosition({ -28,-11.4, 35 });
+	barrelStack->SetPosition(Vector3(-28.0f,-11.4f, 35.0f ));
 	barrelStack->MakeStatic();
 	root->AddChild(barrelStack);
 	//###################
 
 
 	//##### Pond #####
-	SceneNode* pondLampPost = Prefabs::StreetLight({ -160,-15.4,-100 }, { 0,-90,0 });
-	pondLampPost->Scale({ 4,4,4 });
+	SceneNode* pondLampPost = Prefabs::StreetLight(Vector3( -160.0f,-15.4f,-100.0f ), Vector3( 0.0f,-90.0f,0.0f ));
+	pondLampPost->Scale(Vector3(4.0f,4.0f,4.0f));
 	pondLampPost->MakeStatic();
 	root->AddChild(pondLampPost);
-	PointLight* pondLight = new PointLight({ -164.4,8.443,-100.1 }, { 1,1,1,1 }, { 1,1,1,1 }, 100.0f);
+	PointLight* pondLight = new PointLight(Vector3(-164.4f,8.443f,-100.1f ), Vector4(1.0f,1.0f,1.0f,1.0f ), Vector4(1.0f,1.0f,1.0f,1.0f), 100.0f);
 	pondLight->MakeStatic();
 	pointLights.emplace_back(pondLight);
 	//################
@@ -167,12 +167,12 @@ DefaultScene::DefaultScene() : Scene() {
 
 	//##### Compound PointLights #####
 	const int pointLightCount = 6;
-	Vector3 pLightPositions[pointLightCount]{	{-36.43,2.387,-50.42},	{-26.29,3.548,37.42},	{37.95,3.45,37.01},
-												{37.95,3.477,-48.96},	{7.964,3.734,-3.472},	{7.964,3.734,3.714},
+	Vector3 pLightPositions[pointLightCount]{	{-36.43f,2.387f,-50.42f},	{-26.29f,3.548f,37.42f},	{37.95f,3.45f,37.01f},
+												{37.95f,3.477f,-48.96f},	{7.964f,3.734f,-3.472f},	{7.964f,3.734f,3.714f},
 												 };
 
-	Vector4 pLightColours[pointLightCount]{		{2,0,0,1},				{0,2,0,1},				{0,0,2,1},
-												{2,0,2,1},				{1,1,1,1},				{1,1,1,1}  };
+	Vector4 pLightColours[pointLightCount]{		{2.0f,0.0f,0.0f,1.0f},		{0.0f,2.0f,0.0f,1.0f},		{0.0f,0.0f,2.0f,1.0f},
+												{2.0f,0.0f,2.0f,1.0f},		{1.0f,1.0f,1.0f,1.0f},		{1.0f,1.0f,1.0f,1.0f}};
 
 	bool	pIsStatic[pointLightCount]{ true,true,true,true,false,false };
 	for (int i = 0; i < pointLightCount; i++) {
@@ -184,13 +184,13 @@ DefaultScene::DefaultScene() : Scene() {
 
 
 	//##### Central Spinning Spotlight ######
-	spinningLight = new SpotLight({ 2, 80, 0 }, { 50, 0, 0 }, 500.0f, 15.0f);
+	spinningLight = new SpotLight(Vector3( 2.0f, 80.0f, 0.0f ), Vector3(50.0f, 0.0f, 0.0f), 500.0f, 15.0f);
 	spotLights.emplace_back(spinningLight);
 	//#######################################
 
 
 	//##### Camera Light #####
-	cameraLight = new SpotLight({ 0,0,0 }, { 0,0,0 }, 300.0f, 30.0f, { 2,2,2,2 });
+	cameraLight = new SpotLight(Vector3(0.0f,0.0f,0.0f), Vector3(0.0f,0.0f,0.0f), 300.0f, 30.0f, Vector4(2.0f,2.0f,2.0f,2.0f));
 	cameraLight->SetActive(false);
 	spotLights.emplace_back(cameraLight);
 	//########################
@@ -198,7 +198,7 @@ DefaultScene::DefaultScene() : Scene() {
 
 	//##### Randomly Generated Lights #####
 	//If POINT_LIGHT_NUM or SPOT_LIGHT_NUM are greater than 0, generate that number of lights randomly in the scene.
-	Vector3 halfSize = { (heightmapSize / 2) - Vector3(20,0,20) };
+	Vector3 halfSize = { (heightmapSize / 2) - Vector3(20.0f,0.0f,20.0f) };
 	Scene::GenerateRandomLights(POINT_LIGHT_NUM, SPOT_LIGHT_NUM, { -halfSize.x,50,-halfSize.z }, { halfSize.x,50,halfSize.z });
 	//#####################################
 

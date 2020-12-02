@@ -4,7 +4,7 @@
 #include <string>
 #include "Shader.h"
 
-static class ShaderManager {
+class ShaderManager {
 
 	friend class OGLRenderer;
 

@@ -7,7 +7,7 @@ class Mesh;
 class MeshMaterial;
 class MeshAnimation;
 
-static class MeshManager {
+class MeshManager {
 
 	friend class OGLRenderer;
 
@@ -20,5 +20,4 @@ public:
 	static Mesh*	LoadMesh(std::string meshName);
 	static MeshAnimation* LoadMeshAnimation(std::string meshAnimationName);
 	static MeshMaterial* LoadMeshMaterial(std::string meshMaterialName);
-
 };

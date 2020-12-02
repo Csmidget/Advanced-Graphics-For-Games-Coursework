@@ -176,8 +176,8 @@ void SceneNode::Update(float dt) {
 		const Matrix4* prevFrameData = GetRelativeJointData(currentFrame == 0 ? anim->GetFrameCount() - 1 : currentFrame - 1);
 		const Matrix4* currFrameData = GetRelativeJointData(currentFrame);
 
-		float progress = frameTime /(1.0 / anim->GetFrameRate());
-		for (int j = 0; j < mesh->GetJointCount(); j++) {
+		float progress = frameTime /(1.0f / anim->GetFrameRate());
+		for (unsigned int j = 0; j < mesh->GetJointCount(); j++) {
 			frameMatrices.push_back(Matrix4::Lerp(progress, currFrameData[j], prevFrameData[j]));
 		}
 	}

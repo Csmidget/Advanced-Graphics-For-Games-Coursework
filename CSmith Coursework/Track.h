@@ -28,8 +28,8 @@ private:
 	float Lerp(float start, float end, float progress) { return (start * (1.0f - progress) + end * progress); }
 
 	float CosineInterp(float start, float end, float progress) {
-		double cosProgress;
-		cosProgress = (1 - cos(progress * PI)) / 2;
+		float cosProgress;
+		cosProgress = (1 - cos(progress * PI)) / 2.0f;
 		return(start * (1 - cosProgress) + end * cosProgress);
 	}
 

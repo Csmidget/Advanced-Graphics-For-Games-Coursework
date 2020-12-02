@@ -34,7 +34,7 @@ namespace Prefabs {
 		//#### Circuit board ####
 		Mesh* circuitMesh = MeshManager::LoadMesh("SmallFloor.msh");
 		CircuitBoardNode* circuit = new CircuitBoardNode(circuitMesh);
-		circuit->SetTransform({ 1.5,1,0 }, { 90,0,90 }, {1.2,1,1 });
+		circuit->SetTransform(Vector3( 1.5f,1.0f,0.0f), Vector3(90.0f,0.0f,90.0f), Vector3(1.2f,1.0f,1.0f));
 		hut->AddChild(circuit);
 		//#######################
 
@@ -80,7 +80,7 @@ namespace Prefabs {
 		return root;
 	}
 
-	SceneNode* WatchTower(Vector3 position = { 0,0,0 }, Vector3 rotation = { 0,0,0 }) {
+	SceneNode* WatchTower(Vector3 position = { 0.0f,0.0f,0.0f }, Vector3 rotation = { 0.0f,0.0f,0.0f }) {
 		Shader* defaultShader = ShaderManager::LoadShader("BufferBumpVertex.glsl", "BufferBumpFragment.glsl");
 		Mesh* ladderMesh = MeshManager::LoadMesh("Ladder.msh");
 		Mesh* columnMesh = MeshManager::LoadMesh("FenceColumn.msh");
@@ -118,7 +118,7 @@ namespace Prefabs {
 		}
 
 		SceneNode* floor = new SceneNode(floorMesh);
-		floor->SetTransform({ 0,3,0 }, { 0,0,0 }, { 1.1,1.1,1.1 });
+		floor->SetTransform(Vector3( 0.0f,3.0f,0.0f ), Vector3(0.0f,0.0f,0.0f), Vector3(1.1f,1.1f,1.1f));
 		floor->SetTexture(towerDiffuse);
 		floor->SetNormal(towerNormal);
 		floor->SetShader(defaultShader);
@@ -126,7 +126,7 @@ namespace Prefabs {
 
 
 		SceneNode* ceiling = new SceneNode(floorMesh);
-		ceiling->SetTransform({ 0,4,0 }, { 0,0,0 }, { 1.1,1.1,1.1 });
+		ceiling->SetTransform(Vector3(0.0f,4.0f,0.0f), Vector3(0.0f,0.0f,0.0f), Vector3(1.1f,1.1f,1.1f));
 		ceiling->SetTexture(towerDiffuse);
 		ceiling->SetNormal(towerNormal);
 		ceiling->SetShader(defaultShader);
@@ -148,7 +148,7 @@ namespace Prefabs {
 		return streetLight;
 	}
 
-	SceneNode* StreetLightDouble(Vector3 position = { 0,0,0 }, Vector3 rotation = { 0,0,0 }) {
+	SceneNode* StreetLightDouble(Vector3 position = { 0.0f,0.0f,0.0f }, Vector3 rotation = { 0.0f,0.0f,0.0f }) {
 		Shader* defaultShader = ShaderManager::LoadShader("BufferBumpVertex.glsl", "BufferBumpFragment.glsl");
 
 		Mesh* streetLightMesh = MeshManager::LoadMesh("StreetLamp2Double.msh");
@@ -174,53 +174,53 @@ namespace Prefabs {
 		root->AddChild(hut);
 		
 		//Upper Wall
-		root->AddChild(Fence({ -8.5,0,-13.5 }, { 0,90,0 }));
-		root->AddChild(Fence({ -5.5,0,-13.5 }, { 0,90,0 }));
-		root->AddChild(Fence({ -2.5,0,-13.5 }, { 0,90,0 }));
-		root->AddChild(Fence({  0.5,0,-13.5 }, { 0,90,0 }));
-		root->AddChild(Fence({  3.5,0,-13.5 }, { 0,90,0 }));
-		root->AddChild(Fence({  6.5,0,-13.5 }, { 0,90,0 }));
-		root->AddChild(Fence({  9.5,0,-13.5 }, { 0,90,0 }));
+		root->AddChild(Fence(Vector3(-8.5f,0.0f,-13.5f), Vector3(0.0f,90.0f,0.0f)));
+		root->AddChild(Fence(Vector3(-5.5f,0.0f,-13.5f), Vector3(0.0f,90.0f,0.0f)));
+		root->AddChild(Fence(Vector3(-2.5f,0.0f,-13.5f), Vector3(0.0f,90.0f,0.0f)));
+		root->AddChild(Fence(Vector3( 0.5f,0.0f,-13.5f), Vector3(0.0f,90.0f,0.0f)));
+		root->AddChild(Fence(Vector3( 3.5f,0.0f,-13.5f), Vector3(0.0f,90.0f,0.0f)));
+		root->AddChild(Fence(Vector3( 6.5f,0.0f,-13.5f), Vector3(0.0f,90.0f,0.0f)));
+		root->AddChild(Fence(Vector3( 9.5f,0.0f,-13.5f), Vector3(0.0f,90.0f,0.0f)));
 
 		//Left wall
-		root->AddChild(Fence({ -10,0,6 }));
-		root->AddChild(Fence({ -10,0,3 }));
+		root->AddChild(Fence(Vector3( -10.0f,0.0f,6.0f )));
+		root->AddChild(Fence(Vector3( -10.0f,0.0f,3.0f )));
 
-		root->AddChild(Fence({ -10,0,-3 }));
-		root->AddChild(Fence({ -10,0,-6 }));
-		root->AddChild(Fence({ -10,0,-9 }));
-		root->AddChild(Fence({ -10,0,-12 }));
+		root->AddChild(Fence(Vector3(-10.0f,0.0f,-3.0f )));
+		root->AddChild(Fence(Vector3(-10.0f,0.0f,-6.0f )));
+		root->AddChild(Fence(Vector3(-10.0f,0.0f,-9.0f )));
+		root->AddChild(Fence(Vector3(-10.0f,0.0f,-12.0f )));
 
 		//Left-Lower
-		root->AddChild(Fence({ -8.5,0,9 }, { 0,45,0 }));
+		root->AddChild(Fence(Vector3(-8.5f,0.0f,9.0f ), Vector3(0.0f,45.0f,0.0f)));
 
 		//Lower Wall
-		root->AddChild(Fence({-5.5,0, 10.5 }, { 0,90,0 }));
-		root->AddChild(Fence({-2.5,0, 10.5 }, { 0,90,0 }));
-		root->AddChild(Fence({ 0.5,0, 10.5 }, { 0,90,0 }));
-		root->AddChild(Fence({ 3.5,0, 10.5 }, { 0,90,0 }));
-		root->AddChild(Fence({ 6.5,0, 10.5 }, { 0,90,0 }));
-		root->AddChild(Fence({ 9.5,0, 10.5 }, { 0,90,0 }));
+		root->AddChild(Fence(Vector3(-5.5f,0.0f, 10.5f ), Vector3( 0.0f,90.0f,0.0f )));
+		root->AddChild(Fence(Vector3(-2.5f,0.0f, 10.5f ), Vector3( 0.0f,90.0f,0.0f )));
+		root->AddChild(Fence(Vector3( 0.5f,0.0f, 10.5f ), Vector3( 0.0f,90.0f,0.0f )));
+		root->AddChild(Fence(Vector3( 3.5f,0.0f, 10.5f ), Vector3( 0.0f,90.0f,0.0f )));
+		root->AddChild(Fence(Vector3( 6.5f,0.0f, 10.5f ), Vector3( 0.0f,90.0f,0.0f )));
+		root->AddChild(Fence(Vector3( 9.5f,0.0f, 10.5f ), Vector3( 0.0f,90.0f,0.0f )));
 
 		//Right Wall
-		root->AddChild(Fence({ 14,0, 6 }));
-		root->AddChild(Fence({ 14,0, 3 }));
-		root->AddChild(Fence({ 14,0, 0 }));
-		root->AddChild(Fence({ 14,0,-3 }));
-		root->AddChild(Fence({ 14,0,-6 }));
-		root->AddChild(Fence({ 14,0,-9 }));
+		root->AddChild(Fence(Vector3(14.0f,0.0f, 6.0f)));
+		root->AddChild(Fence(Vector3(14.0f,0.0f, 3.0f)));
+		root->AddChild(Fence(Vector3(14.0f,0.0f, 0.0f)));
+		root->AddChild(Fence(Vector3(14.0f,0.0f,-3.0f)));
+		root->AddChild(Fence(Vector3(14.0f,0.0f,-6.0f)));
+		root->AddChild(Fence(Vector3(14.0f,0.0f,-9.0f)));
 
 		//Lights
-		root->AddChild(StreetLight({ -9.5,0,-13 }, { 0,   45, 0 }));
-		root->AddChild(StreetLight({ -7  ,0, 10 }, { 0, 147.5, 0 }));
-		root->AddChild(StreetLight({ 9.5  ,0, 10 }, { 0, 180, 0 }));
-		root->AddChild(StreetLight({ 9.5  ,0, -13 }, { 0, 0, 0 }));
-		root->AddChild(StreetLightDouble({ 2.0,0,0 }));
+		root->AddChild(StreetLight(Vector3(-9.5f,0.0f,-13.0f ), Vector3( 0.0f,45.0f, 0.0f )));
+		root->AddChild(StreetLight(Vector3(-7.0f,0.0f, 10.0f ), Vector3( 0.0f,147.5f, 0.0f )));
+		root->AddChild(StreetLight(Vector3( 9.5f,0.0f, 10.0f ), Vector3( 0.0f,180.0f, 0.0f )));
+		root->AddChild(StreetLight(Vector3( 9.5f,0.0f,-13.0f ), Vector3( 0.0f,0.0f, 0.0f)));
+		root->AddChild(StreetLightDouble(Vector3(2.0f,0.0f,0.0f )));
 
-		root->AddChild(WatchTower({ 13,0,-1.5 }));
-		root->AddChild(WatchTower({ 13,0,-1.5 }));
-		root->AddChild(WatchTower({ 2.0,0,-12.5 }, { 0,90,0 }));
-		root->AddChild(WatchTower({ 2.0,0,9.5 }, { 0,-90,0 }));
+		root->AddChild(WatchTower(Vector3( 13.0f,0.0f,-1.5f )));
+		root->AddChild(WatchTower(Vector3( 13.0f,0.0f,-1.5f )));
+		root->AddChild(WatchTower(Vector3( 2.0f,0.0f,-12.5f )	, Vector3( 0.0f,90.0f,0.0f )));
+		root->AddChild(WatchTower(Vector3( 2.0f,0.0f,9.5f )		, Vector3( 0.0f,-90.0f,0.0f )));
 
 		return root;
 	}
@@ -233,8 +233,8 @@ namespace Prefabs {
 		SceneNode* root = new SceneNode();
 
 		const int barrelCount = 4;
-		const Vector3 barrelPositions[barrelCount]{ {2,-4,2.5}	,{0.0,-4,0}		,{3.7,-4,0.1}		,{2.0,0,1} };
-		const Vector3 barrelRotations[barrelCount]{ {}			,{0  ,22.5 ,0  },{0 ,18.0 ,0  }	,{0 ,(float)rand() ,0 } };
+		const Vector3 barrelPositions[barrelCount]{ {2.0f,-4.0f,2.5f}	,{0.0f,-4.0f,0.0f}	,{3.7f,-4.0f,0.1f}		,{2.0f,0.0f,1.0f} };
+		const Vector3 barrelRotations[barrelCount]{ {}					,{0.0f,22.5f,0.0f}	,{0.0f ,18.0f ,0.0f  }	,{0.0f ,(float)(rand() % 360),0.0f } };
 
 		for (int i = 0; i < barrelCount; ++i) {
 			SceneNode* barrel = new SceneNode(barrelMesh, barrelMat);
@@ -255,26 +255,26 @@ namespace Prefabs {
 		SceneNode* root = new SceneNode();
 
 		//Hut Soldier
-		SceneNode* soldier = new SceneNode(roleTMesh, roleTMat, roleTStandAnim, Vector4(1, 1, 1, 1), animatedShader);
-		soldier->SetTransform(Vector3(20, -15.4, -42));
+		SceneNode* soldier = new SceneNode(roleTMesh, roleTMat, roleTStandAnim, Vector4(1.0f, 1.0f, 1.0f, 1.0f), animatedShader);
+		soldier->SetTransform(Vector3(20.0f, -15.4f, -42.0f));
 		soldier->SetModelScale(Vector3(2.0f, 2.0f, 2.0f));
 		root->AddChild(soldier);
 
 		//RightTower Soldier
 		soldier = new SceneNode(roleTMesh, roleTMat, roleTStandAnim, Vector4(1, 1, 1, 1), animatedShader);
-		soldier->SetTransform(Vector3(52, -3.2, -6.5), { 0,90,0 }, { 0.8,0.8,0.8 });
+		soldier->SetTransform(Vector3(52.0f, -3.2f, -6.5f), Vector3(0.0f,90.0f,0.0f ), Vector3(0.8f,0.8f,0.8f));
 		soldier->SetModelScale(Vector3(2.0f, 2.0f, 2.0f));
 		root->AddChild(soldier);
 
 		//LowerTower Soldier
 		soldier = new SceneNode(roleTMesh, roleTMat, roleTStandAnim, Vector4(1, 1, 1, 1), animatedShader);
-		soldier->SetTransform(Vector3(8.601, -3.2, 37.96), { 0,0,0 }, { 0.8,0.8,0.8 });
+		soldier->SetTransform(Vector3(8.601f, -3.2f, 37.96f), Vector3(0.0f,0.0f,0.0f), Vector3(0.8f,0.8f,0.8f));
 		soldier->SetModelScale(Vector3(2.0f, 2.0f, 2.0f));
 		root->AddChild(soldier);
 
 		//UpperTower Soldier
 		soldier = new SceneNode(roleTMesh, roleTMat, roleTStandAnim, Vector4(1, 1, 1, 1), animatedShader);
-		soldier->SetTransform(Vector3(7.7, -3.2, -50), { 0,180,0 }, { 0.8,0.8,0.8 });
+		soldier->SetTransform(Vector3(7.7f, -3.2f, -50.0f), Vector3(0.0f,180.0f,0.0f), Vector3(0.8f,0.8f,0.8f));
 		soldier->SetModelScale(Vector3(2.0f, 2.0f, 2.0f));
 		root->AddChild(soldier);
 

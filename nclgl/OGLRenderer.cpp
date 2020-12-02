@@ -157,6 +157,7 @@ OGLRenderer::OGLRenderer(Window &window)	{
 Destructor. Deletes the default shader, and the OpenGL rendering context.
 */
 OGLRenderer::~OGLRenderer(void)	{
+	//Delete any textures and shaders that have been built up.
 	ShaderManager::Cleanup();
 	TextureManager::Cleanup();
 	MeshManager::Cleanup();

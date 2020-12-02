@@ -227,7 +227,7 @@ void Mesh::GenerateNormals()	{
 void Mesh::GenerateExtents() {
 	//Generate min and max extents for object, helps with generating bounding volumes.
 
-	for (int i = 0; i < numVertices; ++i) {
+	for (unsigned int i = 0; i < numVertices; ++i) {
 		minExtents.x = std::min(minExtents.x, vertices[i].x);
 		minExtents.y = std::min(minExtents.y, vertices[i].y);
 		minExtents.z = std::min(minExtents.z, vertices[i].z);

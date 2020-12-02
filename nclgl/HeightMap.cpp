@@ -23,17 +23,17 @@ HeightMap::HeightMap(const std::string& name) {
 	Vector3 vertexScale = Vector3(16.0f, 1.0f, 16.0f);
 	Vector2 textureScale = Vector2(1 / 16.0f, 1 / 16.0f);
 
-	size.x = iWidth;
+	size.x = (float)iWidth;
 	size.y = 0;
-	size.z = iHeight;
+	size.z = (float)iHeight;
 
 	for (int z = 0; z < iHeight; ++z) {
 		for (int x = 0; x < iWidth; ++x) {
 			int offset = (z * iWidth) + x;
 			size.y = std::max(size.y, (float)data[offset]);
-			vertices[offset] = Vector3(x, data[offset], z) * vertexScale;
+			vertices[offset] = Vector3((float)x, data[offset], (float)z) * vertexScale;
 			colours[offset] = Vector4((float)data[offset] / 255.0f, (float)data[offset] / 255.0f, (float)data[offset] / 255.0f, 1.0f);
-			textureCoords[offset] = Vector2(x, z) * textureScale;
+			textureCoords[offset] = Vector2((float)x, (float)z) * textureScale;
 		}
 	}
 

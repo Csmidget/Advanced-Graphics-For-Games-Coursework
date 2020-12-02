@@ -49,8 +49,8 @@ std::vector<Matrix4> MeshAnimation::GenerateRelativeJoints(const Matrix4* invBin
 	std::vector<Matrix4> relativeJoints;
 
 	relativeJoints.reserve(frameCount * jointCount);
-	for (int f = 0; f < frameCount; ++f) {
-		for (int i = 0; i < jointCount; ++i)
+	for (unsigned int f = 0; f < frameCount; ++f) {
+		for (unsigned int i = 0; i < jointCount; ++i)
 		{
 			relativeJoints.emplace_back(allJoints[f*jointCount + i] * invBindPose[i]);
 		}

@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.30611.23
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Blank Project", "Blank Project\BlankProject.vcxproj", "{8274D442-89CD-4AC2-AA8E-A9FA621452ED}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CSmith Coursework", "CSmith Coursework\Csmith Coursework.vcxproj", "{8274D442-89CD-4AC2-AA8E-A9FA621452ED}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "nclgl", "nclgl\nclgl.vcxproj", "{98D6B51B-CB0A-4389-ADC6-24082B967C3F}"
 EndProject
