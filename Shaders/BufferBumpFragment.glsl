@@ -21,7 +21,7 @@ void main(void) {
     normal = normalize(TBN * normalize(normal));
 
     vec4 diffuse = texture(diffuseTex, IN.texCoord);
-  //  diffuse = vec4(pow(diffuse.rgb, vec3(2.2)), diffuse.a);
+    diffuse = vec4(pow(diffuse.rgb, vec3(2.2)), diffuse.a);
     fragColour[0] = diffuse;
     fragColour[1] = vec4(normal.xyz * 0.5 + 0.5, 1.0);
 }

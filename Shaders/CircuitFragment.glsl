@@ -31,14 +31,23 @@ void main(void) {
     vec3 normal = (texture(normalTex, IN.texCoord).rgb * 2.0) - 1.0;
     normal = normalize(TBN * normalize(normal));
 
-	fragColour[0] = texture(baseTex, IN.texCoord);
+    vec4 base = texture(baseTex, IN.texCoord);
+    base = vec4(pow(base.rgb, vec3(2.2)), base.a);
+
+	fragColour[0] = base;
     
     float distFromCentre = length(IN.texCoord - vec2(0.5,0.5));
 
     //Handy tool for calculating wave modifiers: https://www.desmos.com/calculator/w9jrdpvsmk
     float overlayStrength = amplitude * sin( (distFromCentre + offset) / frequency ) + verticalOffset; 
 
-    fragColour[0] += texture(circuitTex, IN.texCoord) * texture(overlayTex, IN.texCoord) * overlayStrength;
+    vec4 circuit = texture(circuitTex, IN.texCoord);
+    circuit = vec4(pow(circuit.rgb, vec3(2.2)), circuit.a);
+    vec4 overlay = texture(overlayTex, IN.texCoord);
+    overlay = vec4(pow(overlay.rgb, vec3(2.2)), overlay.a);
+
+
+    fragColour[0] += circuit * overlay * overlayStrength;
     fragColour[1] = vec4(normal.xyz * 0.5 + 0.5, 1.0);
 }
 

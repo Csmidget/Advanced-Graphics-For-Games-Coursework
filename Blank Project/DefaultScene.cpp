@@ -157,8 +157,8 @@ DefaultScene::DefaultScene() : Scene() {
 												{37.95,3.477,-48.96},	{7.964,3.734,-3.472},	{7.964,3.734,3.714},
 												 };
 
-	Vector4 pLightColours[pointLightCount]{		{5,0,0,1},				{0,5,0,1},				{0,0,5,1},
-												{5,0,5,1},				{1,1,1,1},				{1,1,1,1}  };
+	Vector4 pLightColours[pointLightCount]{		{2,0,0,1},				{0,2,0,1},				{0,0,2,1},
+												{2,0,2,1},				{1,1,1,1},				{1,1,1,1}  };
 
 	bool	pIsStatic[pointLightCount]{ true,true,true,true,false,false };
 	for (int i = 0; i < pointLightCount; i++) {

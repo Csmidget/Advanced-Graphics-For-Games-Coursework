@@ -25,10 +25,10 @@ void main(void) {
     vec2 assignPos = vec2(IN.localPos.x / dimensions.x,IN.localPos.z / dimensions.z);
 
     vec4 diffuse1 = texture(diffuseTex1, IN.texCoord);
-  //  diffuse1 = vec4(pow(diffuse1.rgb, vec3(2.2)), diffuse1.a);
+    diffuse1 = vec4(pow(diffuse1.rgb, vec3(2.2)), diffuse1.a);
 
     vec4 diffuse2 = texture(diffuseTex2, IN.texCoord);
-   // diffuse2 = vec4(pow(diffuse2.rgb, vec3(2.2)), diffuse2.a);
+    diffuse2 = vec4(pow(diffuse2.rgb, vec3(2.2)), diffuse2.a);
 
     vec3 normal1 = (texture(normalTex1, IN.texCoord).rgb * 2.0) - 1.0;
     vec3 normal2 = (texture(normalTex2, IN.texCoord).rgb * 2.0) - 1.0;

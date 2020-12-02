@@ -47,7 +47,7 @@ Renderer::Renderer(Window& parent) : OGLRenderer(parent) {
 	postProcessColourTex[0] = 0;
 	postProcessColourTex[1] = 0;
 	neonGridColourTex = 0;
-	saturationPoint = 5.0f;
+	saturationPoint = 2.0f;
 
 	projMatrix = scene->GetCameraPerspective(width, height);
 
@@ -258,6 +258,7 @@ void Renderer::UpdateScene(float dt) {
 		saturationPoint -= dt;
 	}
 	saturationPoint = std::max(0.0f, saturationPoint);
+	saturationPoint = std::min(2.0f, saturationPoint);
 	scene->Update(dt);
 
 	viewMatrix = scene->camera->BuildViewMatrix();
@@ -616,8 +617,8 @@ void Renderer::CombineBuffers() {
 
 	UpdateShaderMatrices();
 
-	float ambient = doNeonGrid ? 0.0f : 0.1f;
-	float transparentAmbient = doNeonGrid ? 0.0f : 0.1f;
+	float ambient = doNeonGrid ? 0.0f : 0.01f;
+	float transparentAmbient = doNeonGrid ? 0.0f : 0.01f;
 
 	glUniform1f(glGetUniformLocation(combineShader->GetProgram(), "ambient"), ambient);
 	glUniform1f(glGetUniformLocation(combineShader->GetProgram(), "transparentAmbient"), transparentAmbient);

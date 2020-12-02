@@ -11,6 +11,12 @@ GLuint TextureManager::LoadTexture(std::string textureName, unsigned int flags) 
 
 	GLuint newTexture = SOIL_load_OGL_texture(textureName.c_str(), SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, flags);
 
+	glBindTexture(GL_TEXTURE_2D, newTexture);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY, 16.0f);
+	glBindTexture(GL_TEXTURE_2D, 0);
+
 	loadedTextures.emplace(textureName, newTexture);
 
 	return newTexture;

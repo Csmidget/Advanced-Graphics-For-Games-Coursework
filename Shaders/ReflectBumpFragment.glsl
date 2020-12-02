@@ -23,7 +23,7 @@ out vec4 fragColour;
 
 void main(void) {
     vec4 diffuse = texture(diffuseTex, IN.texCoord);
-  //  diffuse = vec4(pow(diffuse.rgb, vec3(2.2)), diffuse.a);
+    diffuse = vec4(pow(diffuse.rgb, vec3(2.2)), diffuse.a);
     vec3 viewDir = normalize(cameraPos - IN.worldPos);
   
     mat3 TBN = mat3(normalize(IN.tangent), normalize(IN.binormal), normalize(IN.normal));

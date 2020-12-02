@@ -20,7 +20,7 @@ void main(void) {
 
     vec3 rgbOut = (luminanceOUT / luminanceIN) * texRGB;
 
-   // rgbOut = pow(rgbOut, vec3(1 / 2.2));
+    rgbOut = pow(rgbOut, vec3(1 / 2.2));
 
     fragColour = vec4(rgbOut, 1.0f);
     fragColour.a = 1.0f;

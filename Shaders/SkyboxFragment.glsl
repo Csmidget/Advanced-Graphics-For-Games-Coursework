@@ -8,5 +8,9 @@ in Vertex {
 out vec4 fragColour;
 
 void main(void) {
-    fragColour = texture(cubeTex, normalize(IN.viewDir));
+
+    vec4 diffuse = texture(cubeTex, normalize(IN.viewDir));
+    diffuse = vec4(pow(diffuse.rgb, vec3(2.2)), diffuse.a);
+
+    fragColour = diffuse;
 }
