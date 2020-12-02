@@ -1,5 +1,6 @@
 #include "Mouse.h"
 #include <algorithm>
+
 Mouse::Mouse(HWND &hwnd)	{
 	ZeroMemory( buttons,	 sizeof(bool) * MOUSE_MAX );
 	ZeroMemory( holdButtons, sizeof(bool) * MOUSE_MAX );
@@ -17,27 +18,49 @@ Mouse::Mouse(HWND &hwnd)	{
     rid.dwFlags		= RIDEV_INPUTSINK;   
     rid.hwndTarget	= hwnd;
     RegisterRawInputDevices(&rid, 1, sizeof(rid));
+
+	setAbsolute = false;
 }
 
 void Mouse::Update(RAWINPUT* raw)	{
-	if(isAwake)	{
-		/*
-		Update the absolute and relative mouse movements
-		*/
-		relativePosition.x +=((float)raw->data.mouse.lLastX ) * sensitivity;
-		relativePosition.y +=((float)raw->data.mouse.lLastY ) * sensitivity;
+	if (isAwake) {
+		bool virtualDesktop = (raw->data.mouse.usFlags & MOUSE_VIRTUAL_DESKTOP) > 0;
+		bool isAbsolute		= (raw->data.mouse.usFlags & MOUSE_MOVE_ABSOLUTE) > 0;
 
-		absolutePosition.x += (float)raw->data.mouse.lLastX;
-		absolutePosition.y += (float)raw->data.mouse.lLastY;
+		if (isAbsolute) {
+			const int screenWidth  = GetSystemMetrics(virtualDesktop ? SM_CXVIRTUALSCREEN : SM_CXSCREEN);
+			const int screenHeight = GetSystemMetrics(virtualDesktop ? SM_CYVIRTUALSCREEN : SM_CYSCREEN);
 
-		/*
-		Bounds check the absolute position of the mouse, so it doesn't disappear off screen edges...
-		*/
-		absolutePosition.x = std::max(absolutePosition.x, 0.0f);
-		absolutePosition.x = std::min(absolutePosition.x,absolutePositionBounds.x);
+			Vector2 prevAbsolute = absolutePosition;
+			absolutePosition.x = (raw->data.mouse.lLastX / (float)USHRT_MAX) * screenWidth;
+			absolutePosition.y = (raw->data.mouse.lLastY / (float)USHRT_MAX) * screenHeight;
 
-		absolutePosition.y = std::max(absolutePosition.y, 0.0f);
-		absolutePosition.y = std::min(absolutePosition.y,absolutePositionBounds.y);
+			if (setAbsolute) {
+				relativePosition.x = (absolutePosition.x - prevAbsolute.x) * sensitivity;
+				relativePosition.y = (absolutePosition.y - prevAbsolute.y) * sensitivity;
+			}
+			setAbsolute = true;
+		}
+		else {
+
+			/*
+			Update the absolute and relative mouse movements
+			*/
+			relativePosition.x += ((float)raw->data.mouse.lLastX) * sensitivity;
+			relativePosition.y += ((float)raw->data.mouse.lLastY) * sensitivity;
+
+			absolutePosition.x += (float)raw->data.mouse.lLastX;
+			absolutePosition.y += (float)raw->data.mouse.lLastY;
+
+			/*
+			Bounds check the absolute position of the mouse, so it doesn't disappear off screen edges...
+			*/
+			absolutePosition.x = std::max(absolutePosition.x, 0.0f);
+			absolutePosition.x = std::min(absolutePosition.x, absolutePositionBounds.x);
+
+			absolutePosition.y = std::max(absolutePosition.y, 0.0f);
+			absolutePosition.y = std::min(absolutePosition.y, absolutePositionBounds.y);
+		}
 	
 		/*
 		TODO: How framerate independent is this?
