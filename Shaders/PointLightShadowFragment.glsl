@@ -1,5 +1,7 @@
 #version 330 core
 
+//Shadow calculations based on https://learnopengl.com/Advanced-Lighting/Shadows/Point-Shadows
+
 uniform sampler2D depthTex;
 uniform sampler2D normalTex;
 uniform samplerCube shadowMap;
@@ -55,10 +57,9 @@ void main(void) {
     float viewDistance = length(cameraPos - worldPos);
     float diskRadius = 0.1;
 
-    for(int i = 0; i < samples; ++i)
-    {
+    for(int i = 0; i < samples; ++i) {
         float shadowMapDepth = texture(shadowMap, worldPosToLightPos + sampleOffsetDirections[i] * diskRadius).r;
-        shadowMapDepth *= lightRadius;   // undo mapping [0;1]
+        shadowMapDepth *= lightRadius;  
         if(dist - bias > shadowMapDepth)
             shadow += 1.0;
     }   

@@ -73,7 +73,7 @@ public:
 	//'up' as the...up axis (pointing towards the top of the screen)
 	static Matrix4 BuildViewMatrix(const Vector3 &from, const Vector3 &lookingAt, const Vector3 up = Vector3(0,1,0));
 
-	static Matrix4 Lerp(float p, const Matrix4& mat1, const Matrix4& mat2);
+	static Matrix4 LerpTransforms(float p, const Matrix4& mat1, const Matrix4& mat2);
 
 	Matrix4 GetTransposedRotation();
 

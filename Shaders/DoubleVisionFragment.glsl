@@ -13,8 +13,6 @@ vec2 doubleOffset = vec2(0.05f,0);
 
 void main(void) {
 
-  //  vec2 delta = dFdy(IN.texCoord) + dFdx(IN.texCoord);
-
     vec2 range = vec2(1 - doubleOffset);
 
     vec4 normalCol = texture(sceneTex, IN.texCoord.xy * range);

@@ -75,6 +75,12 @@ public:
 		return Vector3((a.y*b.z) - (a.z*b.y) , (a.z*b.x) - (a.x*b.z) , (a.x*b.y) - (a.y*b.x));	
 	}
 
+	static Vector3 Lerp(float progress, const Vector3& from, const Vector3& to) {
+		return Vector3(	((1 - progress) * from.x) + (progress * to.x),
+						((1 - progress) * from.y) + (progress * to.y),
+						((1 - progress) * from.z) + (progress * to.z));
+	}
+
 	inline friend std::ostream& operator<<(std::ostream& o, const Vector3& v) {
 		o << "Vector3(" << v.x << "," << v.y << "," << v.z <<")" << std::endl;
 		return o;

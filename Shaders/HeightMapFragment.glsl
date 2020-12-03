@@ -32,6 +32,8 @@ void main(void) {
 
     vec3 normal1 = (texture(normalTex1, IN.texCoord).rgb * 2.0) - 1.0;
     vec3 normal2 = (texture(normalTex2, IN.texCoord).rgb * 2.0) - 1.0;
+    
+    //The RG values of the assign texture correspond to how visible each other texture is.
     vec3 assign = texture(assignMap, assignPos).rgb;
 
     vec3 normal = (normal1 * assign.r) + (normal2 * assign.g);

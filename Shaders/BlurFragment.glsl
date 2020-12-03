@@ -1,5 +1,7 @@
 #version 330 core
 
+//Gaussian blur
+
 uniform sampler2D sceneTex;
 
 uniform int isVertical;

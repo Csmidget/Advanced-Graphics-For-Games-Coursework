@@ -87,15 +87,12 @@ Matrix4::Matrix4(const Quaternion& quat) : Matrix4() {
 	values[10] = 1 - 2 * xx - 2 * yy;
 }
 
-Matrix4 Matrix4::Lerp(float p, const Matrix4& matFrom, const Matrix4& matTo)
+Matrix4 Matrix4::LerpTransforms(float p, const Matrix4& matFrom, const Matrix4& matTo)
 {
 	//Position
 	Vector3 from = matFrom.GetPositionVector();
 	Vector3 to = matTo.GetPositionVector();
-	Vector3 lerpedPos;
-	lerpedPos.x = ((1 - p) * from.x) + (p * to.x);
-	lerpedPos.y = ((1 - p) * from.y) + (p * to.y);
-	lerpedPos.z = ((1 - p) * from.z) + (p * to.z);
+	Vector3 lerpedPos = Vector3::Lerp(p, from, to);
 
 	//Scale
 	auto tempFrom = matFrom;
@@ -105,14 +102,12 @@ Matrix4 Matrix4::Lerp(float p, const Matrix4& matFrom, const Matrix4& matTo)
 	
 	Vector3 fromScale = tempFrom.GetScalingVector();
 	Vector3 toScale = tempTo.GetScalingVector();
-	Vector3 lerpedScale; 
-	lerpedScale.x = ((1 - p) * fromScale.x) + (p * toScale.x);
-	lerpedScale.y = ((1 - p) * fromScale.y) + (p * toScale.y);
-	lerpedScale.z = ((1 - p) * fromScale.z) + (p * toScale.z);
+	Vector3 lerpedScale = Vector3::Lerp(p, fromScale, toScale);
 
 	//Rotation
 	Quaternion fromRot = matFrom;
 	Quaternion toRot = matTo;
+	//I tried Slerping here but it caused odd jitter.
 	Quaternion lerpedRot = Quaternion::Lerp(fromRot, toRot, p);
 	
 	//Put it back together.

@@ -21,7 +21,8 @@ void main(void) {
             skelPos += joints[jointIndex] * localPos * jointWeight;
         }
        gl_Position = modelMatrix * vec4(skelPos.xyz, 1.0);
-    } else {
+    } 
+    else {
         gl_Position = modelMatrix * vec4(position, 1.0);
     }
 

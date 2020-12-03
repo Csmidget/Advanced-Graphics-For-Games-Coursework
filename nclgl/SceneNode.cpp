@@ -178,7 +178,7 @@ void SceneNode::Update(float dt) {
 
 		float progress = frameTime /(1.0f / anim->GetFrameRate());
 		for (unsigned int j = 0; j < mesh->GetJointCount(); j++) {
-			frameMatrices.push_back(Matrix4::Lerp(progress, currFrameData[j], prevFrameData[j]));
+			frameMatrices.push_back(Matrix4::LerpTransforms(progress, currFrameData[j], prevFrameData[j]));
 		}
 	}
 }

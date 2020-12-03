@@ -19,7 +19,7 @@ Renderer::Renderer(Window& parent) : OGLRenderer(parent) {
 
 	Matrix4 testMat = Matrix4::Rotation(90, { 1,0,0 });
 	Matrix4 testMat2 = Matrix4::Rotation(100, { 1,0,0 });
-	Matrix4::Lerp(0, testMat, testMat2);
+	Matrix4::LerpTransforms(0, testMat, testMat2);
 
 
 	doBlur = false;
