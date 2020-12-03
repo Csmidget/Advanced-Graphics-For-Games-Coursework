@@ -39,6 +39,7 @@ protected:
 	void PostProcessing();
 	void CombineBuffers();
 	void Blur();
+	void DoubleVision();
 	void PresentScene();
 
 	void Resize(int x, int y) override;
@@ -78,11 +79,16 @@ protected:
 
 	GLuint postProcessFBO;
 	GLuint postProcessColourTex[2];
+	int nextPostProcessOutput;
+
 	Shader* combineShader;
 	Shader* blurShader;
+
+	Shader* doubleVisionShader;
+	float doubleVisionOffset;
+
 	Shader* basicSceneShader;
 	Shader* colourCorrectionShader;
-	int nextPostProcessOutput;
 
 	int currentGridColourPos;
 	float gridColourProgress;

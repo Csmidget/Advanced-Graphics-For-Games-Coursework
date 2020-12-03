@@ -1,6 +1,7 @@
 #version 330 core
 
 uniform sampler2D sceneTex;
+uniform float doubleXOffset;
 
 in Vertex {
     vec2 texCoord;
@@ -9,9 +10,10 @@ in Vertex {
 out vec4 fragColor;
 
 float doubleStrength = 0.5f;
-vec2 doubleOffset = vec2(0.05f,0);
 
 void main(void) {
+
+    vec2 doubleOffset = vec2(doubleXOffset,0.0f);  
 
     vec2 range = vec2(1 - doubleOffset);
 

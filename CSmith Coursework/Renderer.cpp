@@ -30,6 +30,7 @@ Renderer::Renderer(Window& parent) : OGLRenderer(parent) {
 	currentGridColour = gridColours[0];
 	currentGridColourPos = 1;
 	gridColourProgress = 0;
+	doubleVisionOffset = 0.0f;
 
 	//Default all of our screen textures to 0. This is so that GenerateSceenTexture() recognises
 	//they are empty and generates a new texture for them.
@@ -68,6 +69,7 @@ Renderer::Renderer(Window& parent) : OGLRenderer(parent) {
 	neonGridShader = ShaderManager::LoadShader("FlexibleTextureVertex.glsl", "ColouredLinesFragment.glsl");
 	basicSceneShader = ShaderManager::LoadShader("TexturedVertex.glsl", "TexturedFragment.glsl");
 	colourCorrectionShader = ShaderManager::LoadShader("TexturedVertex.glsl", "ColourCorrectFragment.glsl");
+	doubleVisionShader = ShaderManager::LoadShader("TexturedVertex.glsl", "DoubleVisionFragment.glsl");
 
 	glGenFramebuffers(1, &bufferFBO);
 	glGenFramebuffers(1, &lightingFBO);
@@ -262,13 +264,19 @@ void Renderer::UpdateScene(float dt) {
 
 	//Control the point at which colour becomes saturated.
 	if (Window::GetKeyboard()->KeyDown(KEYBOARD_UP)) {
-		saturationPoint += dt;
+		saturationPoint = std::min(2.0f, saturationPoint + dt);
 	}
 	if (Window::GetKeyboard()->KeyDown(KEYBOARD_DOWN)) {
-		saturationPoint -= dt;
+		saturationPoint = std::max(0.0f, saturationPoint - dt);
 	}
-	saturationPoint = std::max(0.0f, saturationPoint);
-	saturationPoint = std::min(2.0f, saturationPoint);
+
+	//Control the double vision effect
+	if (Window::GetKeyboard()->KeyDown(KEYBOARD_RIGHT)) {
+		doubleVisionOffset = std::min(0.2f, doubleVisionOffset +  0.1f * dt);
+	}
+	if (Window::GetKeyboard()->KeyDown(KEYBOARD_LEFT)) {
+		doubleVisionOffset = std::max(0.0f, doubleVisionOffset - 0.1f * dt);
+	}
 
 	if (doNeonGridColourChange) {
 		gridColourProgress += 0.1f * dt;
@@ -644,7 +652,7 @@ void Renderer::PostProcessing() {
 	CombineBuffers();
 
 	if (doBlur) Blur();
-
+	DoubleVision();
 	PresentScene();
 	projMatrix = scene->GetCameraPerspective(width, height);
 }
@@ -718,6 +726,25 @@ void Renderer::Blur() {
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
+void Renderer::DoubleVision() {
+	//No point if there is no offset.
+	if (doubleVisionOffset == 0.0f)
+		return;
+
+	glBindFramebuffer(GL_FRAMEBUFFER, postProcessFBO);
+	BindShader(doubleVisionShader);
+	UpdateShaderMatrices();
+	glActiveTexture(GL_TEXTURE0);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, postProcessColourTex[nextPostProcessOutput], 0);
+	glUniform1f(glGetUniformLocation(doubleVisionShader->GetProgram(), "doubleXOffset"), doubleVisionOffset);
+	glClear(GL_COLOR_BUFFER_BIT);
+	glBindTexture(GL_TEXTURE_2D, postProcessColourTex[!nextPostProcessOutput]);
+
+	quad->Draw();
+
+	nextPostProcessOutput = !nextPostProcessOutput;
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
 
 void Renderer::PresentScene() {
 	//Performs final colour correction (if enabled) and draws to the output buffer (finally)
