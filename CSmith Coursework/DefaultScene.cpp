@@ -59,8 +59,8 @@ DefaultScene::DefaultScene() : Scene() {
 
 	//##### Terrain #####
 	//As it is a custom mesh, we cannot use the MeshManager to load the heightmap.
-	heightMapMesh = new HeightMap(TEXTUREDIR"terraintest.png");
-	HeightMapNode* heightMapNode = new HeightMapNode(heightMapMesh,TEXTUREDIR"terrainassign.png", TEXTUREDIR"Barren Reds.JPG", TEXTUREDIR"ground_asphalt.png", TEXTUREDIR"Barren RedsDOT3.JPG", TEXTUREDIR"AsphaltNormal.png");
+	heightMapMesh = new HeightMap(TEXTUREDIR"TerrainNoise.png");
+	HeightMapNode* heightMapNode = new HeightMapNode(heightMapMesh,TEXTUREDIR"TerrainAssign.png", TEXTUREDIR"Barren Reds.JPG", TEXTUREDIR"ground_asphalt.png", TEXTUREDIR"Barren RedsDOT3.JPG", TEXTUREDIR"AsphaltNormal.png");
 	Vector3 heightmapSize = heightMapMesh->GetHeightMapSize() * 0.1f;
 	heightMapNode->SetTransform(Vector3(-heightmapSize.x / 2, -heightmapSize.y, -heightmapSize.z / 2));
 	heightMapNode->MakeStatic();

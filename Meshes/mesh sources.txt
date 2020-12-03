@@ -1,0 +1,5 @@
+Sci-fi barrels: https://assetstore.unity.com/packages/3d/props/pbr-sci-fi-exterior-props-barrel-119512
+
+Street lamps: https://assetstore.unity.com/packages/3d/props/exterior/street-lamps-165658
+
+Basic shapes (Fence column, wall etc): https://assetstore.unity.com/packages/3d/prototyping-pack-free-94277
