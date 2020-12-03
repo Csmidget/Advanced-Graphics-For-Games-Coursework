@@ -19,12 +19,14 @@ _-_-_-_-_-_-_-""  ""
 #include "common.h"
 #include "Vector3.h"
 #include "Vector4.h"
+#include "Quaternion.h"
 
 class Vector3;
 
 class Matrix4	{
 public:
 	Matrix4(void);
+	Matrix4(const Quaternion& quat);
 	Matrix4(const float elements[16]);
 	~Matrix4(void);
 

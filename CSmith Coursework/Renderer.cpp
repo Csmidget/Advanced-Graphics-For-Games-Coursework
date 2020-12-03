@@ -16,10 +16,20 @@
 const int BLUR_PASSES = 10;
 
 Renderer::Renderer(Window& parent) : OGLRenderer(parent) {
+
+	Matrix4 testMat = Matrix4::Rotation(90, { 1,0,0 });
+	Matrix4 testMat2 = Matrix4::Rotation(100, { 1,0,0 });
+	Matrix4::Lerp(0, testMat, testMat2);
+
+
 	doBlur = false;
 	doNeonGrid = true;
+	doNeonGridColourChange = true;
 	doColourCorrect = true;
 	saturationPoint = 2.0f;
+	currentGridColour = gridColours[0];
+	currentGridColourPos = 1;
+	gridColourProgress = 0;
 
 	//Default all of our screen textures to 0. This is so that GenerateSceenTexture() recognises
 	//they are empty and generates a new texture for them.
@@ -246,6 +256,9 @@ void Renderer::UpdateScene(float dt) {
 		doColourCorrect = !doColourCorrect;
 		std::cout << "Colour Correction " << (doColourCorrect ? "ENABLED\n" : "DISABLED\n");
 	}
+	if (Window::GetKeyboard()->KeyTriggered(KEYBOARD_4)) {
+		doNeonGridColourChange = !doNeonGridColourChange;
+	}
 
 	//Control the point at which colour becomes saturated.
 	if (Window::GetKeyboard()->KeyDown(KEYBOARD_UP)) {
@@ -256,6 +269,17 @@ void Renderer::UpdateScene(float dt) {
 	}
 	saturationPoint = std::max(0.0f, saturationPoint);
 	saturationPoint = std::min(2.0f, saturationPoint);
+
+	if (doNeonGridColourChange) {
+		gridColourProgress += 0.1f * dt;
+		int nextGridColourPos = currentGridColourPos + 1;
+		if (nextGridColourPos > 5) nextGridColourPos = 0;
+		currentGridColour = Vector4::Lerp(gridColours[currentGridColourPos], gridColours[nextGridColourPos], gridColourProgress);
+		if (gridColourProgress > 1.0f) {
+			gridColourProgress = 0;
+			currentGridColourPos = nextGridColourPos;
+		}
+	}
 
 	scene->Update(dt);
 
@@ -566,7 +590,7 @@ void Renderer::DrawNeonGrid() {
 
 	BindShader(neonGridShader);
 	viewMatrix = scene->camera->BuildViewMatrix();
-	glUniform4fv(glGetUniformLocation(neonGridShader->GetProgram(), "colour"), 1, (float*)&Vector4( 1, 0, 1, 1 ));
+	glUniform4fv(glGetUniformLocation(neonGridShader->GetProgram(), "colour"), 1, (float*)&currentGridColour);
 	glUniform1i(glGetUniformLocation(neonGridShader->GetProgram(), "diffuseTex"), 0);
 	glUniform1i(glGetUniformLocation(neonGridShader->GetProgram(), "normalTex"), 1);
 	glUniform1i(glGetUniformLocation(neonGridShader->GetProgram(), "jointCount"), 0);

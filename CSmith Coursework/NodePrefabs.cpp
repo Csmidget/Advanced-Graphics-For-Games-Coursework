@@ -17,9 +17,9 @@ namespace Prefabs {
 		SceneNode* hut = new SceneNode();
 
 		const int wallCount = 4;
-		const Vector3 wallPositions[wallCount]{ {0.0,0,-1.5}	,{1.5,0,0.0},{-1.5,0,0.0}	,{0.0,2,-1.5} };
-		const Vector3 wallRotations[wallCount]{ {0,90,0}	,{0,0,0}	,{0,0,0}		,{90,90,0} };
-		const Vector3 wallScales[wallCount]{ {1,1,1},{1,1,1},{1,1,1},{1,1,1.5} };
+		const Vector3 wallPositions[wallCount]{ {0.0f,0.0f,-1.5f}	,{1.5f,0.0f,0.0f},{-1.5f,0.0f,0.0f}	,{0.0f,2.0f,-1.5f} };
+		const Vector3 wallRotations[wallCount]{ {0.0f,90.0f,0.0f}	,{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f}	,{90.0f,90.0f,0.0f} };
+		const Vector3 wallScales[wallCount]{ {1.0f,1.0f,1.0f},{1.0f,1.0f,1.0f},{1.0f,1.0f,1.0f},{1.0f,1.0f,1.5f} };
 		Mesh* wallMesh = MeshManager::LoadMesh("Wall.msh");
 		for (int i = 0; i < wallCount; i++) {
 			SceneNode* wall = new SceneNode(wallMesh);
@@ -27,7 +27,7 @@ namespace Prefabs {
 			wall->SetNormal(wallNormal);
 			wall->SetShader(wallShader);
 			wall->SetTransform(wallPositions[i], wallRotations[i],wallScales[i]);
-			wall->SetTextureMatrix(Matrix4::Rotation(90, { 0,0,1 }));
+			wall->SetTextureMatrix(Matrix4::Rotation(90, { 0.0f,0.0f,1.0f }));
 			hut->AddChild(wall);
 		}
 

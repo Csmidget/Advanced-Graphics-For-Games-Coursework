@@ -1,5 +1,4 @@
 #include "Matrix4.h"
-#include "Quaternion.h"
 
 Matrix4::Matrix4(void)	{
 	ToIdentity();
@@ -63,6 +62,31 @@ Matrix4 Matrix4::Perspective(float znear, float zfar, float aspect, float fov) {
 	return m;
 }
 
+Matrix4::Matrix4(const Quaternion& quat) : Matrix4() {
+
+	float yy = quat.y * quat.y;
+	float zz = quat.z * quat.z;
+	float xy = quat.x * quat.y;
+	float zw = quat.z * quat.w;
+	float xz = quat.x * quat.z;
+	float yw = quat.y * quat.w;
+	float xx = quat.x * quat.x;
+	float yz = quat.y * quat.z;
+	float xw = quat.x * quat.w;
+
+	values[0] = 1 - 2 * yy - 2 * zz;
+	values[1] = 2 * xy + 2 * zw;
+	values[2] = 2 * xz - 2 * yw;
+
+	values[4] = 2 * xy - 2 * zw;
+	values[5] = 1 - 2 * xx - 2 * zz;
+	values[6] = 2 * yz + 2 * xw;
+
+	values[8] = 2 * xz + 2 * yw;
+	values[9] = 2 * yz - 2 * xw;
+	values[10] = 1 - 2 * xx - 2 * yy;
+}
+
 Matrix4 Matrix4::Lerp(float p, const Matrix4& matFrom, const Matrix4& matTo)
 {
 	Matrix4 newMat{};
@@ -72,33 +96,27 @@ Matrix4 Matrix4::Lerp(float p, const Matrix4& matFrom, const Matrix4& matTo)
 	return newMat;
 
 	//Non working attempt at proper rotational slerping.
-	//Matrix4 newMat{};
-	//
-	//Vector3 pos1 = matFrom.GetPositionVector();
-	//Vector3 pos2 = matTo.GetPositionVector();
+	//Vector3 from = matFrom.GetPositionVector();
+	//Vector3 to = matTo.GetPositionVector();
 	//Vector3 lerpedPos;
-	//lerpedPos.x = (1 - p) * pos1.x + p * pos2.x;
-	//lerpedPos.y = (1 - p) * pos1.y + p * pos2.y;
-	//lerpedPos.z = (1 - p) * pos1.z + p * pos2.z;
+	//lerpedPos.x = ((1 - p) * from.x) + (p * to.x);
+	//lerpedPos.y = ((1 - p) * from.y) + (p * to.y);
+	//lerpedPos.z = ((1 - p) * from.z) + (p * to.z);
 	//
-	//Vector3 scaleFrom = matFrom.GetScalingVector();
-	//Vector3 scaleTo = matTo.GetScalingVector();
+	//Vector3 fromScale = matFrom.GetScalingVector();
+	//Vector3 toScale = matTo.GetScalingVector();
 	//Vector3 lerpedScale; 
-	//lerpedScale.x = (1 - p) * scaleFrom.x + p * scaleTo.x;
-	//lerpedScale.y = (1 - p) * scaleFrom.y + p * scaleTo.y;
-	//lerpedScale.z = (1 - p) * scaleFrom.z + p * scaleTo.z;
+	//lerpedScale.x = ((1 - p) * fromScale.x) + (p * toScale.x);
+	//lerpedScale.y = ((1 - p) * fromScale.y) + (p * toScale.y);
+	//lerpedScale.z = ((1 - p) * fromScale.z) + (p * toScale.z);
 	//
-	//Quaternion q1 = matFrom * Matrix4::Scale(Vector3(1/scaleFrom.x,1/scaleFrom.y,1/scaleFrom.z));
-	//Quaternion q2 = matTo * Matrix4::Scale(Vector3(1 / scaleTo.x, 1 / scaleTo.y, 1 / scaleTo.z));
-	//Quaternion lerpedQ = Quaternion::Slerp(q1, q2, p);// .ToEuler();
+	//Quaternion fromRot = matFrom;
+	//Quaternion toRot = matTo;
+	//Quaternion lerpedRot = Quaternion::Slerp(fromRot, toRot, p);
 	//
-	//Vector3 lerpedEulers = lerpedQ.ToEuler();
-	//
-	//newMat = Matrix4::Translation(lerpedPos) *
-	//Matrix4::Scale(lerpedScale)*
-	//	Matrix4::Rotation(lerpedEulers.x, { 1,0,0 })*
-	//	Matrix4::Rotation(lerpedEulers.y, { 0,1,0 })*
-	//	Matrix4::Rotation(lerpedEulers.z, { 0,0,1 });
+	//Matrix4 newMat = Matrix4::Translation(lerpedPos) *
+	//				 Matrix4::Scale(lerpedScale)*
+	//				 Matrix4(lerpedRot);
 	//
 	//return newMat;
 }

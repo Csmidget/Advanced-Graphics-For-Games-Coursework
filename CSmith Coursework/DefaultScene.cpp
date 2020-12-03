@@ -138,7 +138,7 @@ DefaultScene::DefaultScene() : Scene() {
 
 	//##### Barrels #####
 	SceneNode* barrelStack = Prefabs::BarrelStack();
-	barrelStack->SetPosition(Vector3( 13.0f,-11.4f, 12.5f ));
+	barrelStack->SetPosition(Vector3( 15.0f,-11.4f, 14.5f ));
 	barrelStack->MakeStatic();
 	root->AddChild(barrelStack);
 
@@ -267,14 +267,14 @@ void DefaultScene::Update(float dt) {
 	cameraLight->SetPosition(camera->GetPosition());
 	cameraLight->SetRotation(camera->GetRotation() + Vector3(90, 0, 0));
 
-	if (Window::GetKeyboard()->KeyTriggered(KEYBOARD_9)) {
+	if (Window::GetKeyboard()->KeyTriggered(KEYBOARD_5)) {
 		rotateLight = !rotateLight;
 	}
 	if (rotateLight) {
 		spinningLight->Rotate({ 0,10 * dt, 0 });
 	}
 
-	if (Window::GetKeyboard()->KeyTriggered(KEYBOARD_0)) {
+	if (Window::GetKeyboard()->KeyTriggered(KEYBOARD_CONTROL)) {
 		track->IsActive() ? track->Stop() : track->Start();
 	}
 

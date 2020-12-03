@@ -84,10 +84,19 @@ protected:
 	Shader* colourCorrectionShader;
 	int nextPostProcessOutput;
 
+	int currentGridColourPos;
+	float gridColourProgress;
+	Vector4 currentGridColour;
+	Vector4 gridColours[6] {Vector4(1,0,0,1),Vector4(0,1,0,1),Vector4(0,0,1,1),
+							Vector4(1,1,0,1),Vector4(1,0,1,1),Vector4(0,1,1,1)};
+
+
 	bool doBlur;
 	bool doNeonGrid;
+	bool doNeonGridColourChange;
 	bool doColourCorrect;
 	float saturationPoint;
+	
 
 	Frustum frameFrustum;
 

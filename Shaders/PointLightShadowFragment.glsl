@@ -50,7 +50,7 @@ void main(void) {
 
     float shadow = 0.0;
     float bias   = 0.2;
-    int samples  = 20; 
+    int samples  = 30; 
     float viewDistance = length(cameraPos - worldPos);
     float diskRadius = 0.05;
 
@@ -63,7 +63,7 @@ void main(void) {
     }   
     shadow = 1 - shadow / float(samples);
 
-    if (shadow == 0.0f) {
+    if (shadow < 0.1f) {
         discard;
     }
 

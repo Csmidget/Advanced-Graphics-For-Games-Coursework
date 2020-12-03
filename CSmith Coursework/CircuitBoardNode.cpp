@@ -10,9 +10,9 @@ CircuitBoardNode::CircuitBoardNode(Mesh* mesh) : SceneNode(mesh) {
 	SetShader(defShader);
 
 	this->background = TextureManager::LoadTexture(TEXTUREDIR"metall010.png", SOIL_FLAG_MIPMAPS);
-	SetNormal(TextureManager::LoadTexture(TEXTUREDIR"CircuitNormal.png", SOIL_FLAG_MIPMAPS));
 	this->circuit = TextureManager::LoadTexture(TEXTUREDIR"circuit.png", SOIL_FLAG_MIPMAPS);
 	this->overlay = TextureManager::LoadTexture(TEXTUREDIR"doge.png", SOIL_FLAG_MIPMAPS);
+	SetNormal(TextureManager::LoadTexture(TEXTUREDIR"CircuitNormal.png", SOIL_FLAG_MIPMAPS));
 
 	TextureManager::SetTextureRepeating(background, true);
 	TextureManager::SetTextureRepeating(circuit, true);

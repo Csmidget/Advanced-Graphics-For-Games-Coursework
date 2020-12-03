@@ -22,8 +22,6 @@ _-_-_-_-_-_-_-""  ""
 
 using std::string;
 
-
-
 static const float biasValues[16] = {
 	0.5, 0.0, 0.0, 0.0,
 	0.0, 0.5, 0.0, 0.0,
@@ -146,11 +144,11 @@ OGLRenderer::OGLRenderer(Window &window)	{
 #endif
 #endif
 
-	glClearColor(0.2f,0.2f,0.2f,1.0f);			//When we clear the screen, we want it to be dark grey
+	glClearColor(0.2f,0.2f,0.2f,1.0f);	//When we clear the screen, we want it to be dark grey
 
-	currentShader = 0;							//0 is the 'null' object name for shader programs...
+	currentShader = 0;					//0 is the 'null' object name for shader programs...
 
-	window.SetRenderer(this);					//Tell our window about the new renderer! (Which will in turn resize the renderer window to fit...)
+	window.SetRenderer(this);			//Tell our window about the new renderer! (Which will in turn resize the renderer window to fit...)
 }
 
 /*

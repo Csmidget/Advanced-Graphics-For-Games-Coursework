@@ -29,7 +29,7 @@ private:
 
 	float CosineInterp(float start, float end, float progress) {
 		float cosProgress;
-		cosProgress = (1 - cos(progress * PI)) / 2.0f;
+		cosProgress = (1 - cos(progress * PI)) / 2;
 		return(start * (1 - cosProgress) + end * cosProgress);
 	}
 
@@ -40,6 +40,7 @@ public:
 		hangTime = 0.0f;
 		progress = 0.0f;
 		active = false;
+		loop = false;
 		current = 0;
 	}
 
@@ -47,6 +48,7 @@ public:
 		this->target = target;
 		this->speedMultiplier = speedMultiplier;
 		this->smooth = smooth;
+		this->loop = loop;
 		progress = 0.0f;
 		active = false;
 		current = 0;

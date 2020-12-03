@@ -1,0 +1,75 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="DefaultScene.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="main.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="Renderer.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="Scene.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="NodePrefabs.cpp">
+      <Filter>Source\Prefabs</Filter>
+    </ClCompile>
+    <ClCompile Include="TrackPrefabs.cpp">
+      <Filter>Source\Prefabs</Filter>
+    </ClCompile>
+    <ClCompile Include="CircuitBoardNode.cpp">
+      <Filter>Source\SceneNodes</Filter>
+    </ClCompile>
+    <ClCompile Include="HeightMapNode.cpp">
+      <Filter>Source\SceneNodes</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="DefaultScene.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Renderer.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Scene.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Track.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="NodePrefabs.h">
+      <Filter>Headers\Prefabs</Filter>
+    </ClInclude>
+    <ClInclude Include="TrackPrefabs.h">
+      <Filter>Headers\Prefabs</Filter>
+    </ClInclude>
+    <ClInclude Include="HeightMapNode.h">
+      <Filter>Headers\SceneNodes</Filter>
+    </ClInclude>
+    <ClInclude Include="CircuitBoardNode.h">
+      <Filter>Headers\SceneNodes</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Headers">
+      <UniqueIdentifier>{2374aa34-dd29-4570-84b5-5816172145e4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source">
+      <UniqueIdentifier>{349339c1-5cc6-4467-9b65-0c39f544561b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Headers\Prefabs">
+      <UniqueIdentifier>{62dd9a30-f8e4-4a50-8154-410c070a4e8b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\Prefabs">
+      <UniqueIdentifier>{0206e51e-95e0-42ed-b872-1da66679b791}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\SceneNodes">
+      <UniqueIdentifier>{51973a88-a13f-4b1a-ab69-d8554d9c6a72}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Headers\SceneNodes">
+      <UniqueIdentifier>{0ace4420-7b78-4446-a8a6-e4e08abfbe22}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

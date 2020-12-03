@@ -62,6 +62,15 @@ public:
 		}
 	}
 
+	static Vector4 Lerp(Vector4 from, Vector4 to, float progress) {
+		Vector4 retVec{};
+		retVec.x = (1 - progress) * from.x + progress * to.x;
+		retVec.y = (1 - progress) * from.y + progress * to.y;
+		retVec.z = (1 - progress) * from.z + progress * to.z;
+		retVec.w = (1 - progress) * from.w + progress * to.w;
+		return retVec;
+	}
+
 	float			Length() const {
 		return sqrt((x * x) + (y * y) + (z * z) + (w * w));
 	}
