@@ -41,6 +41,7 @@ void main(void) {
     float specFactor = rFactor;
     specFactor = pow(specFactor, 60.0);
 
+    //Modify the shadow direction vector slightly to sample the surrounding area, smooths the shadow.
     vec3 sampleOffsetDirections[20] = vec3[] (       
         vec3( 1,  1,  1), vec3( 1, -1,  1), vec3(-1, -1,  1), vec3(-1,  1,  1), 
         vec3( 1,  1, -1), vec3( 1, -1, -1), vec3(-1, -1, -1), vec3(-1,  1, -1),
@@ -52,7 +53,7 @@ void main(void) {
     float bias   = 0.2;
     int samples  = 30; 
     float viewDistance = length(cameraPos - worldPos);
-    float diskRadius = 0.05;
+    float diskRadius = 0.1;
 
     for(int i = 0; i < samples; ++i)
     {

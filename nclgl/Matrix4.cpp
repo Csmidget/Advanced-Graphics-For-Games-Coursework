@@ -89,36 +89,38 @@ Matrix4::Matrix4(const Quaternion& quat) : Matrix4() {
 
 Matrix4 Matrix4::Lerp(float p, const Matrix4& matFrom, const Matrix4& matTo)
 {
-	Matrix4 newMat{};
-	for (int i = 0; i < 16; i++) {
-		newMat.values[i] = (1 - p) * matFrom.values[i] + p * matTo.values[i];
-	}
-	return newMat;
+	//Position
+	Vector3 from = matFrom.GetPositionVector();
+	Vector3 to = matTo.GetPositionVector();
+	Vector3 lerpedPos;
+	lerpedPos.x = ((1 - p) * from.x) + (p * to.x);
+	lerpedPos.y = ((1 - p) * from.y) + (p * to.y);
+	lerpedPos.z = ((1 - p) * from.z) + (p * to.z);
 
-	//Non working attempt at proper rotational slerping.
-	//Vector3 from = matFrom.GetPositionVector();
-	//Vector3 to = matTo.GetPositionVector();
-	//Vector3 lerpedPos;
-	//lerpedPos.x = ((1 - p) * from.x) + (p * to.x);
-	//lerpedPos.y = ((1 - p) * from.y) + (p * to.y);
-	//lerpedPos.z = ((1 - p) * from.z) + (p * to.z);
-	//
-	//Vector3 fromScale = matFrom.GetScalingVector();
-	//Vector3 toScale = matTo.GetScalingVector();
-	//Vector3 lerpedScale; 
-	//lerpedScale.x = ((1 - p) * fromScale.x) + (p * toScale.x);
-	//lerpedScale.y = ((1 - p) * fromScale.y) + (p * toScale.y);
-	//lerpedScale.z = ((1 - p) * fromScale.z) + (p * toScale.z);
-	//
-	//Quaternion fromRot = matFrom;
-	//Quaternion toRot = matTo;
-	//Quaternion lerpedRot = Quaternion::Slerp(fromRot, toRot, p);
-	//
-	//Matrix4 newMat = Matrix4::Translation(lerpedPos) *
-	//				 Matrix4::Scale(lerpedScale)*
-	//				 Matrix4(lerpedRot);
-	//
-	//return newMat;
+	//Scale
+	auto tempFrom = matFrom;
+	auto tempTo = matTo;
+	tempFrom = tempFrom * Quaternion(tempFrom).Conjugate();
+	tempTo = tempTo * Quaternion(tempTo).Conjugate();
+	
+	Vector3 fromScale = tempFrom.GetScalingVector();
+	Vector3 toScale = tempTo.GetScalingVector();
+	Vector3 lerpedScale; 
+	lerpedScale.x = ((1 - p) * fromScale.x) + (p * toScale.x);
+	lerpedScale.y = ((1 - p) * fromScale.y) + (p * toScale.y);
+	lerpedScale.z = ((1 - p) * fromScale.z) + (p * toScale.z);
+
+	//Rotation
+	Quaternion fromRot = matFrom;
+	Quaternion toRot = matTo;
+	Quaternion lerpedRot = Quaternion::Lerp(fromRot, toRot, p);
+	
+	//Put it back together.
+	Matrix4 newMat = Matrix4::Translation(lerpedPos) *
+					 Matrix4::Scale(lerpedScale)*
+					 Matrix4(lerpedRot);
+	
+	return newMat;
 }
 
 //http://www.opengl.org/sdk/docs/man/xhtml/glOrtho.xml
