@@ -662,8 +662,6 @@ void Renderer::PostProcessing() {
 	nextPostProcessOutput = 0;
 	
 	modelMatrix.ToIdentity();
-	viewMatrix.ToIdentity();
-	projMatrix.ToIdentity();
 	textureMatrix.ToIdentity();
 
 	//Combine the buffers and put the output into the postprocessing shader
@@ -672,7 +670,6 @@ void Renderer::PostProcessing() {
 	if (doBlur) Blur();
 	DoubleVision();
 	PresentScene();
-	projMatrix = scene->GetCameraPerspective(width, height);
 }
 
 void Renderer::CombineBuffers() {
