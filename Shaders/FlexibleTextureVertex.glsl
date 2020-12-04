@@ -1,25 +1,27 @@
-#version 330 core
+#version 420 core
 
 uniform mat4 modelMatrix;
-uniform mat4 viewMatrix;
-uniform mat4 projMatrix;
 uniform mat4 textureMatrix;
 
 uniform mat4 joints[128];
 uniform bool hasJoints;
+
+layout(std140, binding = 1) uniform ProjView {
+	mat4 projMatrix;
+	mat4 viewMatrix;
+} PV;
 
 in vec3 position;
 in vec2 texCoord;
 in vec4 jointWeights;
 in ivec4 jointIndices;
 
-
 out Vertex {
 	vec2 texCoord;
 } OUT;
 
 void main(void) {
-	mat4 mvp = projMatrix * viewMatrix * modelMatrix;
+	mat4 mvp = PV.projMatrix * PV.viewMatrix * modelMatrix;
 
     vec4 localPos = vec4(position, 1.0f);
     vec4 skelPos = vec4(0,0,0,0);

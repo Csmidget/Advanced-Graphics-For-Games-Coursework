@@ -1,8 +1,11 @@
-#version 330 core
+#version 420 core
 uniform mat4 modelMatrix;
-uniform mat4 viewMatrix;
-uniform mat4 projMatrix;
 in vec3 position;
+
+layout(std140, binding = 1) uniform ProjView {
+	mat4 projMatrix;
+	mat4 viewMatrix;
+} PV;
 
 out Vertex {
     vec3 viewDir;
@@ -10,10 +13,10 @@ out Vertex {
 
 void main(void) {
     vec3 pos = position;
-    mat4 invproj = inverse(projMatrix);
+    mat4 invproj = inverse(PV.projMatrix);
     pos.xy *= vec2(invproj[0][0], invproj[1][1]);
     pos.z = -1.0f;
-    OUT.viewDir = transpose(mat3(viewMatrix)) * normalize(pos);
+    OUT.viewDir = transpose(mat3(PV.viewMatrix)) * normalize(pos);
     gl_Position = vec4(position, 1.0);
 }
 

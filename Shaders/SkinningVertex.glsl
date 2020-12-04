@@ -1,7 +1,10 @@
-#version 330 core
+#version 420 core
 uniform mat4 modelMatrix;
-uniform mat4 viewMatrix;
-uniform mat4 projMatrix;
+
+layout(std140, binding = 1) uniform ProjView {
+	mat4 projMatrix;
+	mat4 viewMatrix;
+} PV;
 
 in vec3 position;
 in vec4 colour;
@@ -38,5 +41,5 @@ void main(void) {
         skelPos += joints[jointIndex] * localPos * jointWeight;
     }
 
-    gl_Position = (projMatrix * viewMatrix) * modelMatrix * vec4(skelPos.xyz,1.0f);
+    gl_Position = (PV.projMatrix * PV.viewMatrix) * modelMatrix * vec4(skelPos.xyz,1.0f);
 }

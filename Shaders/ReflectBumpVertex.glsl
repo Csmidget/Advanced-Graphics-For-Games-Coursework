@@ -1,9 +1,12 @@
-#version 330 core
+#version 420 core
 
 uniform mat4 modelMatrix;
-uniform mat4 viewMatrix;
-uniform mat4 projMatrix;
 uniform mat4 textureMatrix;
+
+layout(std140, binding = 1) uniform ProjView {
+	mat4 projMatrix;
+	mat4 viewMatrix;
+} PV;
 
 in vec3 position;
 in vec3 normal;
@@ -33,5 +36,5 @@ void main(void) {
 
     vec4 worldPos = (modelMatrix * vec4(position,1));
     OUT.worldPos = worldPos.xyz;
-    gl_Position = (projMatrix * viewMatrix) * worldPos;
+    gl_Position = (PV.projMatrix * PV.viewMatrix) * worldPos;
 }

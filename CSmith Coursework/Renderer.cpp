@@ -31,6 +31,7 @@ Renderer::Renderer(Window& parent) : OGLRenderer(parent) {
 	currentGridColourPos = 1;
 	gridColourProgress = 0;
 	doubleVisionOffset = 0.0f;
+	identityMat.ToIdentity();
 
 	//Default all of our screen textures to 0. This is so that GenerateSceenTexture() recognises
 	//they are empty and generates a new texture for them.
@@ -60,16 +61,23 @@ Renderer::Renderer(Window& parent) : OGLRenderer(parent) {
 
 	projMatrix = scene->GetCameraPerspective(width, height);
 
-	skyboxShader = ShaderManager::LoadShader("SkyboxVertex.glsl", "SkyboxFragment.glsl");
-	blurShader = ShaderManager::LoadShader("TexturedVertex.glsl", "BlurFragment.glsl");
-	pointLightShader = ShaderManager::LoadShader("LightVertex.glsl", "PointLightShadowFragment.glsl");
-	spotLightShader = ShaderManager::LoadShader("LightVertex.glsl", "SpotLightShadowFragment.glsl");
-	shadowShader = ShaderManager::LoadShader("ShadowVertex.glsl", "ShadowFragment.glsl", "ShadowGeometry.glsl");
-	combineShader = ShaderManager::LoadShader("CombineVertex.glsl", "CombineFragment.glsl");
-	neonGridShader = ShaderManager::LoadShader("FlexibleTextureVertex.glsl", "ColouredLinesFragment.glsl");
-	basicSceneShader = ShaderManager::LoadShader("TexturedVertex.glsl", "TexturedFragment.glsl");
-	colourCorrectionShader = ShaderManager::LoadShader("TexturedVertex.glsl", "ColourCorrectFragment.glsl");
-	doubleVisionShader = ShaderManager::LoadShader("TexturedVertex.glsl", "DoubleVisionFragment.glsl");
+	skyboxShader			= ShaderManager::LoadShader("SkyboxVertex.glsl", "SkyboxFragment.glsl");
+	blurShader				= ShaderManager::LoadShader("TexturedVertex.glsl", "BlurFragment.glsl");
+	pointLightShader		= ShaderManager::LoadShader("LightVertex.glsl", "PointLightShadowFragment.glsl");
+	spotLightShader			= ShaderManager::LoadShader("LightVertex.glsl", "SpotLightShadowFragment.glsl");
+	shadowShader			= ShaderManager::LoadShader("ShadowVertex.glsl", "ShadowFragment.glsl", "ShadowGeometry.glsl");
+	combineShader			= ShaderManager::LoadShader("CombineVertex.glsl", "CombineFragment.glsl");
+	neonGridShader			= ShaderManager::LoadShader("FlexibleTextureVertex.glsl", "ColouredLinesFragment.glsl");
+	basicSceneShader		= ShaderManager::LoadShader("TexturedVertex.glsl", "TexturedFragment.glsl");
+	colourCorrectionShader	= ShaderManager::LoadShader("TexturedVertex.glsl", "ColourCorrectFragment.glsl");
+	doubleVisionShader		= ShaderManager::LoadShader("TexturedVertex.glsl", "DoubleVisionFragment.glsl");
+
+	//Generate our projection view matrix uniform buffer
+	glGenBuffers(1, &projViewBuffer);
+	glBindBuffer(GL_UNIFORM_BUFFER, projViewBuffer);
+	glBufferData(GL_UNIFORM_BUFFER, 128, NULL, GL_STATIC_DRAW);
+	glBindBufferBase(GL_UNIFORM_BUFFER, 1, projViewBuffer);
+	glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
 	glGenFramebuffers(1, &bufferFBO);
 	glGenFramebuffers(1, &lightingFBO);
@@ -102,7 +110,6 @@ Renderer::Renderer(Window& parent) : OGLRenderer(parent) {
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, bufferDepthStencilTex, 0);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_TEXTURE_2D, bufferDepthStencilTex, 0);
 	glDrawBuffers(2, buffers);
-
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
 		return;
 	}
@@ -113,7 +120,6 @@ Renderer::Renderer(Window& parent) : OGLRenderer(parent) {
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, lightSpecularTex, 0);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_TEXTURE_2D, bufferDepthStencilTex, 0);
 	glDrawBuffers(2, buffers);
-
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
 		return;
 	}
@@ -122,7 +128,6 @@ Renderer::Renderer(Window& parent) : OGLRenderer(parent) {
 	glBindFramebuffer(GL_FRAMEBUFFER, skyboxFBO);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, skyboxColourTex, 0);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_TEXTURE_2D, bufferDepthStencilTex, 0);
-
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
 		return;
 	}
@@ -130,7 +135,6 @@ Renderer::Renderer(Window& parent) : OGLRenderer(parent) {
 	glBindFramebuffer(GL_FRAMEBUFFER, postProcessFBO);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, postProcessColourTex[0], 0);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_TEXTURE_2D, bufferDepthStencilTex, 0);
-
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
 		return;
 	}
@@ -138,7 +142,6 @@ Renderer::Renderer(Window& parent) : OGLRenderer(parent) {
 	glBindFramebuffer(GL_FRAMEBUFFER, neonGridFBO);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, neonGridColourTex, 0);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_TEXTURE_2D, bufferDepthStencilTex, 0);
-
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
 		return;
 	}
@@ -175,11 +178,15 @@ Renderer::~Renderer(void) {
 	glDeleteTextures(1, &lightSpecularTex);
 	glDeleteTextures(1, &skyboxColourTex);
 	glDeleteTextures(2, postProcessColourTex);
+	glDeleteTextures (1, &neonGridColourTex);
+
+	glDeleteBuffers(1, &projViewBuffer);
 
 	glDeleteFramebuffers(1, &bufferFBO);
 	glDeleteFramebuffers(1, &lightingFBO);
 	glDeleteFramebuffers(1, &skyboxFBO);
 	glDeleteFramebuffers(1, &postProcessFBO);
+	glDeleteFramebuffers(1, &neonGridFBO);
 }
 
 void Renderer::GenerateScreenTexture(GLuint& into, bool depth) {
@@ -250,9 +257,11 @@ void Renderer::UpdateScene(float dt) {
 	//Enable/Disable various effects
 	if (Window::GetKeyboard()->KeyTriggered(KEYBOARD_1)) {
 		doBlur = !doBlur;
+		std::cout << "Blur " << (doBlur ? "ENABLED\n" : "DISABLED\n");
 	}
 	if (Window::GetKeyboard()->KeyTriggered(KEYBOARD_2)) {
 		doNeonGrid = !doNeonGrid;
+		std::cout << "Neon Grid" << (doNeonGrid ? "ENABLED\n" : "DISABLED\n");
 	}
 	if (Window::GetKeyboard()->KeyTriggered(KEYBOARD_3)) {
 		doColourCorrect = !doColourCorrect;
@@ -260,6 +269,7 @@ void Renderer::UpdateScene(float dt) {
 	}
 	if (Window::GetKeyboard()->KeyTriggered(KEYBOARD_4)) {
 		doNeonGridColourChange = !doNeonGridColourChange;
+		std::cout << "Neon Grid Colour Change " << (doNeonGridColourChange ? "ENABLED\n" : "DISABLED\n");
 	}
 
 	//Control the point at which colour becomes saturated.
@@ -306,7 +316,7 @@ void Renderer::RenderScene() {
 	//Generate dynamic shadow maps for this frame. 
 	//Only objects within view frustum will be used
 	DrawShadowMaps(false);
-
+	SetProjViewBuffer(scene->GetCameraPerspective(width, height), viewMatrix);
 	DrawOpaques();
 	DrawTransparents();
 
@@ -315,12 +325,18 @@ void Renderer::RenderScene() {
 	
 	//If neon grid is enabled, draw it unlit areas
 	DrawNeonGrid();
-
 	DrawSkybox();
+	SetProjViewBuffer(identityMat, identityMat);
 
 	PostProcessing();
 
 	ClearNodeLists();
+}
+
+void Renderer::UpdatePerObjectShaderMatrices() {
+	glUniformMatrix4fv(glGetUniformLocation(currentShader->GetProgram(), "modelMatrix"), 1, false, modelMatrix.values);
+	glUniformMatrix4fv(glGetUniformLocation(currentShader->GetProgram(), "textureMatrix"), 1, false, textureMatrix.values);
+	glUniformMatrix4fv(glGetUniformLocation(currentShader->GetProgram(), "shadowMatrix"), 1, false, shadowMatrix.values);
 }
 
 void Renderer::BuildNodeLists(SceneNode* from, bool frustumCheck) {
@@ -419,6 +435,13 @@ void Renderer::DrawShadowMap(Light* light,float farPlaneDist) {
 	}
 }
 
+void Renderer::SetProjViewBuffer(const Matrix4& projMatrix, const Matrix4& viewMatrix) {
+	glBindBuffer(GL_UNIFORM_BUFFER, projViewBuffer);
+	glBufferSubData(GL_UNIFORM_BUFFER, 0, 64, &projMatrix);
+	glBufferSubData(GL_UNIFORM_BUFFER, 64, 64, &viewMatrix);
+	glBindBuffer(GL_UNIFORM_BUFFER, 0);
+}
+
 void Renderer::DrawOpaques() {
 	glBindFramebuffer(GL_FRAMEBUFFER, bufferFBO);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, bufferColourTex, 0);
@@ -462,7 +485,7 @@ void Renderer::DrawNode(SceneNode* n, Shader* shaderOverride) {
 	if (n->GetMesh()) {
 		modelMatrix = n->GetWorldTransform() * Matrix4::Scale(n->GetModelScale());
 		textureMatrix = n->GetTextureMatrix();
-		UpdateShaderMatrices();
+		UpdatePerObjectShaderMatrices();
 
 		if (n->GetTexture()) {
 			glActiveTexture(GL_TEXTURE0);
@@ -527,7 +550,6 @@ void Renderer::SetupLightShader(Shader* shader) {
 
 	Matrix4 invViewProj = (projMatrix * viewMatrix).Inverse();
 	glUniformMatrix4fv(glGetUniformLocation(shader->GetProgram(), "inverseProjView"), 1, false, invViewProj.values);
-	UpdateShaderMatrices();
 }
 
 void Renderer::DrawLights() {
@@ -619,9 +641,7 @@ void Renderer::DrawSkybox() {
 	glClear(GL_COLOR_BUFFER_BIT);
 
 	BindShader(skyboxShader);
-	UpdateShaderMatrices();
 
-	glUniform1i(glGetUniformLocation(skyboxShader->GetProgram(), "cubeTex"), 0);
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_CUBE_MAP, scene->skybox);
 
@@ -667,8 +687,6 @@ void Renderer::CombineBuffers() {
 	
 	BindShader(combineShader);
 
-	UpdateShaderMatrices();
-
 	float ambient = doNeonGrid ? 0.0f : 0.01f;
 	float transparentAmbient = doNeonGrid ? 0.0f : 0.01f;
 
@@ -708,7 +726,7 @@ void Renderer::CombineBuffers() {
 void Renderer::Blur() {
 	glBindFramebuffer(GL_FRAMEBUFFER, postProcessFBO);
 	BindShader(blurShader);
-	UpdateShaderMatrices();
+	UpdatePerObjectShaderMatrices();
 
 	bool isVertical = 0;
 	glActiveTexture(GL_TEXTURE0);
@@ -733,7 +751,7 @@ void Renderer::DoubleVision() {
 
 	glBindFramebuffer(GL_FRAMEBUFFER, postProcessFBO);
 	BindShader(doubleVisionShader);
-	UpdateShaderMatrices();
+	UpdatePerObjectShaderMatrices();
 	glActiveTexture(GL_TEXTURE0);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, postProcessColourTex[nextPostProcessOutput], 0);
 	glUniform1f(glGetUniformLocation(doubleVisionShader->GetProgram(), "doubleXOffset"), doubleVisionOffset);
@@ -754,7 +772,7 @@ void Renderer::PresentScene() {
 	Shader* shader = doColourCorrect ? colourCorrectionShader : basicSceneShader;
 	BindShader(shader);
 
-	UpdateShaderMatrices();
+	UpdatePerObjectShaderMatrices();
 
 	glUniform1i(glGetUniformLocation(shader->GetProgram(), "diffuseTex"), 0);
 	glUniform1f(glGetUniformLocation(shader->GetProgram(), "saturationPoint"), saturationPoint);

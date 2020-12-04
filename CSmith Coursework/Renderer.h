@@ -25,8 +25,11 @@ protected:
 	void SortNodeLists();
 	void ClearNodeLists();
 
+	void UpdatePerObjectShaderMatrices();
+
 	void DrawShadowMaps(bool staticLights);
 	void DrawShadowMap(Light* light, float farPlaneDist);
+	void SetProjViewBuffer(const Matrix4& projMatrix, const Matrix4& viewMatrix);
 	void DrawOpaques();
 	void DrawTransparents();
 	void DrawNode(SceneNode* n, Shader* shaderOverride = nullptr);
@@ -56,6 +59,8 @@ protected:
 	Shader* pointLightShader;
 	Shader* spotLightShader;
 	Shader* shadowShader;
+
+	GLuint projViewBuffer;
 
 	GLuint bufferFBO;					//FBO for our G-Buffer pass
 	GLuint bufferColourTex;				//Albedo goes here
@@ -102,6 +107,8 @@ protected:
 	bool doNeonGridColourChange;
 	bool doColourCorrect;
 	float saturationPoint;
+
+	Matrix4 identityMat;
 	
 
 	Frustum frameFrustum;
