@@ -17,11 +17,6 @@ const int BLUR_PASSES = 10;
 
 Renderer::Renderer(Window& parent) : OGLRenderer(parent) {
 
-	Matrix4 testMat = Matrix4::Rotation(90, { 1,0,0 });
-	Matrix4 testMat2 = Matrix4::Rotation(100, { 1,0,0 });
-	Matrix4::LerpTransforms(0, testMat, testMat2);
-
-
 	doBlur = false;
 	doNeonGrid = true;
 	doNeonGridColourChange = true;
@@ -91,7 +86,7 @@ Renderer::Renderer(Window& parent) : OGLRenderer(parent) {
 		GL_COLOR_ATTACHMENT1
 	};
 
-	//Generate our scene depth texture...
+	//Generate our screen textures
 	GenerateScreenTexture(bufferDepthStencilTex, true);
 	GenerateScreenTexture(bufferColourTex);
 	GenerateScreenTexture(bufferNormalTex);
@@ -167,13 +162,14 @@ Renderer::Renderer(Window& parent) : OGLRenderer(parent) {
 }
 
 Renderer::~Renderer(void) {
-
 	delete scene;
 	delete quad;
 
 	glDeleteTextures(1, &bufferDepthStencilTex);
 	glDeleteTextures(1, &bufferColourTex);
 	glDeleteTextures(1, &bufferNormalTex);
+	glDeleteTextures(1, &bufferTransparentColourTex);
+	glDeleteTextures(1, &bufferTransparentNormalTex);
 	glDeleteTextures(1, &lightDiffuseTex);
 	glDeleteTextures(1, &lightSpecularTex);
 	glDeleteTextures(1, &skyboxColourTex);
@@ -187,6 +183,7 @@ Renderer::~Renderer(void) {
 	glDeleteFramebuffers(1, &skyboxFBO);
 	glDeleteFramebuffers(1, &postProcessFBO);
 	glDeleteFramebuffers(1, &neonGridFBO);
+	glDeleteFramebuffers(1, &shadowFBO);
 }
 
 void Renderer::GenerateScreenTexture(GLuint& into, bool depth) {
@@ -323,11 +320,12 @@ void Renderer::RenderScene() {
 	//Deferred rendering, light our scene
 	DrawLights();
 	
-	//If neon grid is enabled, draw it unlit areas
+	//If neon grid is enabled, draw it in unlit areas
 	DrawNeonGrid();
-	DrawSkybox();
-	SetProjViewBuffer(identityMat, identityMat);
 
+	DrawSkybox();
+
+	SetProjViewBuffer(identityMat, identityMat);
 	PostProcessing();
 
 	ClearNodeLists();
@@ -452,8 +450,6 @@ void Renderer::DrawOpaques() {
 
 	glStencilFunc(GL_ALWAYS, 1, ~0);
 	glStencilOp(GL_REPLACE, GL_REPLACE, GL_REPLACE);
-
-	//viewMatrix = scene->camera->BuildViewMatrix();
 
 	for (auto i : nodeList) {
 		DrawNode(i);
@@ -602,11 +598,14 @@ void Renderer::DrawLights() {
 }
 
 void Renderer::DrawNeonGrid() {
+	//We always want to clear the neon Grid texture as it is used in the combinebuffers shader
 	glBindFramebuffer(GL_FRAMEBUFFER, neonGridFBO);
 	glClear(GL_COLOR_BUFFER_BIT);
 
-	if (!doNeonGrid)
+	if (!doNeonGrid) {
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		return;
+	}
 
 	//We don't care about depth for the neon grid. If it passes the stencil test
 	//then it should definitely be drawn.
@@ -619,7 +618,6 @@ void Renderer::DrawNeonGrid() {
 	glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
 
 	BindShader(neonGridShader);
-	viewMatrix = scene->camera->BuildViewMatrix();
 	glUniform4fv(glGetUniformLocation(neonGridShader->GetProgram(), "colour"), 1, (float*)&currentGridColour);
 	glUniform1i(glGetUniformLocation(neonGridShader->GetProgram(), "diffuseTex"), 0);
 	glUniform1i(glGetUniformLocation(neonGridShader->GetProgram(), "normalTex"), 1);

@@ -2,7 +2,7 @@
 #include "Renderer.h"
 
 int main()	{
-	Window w("Make your own project!", 1280, 720, false);
+	Window w("Cyberspace Compound", 1280, 720, false);
 
 	srand((unsigned int)time(NULL));
 
@@ -17,7 +17,7 @@ int main()	{
 
 	w.LockMouseToWindow(true);
 	w.ShowOSPointer(false);
-
+	
 	//Do a call to reset the timer before we begin our update loop.
 	w.UpdateWindow();
 	while(w.UpdateWindow()  && !Window::GetKeyboard()->KeyDown(KEYBOARD_ESCAPE)){

@@ -13,7 +13,6 @@ SceneNode::SceneNode(Mesh* m,  MeshMaterial* mat, MeshAnimation* anm, Vector4 co
 	position = {};
 	rotation = {};
 	scale = { 1,1,1 };
-	boundingRadius = 1.0f;
 	distanceFromCamera = 0.0f;
 	texture = 0;
 	normal = 0;

@@ -91,15 +91,18 @@ public:
 			c->MakeDynamic();
 	}
 
-
 protected:
 
 	void UpdateTransform();
 	void SetTransform(const Matrix4& matrix) { transform = matrix; }
-
 	bool HasParent(SceneNode* _parent) const;
 	const Matrix4* GetRelativeJointData(unsigned int frame) const;
 
+	bool isStatic;
+	bool reflective;
+	float distanceFromCamera;
+	float frameTime;
+	
 	SceneNode* parent;
 
 	Vector3 position;
@@ -108,9 +111,11 @@ protected:
 
 	Shader* shader;
 	Mesh* mesh;
+
 	MeshAnimation* anim;
 	std::vector<Matrix4> animRelativeJoints;
 	std::vector<Matrix4> frameMatrices;
+	int currentFrame;
 
 	MeshMaterial* material;
 	vector <GLuint> matTextures;
@@ -123,14 +128,7 @@ protected:
 	Vector3 modelScale;
 	Vector4 colour;
 	std::vector<SceneNode*> children;
-	
 
-	float distanceFromCamera;
-	float boundingRadius;
-	float frameTime;
-	int currentFrame;
-	bool isStatic;
-	bool reflective;
 	GLuint texture;
 	GLuint normal;
 };
