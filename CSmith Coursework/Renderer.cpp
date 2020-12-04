@@ -311,7 +311,7 @@ void Renderer::RenderScene() {
 	glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 	
 	//Generate dynamic shadow maps for this frame. 
-	//Only objects within view frustum will be used
+	//Only objects within view frustum will be used.
 	DrawShadowMaps(false);
 	SetProjViewBuffer(scene->GetCameraPerspective(width, height), viewMatrix);
 	DrawOpaques();
@@ -327,6 +327,7 @@ void Renderer::RenderScene() {
 
 	SetProjViewBuffer(identityMat, identityMat);
 	PostProcessing();
+	PresentScene();
 
 	ClearNodeLists();
 }
@@ -669,7 +670,6 @@ void Renderer::PostProcessing() {
 
 	if (doBlur) Blur();
 	DoubleVision();
-	PresentScene();
 }
 
 void Renderer::CombineBuffers() {
