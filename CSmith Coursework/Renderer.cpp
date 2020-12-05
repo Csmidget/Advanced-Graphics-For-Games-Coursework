@@ -225,6 +225,9 @@ void Renderer::Resize(int x, int y) {
 	GenerateScreenTexture(postProcessColourTex[1]);
 	GenerateScreenTexture(neonGridColourTex);
 
+	projMatrix = scene->GetCameraPerspective(width, height);
+
+
 	//Set out FBO's to use the regenerated textures.
 	glBindFramebuffer(GL_FRAMEBUFFER, bufferFBO);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, bufferColourTex, 0);
